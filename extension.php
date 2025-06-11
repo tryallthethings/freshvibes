@@ -105,4 +105,13 @@ class FreshVibesViewExtension extends Minz_Extension
 				return $default;
 		}
 	}
+
+	public function cspRules(): array {
+		$host = parse_url(Minz_Url::base(), PHP_URL_HOST);
+		return [
+			'connect-src' => [
+				$host,
+			],
+		];
+	}
 }
