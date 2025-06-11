@@ -366,12 +366,47 @@ function initializeDashboard(freshvibesView) {
 				return;
 			}
 
-			if (e.target.closest('.tab-settings-button')) {
-				const menu = e.target.closest('.tab-settings-button').nextElementSibling;
-				menu.classList.toggle('active');
-				e.stopPropagation();
-				return;
-			}
+       if (e.target.closest('.tab-settings-button')) {
+                               const button = e.target.closest('.tab-settings-button');
+                               const menu = button.nextElementSibling;
+
+                               document.querySelectorAll('.tab-settings-menu.active').forEach(m => {
+                                       if (m !== menu) {
+                                               m.classList.remove('active');
+                                               m.style.position = '';
+                                               m.style.left = '';
+                                               m.style.right = '';
+                                               m.style.transform = '';
+                                               m.style.top = '';
+                                       }
+                               });
+
+                               const isActive = menu.classList.toggle('active');
+                               if (isActive) {
+                                       if (window.matchMedia('(max-width: 600px)').matches) {
+                                               const rect = button.getBoundingClientRect();
+                                               menu.style.position = 'fixed';
+                                               menu.style.left = '50%';
+                                               menu.style.right = 'auto';
+                                               menu.style.transform = 'translateX(-50%)';
+                                               menu.style.top = rect.bottom + 'px';
+                                       } else {
+                                               menu.style.position = '';
+                                               menu.style.left = '';
+                                               menu.style.right = '';
+                                               menu.style.transform = '';
+                                               menu.style.top = '';
+                                       }
+                               } else {
+                                       menu.style.position = '';
+                                       menu.style.left = '';
+                                       menu.style.right = '';
+                                       menu.style.transform = '';
+                                       menu.style.top = '';
+                               }
+                               e.stopPropagation();
+                               return;
+                       }
 
 			if (e.target.closest('.tab-action-delete')) {
 				const tabId = e.target.closest('.freshvibes-tab').dataset.tabId;

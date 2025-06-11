@@ -30,6 +30,8 @@
     padding: 0;
     margin: 0;
     align-items: center;
+  flex-wrap: wrap;
+    gap: 4px;    
 }
 
 .freshvibes-tab {
@@ -42,6 +44,9 @@
     position: relative;
     display: flex;
     align-items: center;
+  justify-content: center;
+    text-align: center;
+    flex: 1 1 auto;    
     gap: 8px;
     background-color: var(--background-color-grey);
     color: var(--font-color-grey);
@@ -77,6 +82,8 @@
     color: var(--font-color);
     cursor: pointer;
     margin-left: 8px;
+text-align: center;
+    flex: 1 1 auto;    
 }
 
 .tab-add-button:hover {
@@ -148,7 +155,7 @@
     border-radius: var(--border-radius);
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
     padding: 10px;
-    min-width: 180px;
+    min-width: 200px;
     flex-direction: column;
     gap: 10px;
 }
@@ -503,4 +510,89 @@
 
 .fontsize-large .freshvibes-container-content {
     font-size: 1.1em;
+}
+
+@media (max-width: 600px) {
+    .tab-settings-menu {
+        position: fixed;
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%);
+        min-width: min(280px, calc(100vw - 20px));
+        max-width: calc(100vw - 20px);
+    }
+
+    .tab-settings-menu button,
+    .columns-selector button {
+        padding: 6px 10px;
+    }
+    .freshvibes-header {
+        flex-direction: column;
+        align-items: stretch;
+    }
+
+    .freshvibes-tabs {
+        width: 100%;
+    }
+
+    .freshvibes-tab,
+    .tab-add-button {
+        flex: 1 1 auto;
+        margin: 2px;
+        margin-left: 0;
+    }
+
+    .tab-add-button,
+    .columns-selector button {
+        width: 100%;
+    }
+
+    .freshvibes-columns {
+        flex-direction: column;
+        width: 100%;
+    }
+
+    .freshvibes-column,
+    .freshvibes-container {
+        width: 100%;
+    }
+
+    .freshvibes-column {
+        min-height: 0;
+    }
+
+    .freshvibes-column:empty {
+        display: none;
+    }
+
+    .freshvibes-container-content li.entry-item {
+        display: grid;
+        grid-template-columns: 1fr auto;
+        grid-template-areas: "title title" "snippet date";
+        gap: 4px 10px;
+    }
+
+    .entry-main {
+        display: contents;
+    }
+
+    .entry-title {
+        grid-area: title;
+    }
+
+    .entry-snippet {
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        grid-area: snippet;
+    }
+
+    .entry-snippet:before {
+        content: "";
+    }
+
+    .entry-date {
+        grid-area: date;
+        align-self: end;
+    }
 }
