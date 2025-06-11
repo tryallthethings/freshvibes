@@ -26,8 +26,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				'name' => _t('ext.FreshVibesView.default_tab_name', 'Main'),
 				'icon' => '',
 				'icon_color' => '',
-				'num_columns' => 3,
-				'columns' => ['col1' => [], 'col2' => [], 'col3' => []],
+				'num_columns' => FreshVibesViewExtension::DEFAULT_TAB_COLUMNS,
+				'columns' => $this->buildEmptyColumns(FreshVibesViewExtension::DEFAULT_TAB_COLUMNS),
 			]];
 
 			$this->saveLayout($layout);
@@ -240,8 +240,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 						'name' => _t('ext.FreshVibesView.new_tab_name', 'New Tab'),
 						'icon' => '',
 						'icon_color' => '',
-						'num_columns' => 3,
-						'columns' => ['col1' => [], 'col2' => [], 'col3' => []],
+						'num_columns' => FreshVibesViewExtension::DEFAULT_TAB_COLUMNS,
+						'columns' => $this->buildEmptyColumns(FreshVibesViewExtension::DEFAULT_TAB_COLUMNS),
 					];
 					$layout[] = $newTab;
 					$this->saveLayout($layout);
@@ -291,18 +291,15 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 					break;
 				case 'set_columns':
 					$tabId = Minz_Request::paramString('tab_id');
-					$numCols = Minz_Request::paramInt('value', 3);
+					$numCols = Minz_Request::paramInt('value', FreshVibesViewExtension::DEFAULT_TAB_COLUMNS);
 					if ($numCols < 1 || $numCols > 6) {
-						$numCols = 3;
+						$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
 					}
 					foreach ($layout as &$tab) {
 						if ($tab['id'] === $tabId) {
 							$tab['num_columns'] = $numCols;
 							$allFeeds = array_merge(...array_values($tab['columns']));
-							$newColumns = [];
-							for ($i = 1; $i <= $numCols; $i++) {
-								$newColumns['col' . $i] = [];
-							}
+							$newColumns = $this->buildEmptyColumns($numCols);
 							if (!empty($allFeeds)) {
 								foreach ($allFeeds as $i => $feedId) {
 									$newColumns['col' . (($i % $numCols) + 1)][] = $feedId;
@@ -337,6 +334,15 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 		}
 		exit;
+	}
+
+	private function buildEmptyColumns(int $count): array
+	{
+		$columns = [];
+		for ($i = 1; $i <= $count; $i++) {
+			$columns['col' . $i] = [];
+		}
+		return $columns;
 	}
 
 	public function setActiveTabAction()

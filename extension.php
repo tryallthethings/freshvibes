@@ -16,6 +16,7 @@ class FreshVibesViewExtension extends Minz_Extension
 	public const REFRESH_ENABLED_CONFIG_KEY = 'freshvibes_refresh_enabled';
 	public const REFRESH_INTERVAL_CONFIG_KEY = 'freshvibes_refresh_interval';
 	public const DATE_FORMAT_CONFIG_KEY = 'freshvibes_date_format';
+	public const DEFAULT_TAB_COLUMNS = 4;
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
 	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50];
