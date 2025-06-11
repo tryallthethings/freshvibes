@@ -1,8 +1,8 @@
 document.addEventListener('DOMContentLoaded', () => {
-        const freshvibesView = document.querySelector('.freshvibes-view');
-        if (freshvibesView) {
-                initializeDashboard(freshvibesView);
-        }
+	const freshvibesView = document.querySelector('.freshvibes-view');
+	if (freshvibesView) {
+		initializeDashboard(freshvibesView);
+	}
 });
 
 function initializeDashboard(freshvibesView) {
@@ -10,13 +10,13 @@ function initializeDashboard(freshvibesView) {
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
 	// --- DOM & CONFIG ---
-    const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl } = freshvibesView.dataset;
-    const trEl = document.getElementById('freshvibes-i18n');
-    const tr = trEl ? JSON.parse(trEl.textContent) : {};
-    if (trEl) trEl.remove();
-    
-        const tabsContainer = freshvibesView.querySelector('.freshvibes-tabs');
-        const panelsContainer = freshvibesView.querySelector('.freshvibes-panels');
+	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl } = freshvibesView.dataset;
+	const trEl = document.getElementById('freshvibes-i18n');
+	const tr = trEl ? JSON.parse(trEl.textContent) : {};
+	if (trEl) trEl.remove();
+
+	const tabsContainer = freshvibesView.querySelector('.freshvibes-tabs');
+	const panelsContainer = freshvibesView.querySelector('.freshvibes-panels');
 	const templates = {
 		tabLink: document.getElementById('template-tab-link'),
 		tabPanel: document.getElementById('template-tab-panel'),
@@ -33,12 +33,12 @@ function initializeDashboard(freshvibesView) {
 	function renderTabs() {
 		tabsContainer.innerHTML = '';
 		state.layout.forEach(tab => tabsContainer.appendChild(createTabLink(tab)));
-        const addButton = document.createElement('button');
-        addButton.type = 'button';
-        addButton.className = 'tab-add-button';
-        addButton.textContent = '+';
-        addButton.ariaLabel = tr.add_tab || 'Add new tab';
-        tabsContainer.appendChild(addButton);
+		const addButton = document.createElement('button');
+		addButton.type = 'button';
+		addButton.className = 'tab-add-button';
+		addButton.textContent = '+';
+		addButton.ariaLabel = tr.add_tab || 'Add new tab';
+		tabsContainer.appendChild(addButton);
 	}
 
 	function renderPanels() {
@@ -46,26 +46,26 @@ function initializeDashboard(freshvibesView) {
 		state.layout.forEach(tab => panelsContainer.appendChild(createTabPanel(tab)));
 	}
 
-    function createTabLink(tab) {
-                const link = templates.tabLink.content.cloneNode(true).firstElementChild;
-                link.dataset.tabId = tab.id;
-                const iconSpan = link.querySelector('.tab-icon');
-                if (iconSpan) {
-                        iconSpan.textContent = tab.icon || '';
-                        iconSpan.style.color = tab.icon_color || '';
-                }
-                link.querySelector('.tab-name').textContent = tab.name;
-                const iconInput = link.querySelector('.tab-icon-input');
-                if (iconInput) iconInput.value = tab.icon || '';
-                const colorInput = link.querySelector('.tab-icon-color-input');
-                if (colorInput) colorInput.value = tab.icon_color || '#000000';
+	function createTabLink(tab) {
+		const link = templates.tabLink.content.cloneNode(true).firstElementChild;
+		link.dataset.tabId = tab.id;
+		const iconSpan = link.querySelector('.tab-icon');
+		if (iconSpan) {
+			iconSpan.textContent = tab.icon || '';
+			iconSpan.style.color = tab.icon_color || '';
+		}
+		link.querySelector('.tab-name').textContent = tab.name;
+		const iconInput = link.querySelector('.tab-icon-input');
+		if (iconInput) iconInput.value = tab.icon || '';
+		const colorInput = link.querySelector('.tab-icon-color-input');
+		if (colorInput) colorInput.value = tab.icon_color || '#000000';
 
-                const settingsButton = link.querySelector('.tab-settings-button');
-                if (settingsButton) {
-                        settingsButton.innerHTML = '&#x25BC;';
-                }
+		const settingsButton = link.querySelector('.tab-settings-button');
+		if (settingsButton) {
+			settingsButton.innerHTML = '&#x25BC;';
+		}
 
-                return link;
+		return link;
 	}
 
 	function createTabPanel(tab) {
@@ -74,40 +74,40 @@ function initializeDashboard(freshvibesView) {
 		return panel;
 	}
 
-    function setupAutoRefresh() {
-        const isRefreshEnabled = refreshEnabled === 'true' || refreshEnabled === '1';
-        if (!isRefreshEnabled) {
-            return;
-        }
+	function setupAutoRefresh() {
+		const isRefreshEnabled = refreshEnabled === 'true' || refreshEnabled === '1';
+		if (!isRefreshEnabled) {
+			return;
+		}
 
-        const intervalMinutes = parseInt(refreshInterval, 10) || 15;
-        const refreshMs = intervalMinutes * 60 * 1000;
+		const intervalMinutes = parseInt(refreshInterval, 10) || 15;
+		const refreshMs = intervalMinutes * 60 * 1000;
 
-        if (refreshMs <= 0) {
-            return;
-        }
+		if (refreshMs <= 0) {
+			return;
+		}
 
-        setInterval(() => {
-            const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active') ||
-                                (document.activeElement && ['INPUT', 'TEXTAREA', 'BUTTON', 'A'].includes(document.activeElement.tagName));
+		setInterval(() => {
+			const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active') ||
+				(document.activeElement && ['INPUT', 'TEXTAREA', 'BUTTON', 'A'].includes(document.activeElement.tagName));
 
-            if (!isInteracting && dashboardUrl) {
-                window.location.href = dashboardUrl;
-            }
-        }, refreshMs);
-    }
+			if (!isInteracting && dashboardUrl) {
+				window.location.href = dashboardUrl;
+			}
+		}, refreshMs);
+	}
 
-    function renderTabContent(tab) {
+	function renderTabContent(tab) {
 		const panel = document.getElementById(tab.id);
 		if (!panel) return;
 
-                const columnsContainer = panel.querySelector('.freshvibes-columns');
+		const columnsContainer = panel.querySelector('.freshvibes-columns');
 		columnsContainer.innerHTML = '';
-                columnsContainer.className = `freshvibes-columns columns-${tab.num_columns}`;
-		
+		columnsContainer.className = `freshvibes-columns columns-${tab.num_columns}`;
+
 		const columns = Array.from({ length: tab.num_columns }, (_, i) => {
-                        const colDiv = document.createElement('div');
-                        colDiv.className = 'freshvibes-column';
+			const colDiv = document.createElement('div');
+			colDiv.className = 'freshvibes-column';
 			colDiv.dataset.columnId = `col${i + 1}`;
 			columnsContainer.appendChild(colDiv);
 			return colDiv;
@@ -152,102 +152,102 @@ function initializeDashboard(freshvibesView) {
 		initializeSortable(columns);
 	}
 
-function createFeedContainer(feed, sourceTabId) {
-    const container = templates.feedContainer.content.cloneNode(true).firstElementChild;
-    container.dataset.feedId = feed.id;
-    container.dataset.sourceTabId = sourceTabId;
-    container.classList.toggle('fontsize-small', feed.currentFontSize === 'small');
-    container.classList.toggle('fontsize-large', feed.currentFontSize === 'large');
+	function createFeedContainer(feed, sourceTabId) {
+		const container = templates.feedContainer.content.cloneNode(true).firstElementChild;
+		container.dataset.feedId = feed.id;
+		container.dataset.sourceTabId = sourceTabId;
+		container.classList.toggle('fontsize-small', feed.currentFontSize === 'small');
+		container.classList.toggle('fontsize-large', feed.currentFontSize === 'large');
 
-    const favicon = container.querySelector('.feed-favicon');
-    if (feed.favicon) {
-        favicon.src = feed.favicon;
-        favicon.style.display = '';
-    } else {
-        favicon.style.display = 'none';
-    }
-    container.querySelector('.feed-title').textContent = feed.name;
+		const favicon = container.querySelector('.feed-favicon');
+		if (feed.favicon) {
+			favicon.src = feed.favicon;
+			favicon.style.display = '';
+		} else {
+			favicon.style.display = 'none';
+		}
+		container.querySelector('.feed-title').textContent = feed.name;
 
-    const contentDiv = container.querySelector('.freshvibes-container-content');
-    contentDiv.innerHTML = '';
-	if (feed.entries && Array.isArray(feed.entries) && feed.entries.length > 0 && !feed.entries.error) {
+		const contentDiv = container.querySelector('.freshvibes-container-content');
+		contentDiv.innerHTML = '';
+		if (feed.entries && Array.isArray(feed.entries) && feed.entries.length > 0 && !feed.entries.error) {
 			const ul = document.createElement('ul');
 			feed.entries.forEach(entry => {
-					const li = document.createElement('li');
-					li.className = 'entry-item';
+				const li = document.createElement('li');
+				li.className = 'entry-item';
 
-					const main = document.createElement('div');
-					main.className = 'entry-main';
+				const main = document.createElement('div');
+				main.className = 'entry-main';
 
-					const a = document.createElement('a');
-					a.href = entry.link;
-					a.target = '_blank';
-					a.rel = 'noopener noreferrer';
-					a.className = 'entry-title';
-					a.textContent = entry.title || '(No title)';
-					main.appendChild(a);
+				const a = document.createElement('a');
+				a.href = entry.link;
+				a.target = '_blank';
+				a.rel = 'noopener noreferrer';
+				a.className = 'entry-title';
+				a.textContent = entry.title || '(No title)';
+				main.appendChild(a);
 
-					if (entry.snippet) {
-							const snippet = document.createElement('span');
-							snippet.className = 'entry-snippet';
-							snippet.textContent = entry.snippet;
-							main.appendChild(snippet);
-					}
+				if (entry.snippet) {
+					const snippet = document.createElement('span');
+					snippet.className = 'entry-snippet';
+					snippet.textContent = entry.snippet;
+					main.appendChild(snippet);
+				}
 
-					const date = document.createElement('span');
-					date.className = 'entry-date';
-					date.textContent = entry.dateShort;
-					date.setAttribute('title', entry.dateFull);
+				const date = document.createElement('span');
+				date.className = 'entry-date';
+				date.textContent = entry.dateShort;
+				date.setAttribute('title', entry.dateFull);
 
-					li.appendChild(main);
-					li.appendChild(date);
-					ul.appendChild(li);
+				li.appendChild(main);
+				li.appendChild(date);
+				ul.appendChild(li);
 			});
 			contentDiv.appendChild(ul);
-	} else {
+		} else {
 			const p = document.createElement('p');
 			p.className = 'no-entries';
 			p.textContent = feed.entries.error || tr.no_entries || 'No recent articles.';
 			contentDiv.appendChild(p);
+		}
+
+		const editor = container.querySelector('.feed-settings-editor');
+		const limitSelect = editor.querySelector('.feed-limit-select');
+		[5, 10, 15, 20, 25, 30, 40, 50].forEach(val => {
+			const opt = new Option(val, val, val === feed.currentLimit, val === feed.currentLimit);
+			limitSelect.add(opt);
+		});
+		const fontSelect = editor.querySelector('.feed-fontsize-select');
+		['small', 'regular', 'large'].forEach(val => {
+			const opt = new Option(val.charAt(0).toUpperCase() + val.slice(1), val, val === feed.currentFontSize, val === feed.currentFontSize);
+			fontSelect.add(opt);
+		});
+
+		const otherTabs = state.layout.filter(t => t.id !== sourceTabId);
+		if (otherTabs.length > 0) {
+			const moveDiv = document.createElement('div');
+			moveDiv.className = 'feed-move-to';
+			const lbl = document.createElement('label');
+			lbl.textContent = tr.move_to || 'Move to:';
+			moveDiv.appendChild(lbl);
+			const ul = document.createElement('ul');
+			ul.className = 'feed-move-to-list';
+			otherTabs.forEach(tab => {
+				const li = document.createElement('li');
+				const button = document.createElement('button');
+				button.type = 'button';
+				button.dataset.targetTabId = tab.id;
+				button.textContent = tab.name;
+				button.setAttribute('aria-label', `Move feed to tab: ${tab.name}`);
+				li.appendChild(button);
+				ul.appendChild(li);
+			});
+			moveDiv.appendChild(ul);
+			editor.appendChild(moveDiv);
+		}
+
+		return container;
 	}
-
-    const editor = container.querySelector('.feed-settings-editor');
-    const limitSelect = editor.querySelector('.feed-limit-select');
-    [5, 10, 15, 20, 25, 30, 40, 50].forEach(val => {
-        const opt = new Option(val, val, val === feed.currentLimit, val === feed.currentLimit);
-        limitSelect.add(opt);
-    });
-    const fontSelect = editor.querySelector('.feed-fontsize-select');
-    ['small', 'regular', 'large'].forEach(val => {
-        const opt = new Option(val.charAt(0).toUpperCase() + val.slice(1), val, val === feed.currentFontSize, val === feed.currentFontSize);
-        fontSelect.add(opt);
-    });
-
-    const otherTabs = state.layout.filter(t => t.id !== sourceTabId);
-    if (otherTabs.length > 0) {
-        const moveDiv = document.createElement('div');
-        moveDiv.className = 'feed-move-to';
-		const lbl = document.createElement('label');
-		lbl.textContent = tr.move_to || 'Move to:';
-		moveDiv.appendChild(lbl);
-        const ul = document.createElement('ul');
-        ul.className = 'feed-move-to-list';
-        otherTabs.forEach(tab => {
-            const li = document.createElement('li');
-            const button = document.createElement('button');
-            button.type = 'button';
-            button.dataset.targetTabId = tab.id;
-            button.textContent = tab.name;
-            button.setAttribute('aria-label', `Move feed to tab: ${tab.name}`);
-            li.appendChild(button);
-            ul.appendChild(li);
-        });
-        moveDiv.appendChild(ul);
-        editor.appendChild(moveDiv);
-    }
-
-    return container;
-}
 
 	// --- ACTIONS ---
 	function api(url, body) {
@@ -265,11 +265,11 @@ function createFeedContainer(feed, sourceTabId) {
 		if (!tabId) return;
 		state.activeTabId = tabId;
 
-            tabsContainer.querySelectorAll('.freshvibes-tab').forEach(t => t.classList.toggle('active', t.dataset.tabId === tabId));
-            panelsContainer.querySelectorAll('.freshvibes-panel').forEach(p => {
-                        const isActive = p.id === tabId;
-                        p.classList.toggle('active', isActive);
-                        if (isActive && p.querySelector('.freshvibes-columns').innerHTML === '') {
+		tabsContainer.querySelectorAll('.freshvibes-tab').forEach(t => t.classList.toggle('active', t.dataset.tabId === tabId));
+		panelsContainer.querySelectorAll('.freshvibes-panel').forEach(p => {
+			const isActive = p.id === tabId;
+			p.classList.toggle('active', isActive);
+			if (isActive && p.querySelector('.freshvibes-columns').innerHTML === '') {
 				renderTabContent(state.layout.find(t => t.id === tabId));
 			}
 		});
@@ -281,21 +281,21 @@ function createFeedContainer(feed, sourceTabId) {
 	function initializeSortable(columns) {
 		if (typeof Sortable === 'undefined') return;
 		columns.forEach(column => {
-                        new Sortable(column, {
-                                group: 'freshvibes-feeds',
-                                animation: 150,
-                                handle: '.freshvibes-container-header',
-                                onEnd: () => {
-                                        const panel = column.closest('.freshvibes-panel');
-                                        const tabId = panel.id;
-                                        const layoutData = {};
-                                        panel.querySelectorAll('.freshvibes-column').forEach(col => {
-                                                const colId = col.dataset.columnId;
-                                                layoutData[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
-                                        });
+			new Sortable(column, {
+				group: 'freshvibes-feeds',
+				animation: 150,
+				handle: '.freshvibes-container-header',
+				onEnd: () => {
+					const panel = column.closest('.freshvibes-panel');
+					const tabId = panel.id;
+					const layoutData = {};
+					panel.querySelectorAll('.freshvibes-column').forEach(col => {
+						const colId = col.dataset.columnId;
+						layoutData[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
+					});
 
-                    const tab = state.layout.find(t => t.id === tabId);
-                    if (tab) tab.columns = layoutData;
+					const tab = state.layout.find(t => t.id === tabId);
+					if (tab) tab.columns = layoutData;
 
 					api(saveLayoutUrl, { layout: JSON.stringify(layoutData), tab_id: tabId }).catch(console.error);
 				}
@@ -304,8 +304,8 @@ function createFeedContainer(feed, sourceTabId) {
 	}
 
 	// --- EVENT LISTENERS ---
-        function setupEventListeners() {
-                freshvibesView.addEventListener('click', e => {
+	function setupEventListeners() {
+		freshvibesView.addEventListener('click', e => {
 			if (e.target.closest('.tab-add-button')) {
 				api(tabActionUrl, { operation: 'add' }).then(data => {
 					if (data.status === 'success') {
@@ -316,8 +316,8 @@ function createFeedContainer(feed, sourceTabId) {
 				}).catch(console.error);
 				return;
 			}
-			
-                        const tabLink = e.target.closest('.freshvibes-tab');
+
+			const tabLink = e.target.closest('.freshvibes-tab');
 			if (tabLink && !e.target.closest('.tab-settings-button, .tab-settings-menu')) {
 				activateTab(tabLink.dataset.tabId);
 				return;
@@ -331,12 +331,12 @@ function createFeedContainer(feed, sourceTabId) {
 			}
 
 			if (e.target.closest('.tab-action-delete')) {
-                                const tabId = e.target.closest('.freshvibes-tab').dataset.tabId;
+				const tabId = e.target.closest('.freshvibes-tab').dataset.tabId;
 				if (confirm(tr.confirm_delete_tab || 'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.')) {
 					api(tabActionUrl, { operation: 'delete', tab_id: tabId }).then(data => {
 						if (data.status === 'success') {
 							state.layout = data.new_layout;
-                            state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+							state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
 							render();
 						}
 					}).catch(console.error);
@@ -347,7 +347,7 @@ function createFeedContainer(feed, sourceTabId) {
 			const columnsButton = e.target.closest('[data-columns]');
 			if (columnsButton) {
 				const numCols = columnsButton.dataset.columns;
-                                const tabId = columnsButton.closest('.freshvibes-tab').dataset.tabId;
+				const tabId = columnsButton.closest('.freshvibes-tab').dataset.tabId;
 				api(tabActionUrl, { operation: 'set_columns', tab_id: tabId, value: numCols }).then(data => {
 					if (data.status === 'success') {
 						state.layout = data.new_layout;
@@ -358,7 +358,7 @@ function createFeedContainer(feed, sourceTabId) {
 				}).catch(console.error);
 				return;
 			}
-			
+
 			if (e.target.closest('.feed-settings-button')) {
 				const editor = e.target.closest('.feed-settings-button').nextElementSibling;
 				editor.classList.toggle('active');
@@ -366,49 +366,49 @@ function createFeedContainer(feed, sourceTabId) {
 				return;
 			}
 
-            const moveButton = e.target.closest('.feed-move-to-list button');
-            if (moveButton) {
-                const container = moveButton.closest('.freshvibes-container');
-                const feedId = container.dataset.feedId;
-                const sourceTabId = container.dataset.sourceTabId;
-                const targetTabId = moveButton.dataset.targetTabId;
+			const moveButton = e.target.closest('.feed-move-to-list button');
+			if (moveButton) {
+				const container = moveButton.closest('.freshvibes-container');
+				const feedId = container.dataset.feedId;
+				const sourceTabId = container.dataset.sourceTabId;
+				const targetTabId = moveButton.dataset.targetTabId;
 
-                                if (!moveFeedUrl) {
-                                        console.error('FreshVibesView: moveFeedUrl is not defined in the dataset. Cannot move feed.');
-                                        return;
-                                }
+				if (!moveFeedUrl) {
+					console.error('FreshVibesView: moveFeedUrl is not defined in the dataset. Cannot move feed.');
+					return;
+				}
 
-                api(moveFeedUrl, { feed_id: feedId, source_tab_id: sourceTabId, target_tab_id: targetTabId })
-                .then(data => {
-                    if (data.status === 'success') {
-                        state.layout = data.new_layout;
-						state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+				api(moveFeedUrl, { feed_id: feedId, source_tab_id: sourceTabId, target_tab_id: targetTabId })
+					.then(data => {
+						if (data.status === 'success') {
+							state.layout = data.new_layout;
+							state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
 
-						// Remove feed container from its original position
-						container.remove();
+							// Remove feed container from its original position
+							container.remove();
 
-						const targetTab = state.layout.find(t => t.id === targetTabId);
-						const targetPanel = document.getElementById(targetTabId);
+							const targetTab = state.layout.find(t => t.id === targetTabId);
+							const targetPanel = document.getElementById(targetTabId);
 
-						// If target tab is active, re-render its content. Otherwise, just clear it.
-                                                if (targetTab && targetPanel) {
-                                                        targetPanel.querySelector('.freshvibes-columns').innerHTML = '';
-							if (targetPanel.classList.contains('active')) {
-								renderTabContent(targetTab);
+							// If target tab is active, re-render its content. Otherwise, just clear it.
+							if (targetTab && targetPanel) {
+								targetPanel.querySelector('.freshvibes-columns').innerHTML = '';
+								if (targetPanel.classList.contains('active')) {
+									renderTabContent(targetTab);
+								}
 							}
 						}
-                    }
-                }).catch(console.error);
-                return;
-            }
-			
+					}).catch(console.error);
+				return;
+			}
+
 			if (e.target.closest('.feed-settings-save')) {
 				const editor = e.target.closest('.feed-settings-editor');
-                                const container = editor.closest('.freshvibes-container');
+				const container = editor.closest('.freshvibes-container');
 				const feedId = container.dataset.feedId;
 				const limit = editor.querySelector('.feed-limit-select').value;
 				const fontSize = editor.querySelector('.feed-fontsize-select').value;
-				
+
 				api(saveFeedSettingsUrl, { feed_id: feedId, limit, font_size: fontSize }).then(data => {
 					if (data.status === 'success') {
 						editor.classList.remove('active');
@@ -419,7 +419,7 @@ function createFeedContainer(feed, sourceTabId) {
 						if (oldLimit !== parseInt(limit, 10)) {
 							location.reload();
 						} else {
-                                                        container.className = 'freshvibes-container';
+							container.className = 'freshvibes-container';
 							container.classList.toggle('fontsize-small', fontSize === 'small');
 							container.classList.toggle('fontsize-large', fontSize === 'large');
 						}
@@ -427,7 +427,7 @@ function createFeedContainer(feed, sourceTabId) {
 				}).catch(console.error);
 				return;
 			}
-			
+
 			if (e.target.closest('.feed-settings-cancel')) {
 				e.target.closest('.feed-settings-editor').classList.remove('active');
 				return;
@@ -441,30 +441,30 @@ function createFeedContainer(feed, sourceTabId) {
 			}
 		});
 
-		 tabsContainer.addEventListener('change', e => {
-                        if (e.target.classList.contains('tab-icon-input') || e.target.classList.contains('tab-icon-color-input')) {
-                                const tabEl = e.target.closest('.freshvibes-tab');
-                                if (!tabEl) return;
-                                const tabId = tabEl.dataset.tabId;
-                                const iconVal = tabEl.querySelector('.tab-icon-input').value.trim();
-                                const colorVal = tabEl.querySelector('.tab-icon-color-input').value;
-                                api(tabActionUrl, { operation: 'set_icon', tab_id: tabId, icon: iconVal, color: colorVal }).then(() => {
-                                        const iconSpan = tabEl.querySelector('.tab-icon');
-                                        if (iconSpan) {
-                                                iconSpan.textContent = iconVal;
-                                                iconSpan.style.color = colorVal;
-                                        }
-                                        const tabData = state.layout.find(t => t.id === tabId);
-                                        if (tabData) { tabData.icon = iconVal; tabData.icon_color = colorVal; }
-                                }).catch(console.error);
-                        }
-                });
+		tabsContainer.addEventListener('change', e => {
+			if (e.target.classList.contains('tab-icon-input') || e.target.classList.contains('tab-icon-color-input')) {
+				const tabEl = e.target.closest('.freshvibes-tab');
+				if (!tabEl) return;
+				const tabId = tabEl.dataset.tabId;
+				const iconVal = tabEl.querySelector('.tab-icon-input').value.trim();
+				const colorVal = tabEl.querySelector('.tab-icon-color-input').value;
+				api(tabActionUrl, { operation: 'set_icon', tab_id: tabId, icon: iconVal, color: colorVal }).then(() => {
+					const iconSpan = tabEl.querySelector('.tab-icon');
+					if (iconSpan) {
+						iconSpan.textContent = iconVal;
+						iconSpan.style.color = colorVal;
+					}
+					const tabData = state.layout.find(t => t.id === tabId);
+					if (tabData) { tabData.icon = iconVal; tabData.icon_color = colorVal; }
+				}).catch(console.error);
+			}
+		});
 
-                tabsContainer.addEventListener('dblclick', e => {
+		tabsContainer.addEventListener('dblclick', e => {
 			const tabNameSpan = e.target.closest('.tab-name');
 			if (!tabNameSpan) return;
-			
-                        const tabElement = tabNameSpan.closest('.freshvibes-tab');
+
+			const tabElement = tabNameSpan.closest('.freshvibes-tab');
 			if (!tabElement) return;
 
 			const tabId = tabElement.dataset.tabId;
@@ -473,14 +473,14 @@ function createFeedContainer(feed, sourceTabId) {
 			input.type = 'text';
 			input.className = 'tab-name-input';
 			input.value = oldName;
-			
+
 			let isSaving = false;
 			const saveName = () => {
 				if (isSaving) return;
 				isSaving = true;
 
 				const newName = input.value.trim();
-				
+
 				if (input.parentNode) {
 					input.replaceWith(tabNameSpan);
 				}
@@ -491,7 +491,7 @@ function createFeedContainer(feed, sourceTabId) {
 						if (data.status === 'success') {
 							const tabInState = state.layout.find(t => t.id === tabId);
 							if (tabInState) tabInState.name = newName;
-							
+
 							// Update all move-to dropdown buttons with the new tab name
 							document.querySelectorAll(`.feed-move-to-list button[data-target-tab-id="${tabId}"]`).forEach(button => {
 								button.textContent = newName;
@@ -508,7 +508,7 @@ function createFeedContainer(feed, sourceTabId) {
 					tabNameSpan.textContent = oldName;
 				}
 			};
-			
+
 			input.addEventListener('blur', saveName);
 			input.addEventListener('keydown', ev => {
 				if (ev.key === 'Enter') {
@@ -525,7 +525,7 @@ function createFeedContainer(feed, sourceTabId) {
 			input.select();
 		});
 	}
-    
+
 	// --- INITIALIZATION ---
 	fetch(getLayoutUrl)
 		.then(res => {
@@ -544,20 +544,20 @@ function createFeedContainer(feed, sourceTabId) {
 			state.layout = data.layout || [];
 			state.activeTabId = data.active_tab_id;
 			state.feeds = JSON.parse(feedsDataScript.textContent);
-			
+
 			state.allPlacedFeedIds = new Set(state.layout.flatMap(t => Object.values(t.columns).flat()).map(String));
-			
+
 			// Clean up the temporary script tag
 			document.getElementById('feeds-data-script').remove();
-			
+
 			// Render the fully-initialized dashboard with the correct state
 			render();
 			setupEventListeners();
 
-            setupAutoRefresh();
+			setupAutoRefresh();
 		})
 		.catch(error => {
-            console.error('FreshVibesView: Could not initialize.', error);
-            freshvibesView.innerHTML = '<p>' + (tr.error_dashboard_init || 'Error loading dashboard. Please check the console and try again.') + '</p>';
-                });
+			console.error('FreshVibesView: Could not initialize.', error);
+			freshvibesView.innerHTML = '<p>' + (tr.error_dashboard_init || 'Error loading dashboard. Please check the console and try again.') + '</p>';
+		});
 }
