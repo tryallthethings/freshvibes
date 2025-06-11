@@ -1,0 +1,32 @@
+<?php
+return array(
+    'FreshVibesView' => array(
+        'title' => 'Fresh Vibes View',
+        'default_tab_name' => 'Home',
+        'new_tab_name' => 'Neuer Tab',
+        'feed_settings' => 'Feed-Einstellungen',
+        'no_entries' => 'Keine Artikel vorhanden.',
+        'error_loading' => 'Fehler beim Laden der Artikel.',
+        'aria_dashboard_tabs' => 'Dashboard-Tabs',
+        'aria_tab_settings' => 'Tab-Einstellungen',
+        'columns_label' => 'Anzahl der Spalten',
+        'delete_tab' => 'Tab löschen',
+        'feed_settings_aria' => 'Einstellungen für diesen Feed',
+        'limit_label' => 'Limit:',
+        'font_label' => 'Schriftgröße:',
+        'save' => 'Speichern',
+        'cancel' => 'Abbrechen',
+        'add_tab' => 'Neuen Tab hinzufügen',
+        'confirm_delete_tab' => 'Diesen Tab wirklich löschen? Feeds werden auf den ersten Tab verschoben.',
+        'move_to' => 'Verschieben nach:',
+        'error_dashboard_init' => 'Fehler beim Laden des Dashboards. Bitte Konsole prüfen und erneut versuchen.',
+        'settings_refresh_enabled_label' => 'Automatische Aktualisierung aktivieren',
+        'settings_refresh_enabled_help' => 'Bei Aktivierung wird das Dashboard automatisch neu geladen.',
+        'settings_refresh_interval_label' => 'Aktualisierungsintervall (Minuten)',
+        'settings_refresh_interval_help' => 'Das Dashboard wird in diesem Intervall automatisch neu geladen.',
+        'settings_date_format_label' => 'Datumsformat der Artikel',
+        'settings_date_format_help' => 'Verwendet PHP-Datumsformat-Codes. Beispiele: `Y-m-d H:i`, `d.m.Y H:i`',
+        'settings_save_button' => 'Einstellungen speichern',
+        'tabicon' => 'Icon / Emoji'
+    ),
+);

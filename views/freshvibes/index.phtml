@@ -1,0 +1,108 @@
+<?php declare(strict_types=1);
+
+if (!Minz_Request::paramBoolean('ajax')) {
+	$this->partial('aside_feed');
+	$this->partial('nav_menu');
+}
+?>
+
+<section class="freshvibes-view"
+		role="main"
+                data-xextension-freshvibesview-get-layout-url="<?php echo htmlspecialchars($this->getLayoutUrl, ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-save-layout-url="<?php echo htmlspecialchars($this->saveLayoutUrl, ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-save-feed-settings-url="<?php echo htmlspecialchars($this->saveFeedSettingsUrl, ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-tab-action-url="<?php echo htmlspecialchars($this->tabActionUrl, ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-set-active-tab-url="<?php echo htmlspecialchars($this->setActiveTabUrl, ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-refresh-interval="<?php echo htmlspecialchars((string)($this->refreshInterval ?? 15), ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-date-format="<?php echo htmlspecialchars((string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'), ENT_QUOTES); ?>"
+                data-xextension-freshvibesview-move-feed-url="<?= $this->moveFeedUrl; ?>"
+                data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
+
+        <header class="freshvibes-header">
+                <nav class="freshvibes-tabs" aria-label="<?php echo _t('ext.FreshVibesView.aria_dashboard_tabs', 'Dashboard tabs'); ?>"></nav>
+	</header>
+
+        <div class="freshvibes-panels">
+		<?php // Tab panels will be dynamically inserted here by script.js ?>
+	</div>
+</section>
+
+<script id="feeds-data-script" type="application/json">
+     <?php echo json_encode($this->feedsData); ?>
+</script>
+<script id="freshvibes-i18n" type="application/json">
+        <?php echo json_encode([
+                'add_tab' => _t('ext.FreshVibesView.add_tab', 'Add new tab'),
+                'confirm_delete_tab' => _t('ext.FreshVibesView.confirm_delete_tab', 'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.'),
+                'move_to' => _t('ext.FreshVibesView.move_to', 'Move to:'),
+                'no_entries' => _t('ext.FreshVibesView.no_entries', 'No articles to display.'),
+                'error_dashboard_init' => _t('ext.FreshVibesView.error_dashboard_init', 'Error loading dashboard. Please check the console and try again.')
+        ]); ?>
+</script>
+
+<datalist id="tab-icon-list">
+        <option value="⭐"></option>
+        <option value="📰"></option>
+        <option value="🖥️"></option>
+        <option value="🎮"></option>
+        <option value="🏠"></option>
+        <option value="💻"></option>
+        <option value="📚"></option>
+        <option value="✉️"></option>
+        <option value="⚙️"></option>
+        <option value="💡"></option>
+</datalist>
+
+<template id="template-tab-link">
+        <div class="freshvibes-tab" role="tab" tabindex="-1">
+		<span class="tab-icon"></span>
+		<span class="tab-name"></span>
+		<div class="tab-settings">
+                        <button type="button" class="tab-settings-button" aria-label="<?php echo _t('ext.FreshVibesView.aria_tab_settings', 'Tab settings'); ?>">▾</button>
+			<div class="tab-settings-menu">
+  				<div class="menu-section">
+                                        <label><?php echo _t('ext.FreshVibesView.columns_label', 'Number of columns'); ?></label>
+					<div class="columns-selector">
+						<button data-columns="1">1</button>
+						<button data-columns="2">2</button>
+						<button data-columns="3">3</button>
+						<button data-columns="4">4</button>
+						<button data-columns="5">5</button>
+						<button data-columns="6">6</button>
+					</div>
+				</div>
+				<div class="menu-section icon-settings">
+					<label><?php echo _t('ext.FreshVibesView.tabicon', 'Tab icon'); ?></label>
+					<input type="text" class="tab-icon-input" list="tab-icon-list" placeholder="😀" />
+					<input type="color" class="tab-icon-color-input" value="#000000" />
+				</div>
+                        <button type="button" class="tab-action-delete"><?php echo _t('ext.FreshVibesView.delete_tab', 'Delete tab'); ?></button>
+		</div>
+	</div>
+</template>
+
+<template id="template-tab-panel">
+        <div class="freshvibes-panel" role="tabpanel" tabindex="0">
+                <div class="freshvibes-columns"></div>
+        </div>
+</template>
+
+<template id="template-feed-container">
+        <div class="freshvibes-container" role="region">
+                <div class="freshvibes-container-header">
+			<img src="" alt="" class="feed-favicon" width="16" height="16" loading="lazy" />
+			<span class="feed-title"></span>
+			<div class="feed-settings">
+                                <button type="button" class="feed-settings-button" title="<?php echo _t('ext.FreshVibesView.feed_settings', 'Feed settings') ?>" aria-label="<?php echo _t('ext.FreshVibesView.feed_settings_aria', 'Settings for this feed'); ?>">
+					<?= _i('configure') ?></a>
+				</button>
+                                <div class="feed-settings-editor">
+                                                <div class="setting-row"><label><?php echo _t('ext.FreshVibesView.limit_label', 'Limit:'); ?></label><select class="feed-limit-select"></select></div>
+                                                <div class="setting-row"><label><?php echo _t('ext.FreshVibesView.font_label', 'Font:'); ?></label><select class="feed-fontsize-select"></select></div>
+                                                <div class="setting-row setting-row-buttons"><button type="button" class="feed-settings-save"><?php echo _t('ext.FreshVibesView.save', 'Save'); ?></button><button type="button" class="feed-settings-cancel"><?php echo _t('ext.FreshVibesView.cancel', 'Cancel'); ?></button></div>
+				</div>
+			</div>
+		</div>
+                <div class="freshvibes-container-content"></div>
+        </div>
+</template>

@@ -1,0 +1,70 @@
+<?php
+    declare(strict_types=1);
+    /** @var FreshVibesViewExtension $this */
+?>
+<form
+    action="<?= _url('extension', 'configure', 'e', urlencode($this->getName())) ?>"
+    method="post"
+>
+    <input type="hidden" name="_csrf" value="<?= FreshRSS_Auth::csrfToken() ?>">
+
+    <div class="form-group">
+        <label class="group-name" for="refresh_enabled">
+            <?= _t('ext.FreshVibesView.settings_refresh_enabled_label') ?>
+        </label>
+        <div class="group-controls">
+            <input
+                type="checkbox"
+                name="refresh_enabled"
+                id="refresh_enabled"
+                <?= $this->getSetting('refresh_enabled', false) ? 'checked="checked"' : '' ?>
+            >
+            <p class="help">
+                <?= _t('ext.FreshVibesView.settings_refresh_enabled_help') ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="group-name" for="refresh_interval">
+            <?= _t('ext.FreshVibesView.settings_refresh_interval_label') ?>
+        </label>
+        <div class="group-controls">
+            <input
+                type="number"
+                name="refresh_interval"
+                id="refresh_interval"
+                value="<?= $this->getSetting('refresh_interval', 15) ?>"
+                min="1"
+            >
+            <p class="help">
+                <?= _t('ext.FreshVibesView.settings_refresh_interval_help') ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group">
+        <label class="group-name" for="date_format">
+            <?= _t('ext.FreshVibesView.settings_date_format_label') ?>
+        </label>
+        <div class="group-controls">
+            <input
+                type="text"
+                name="date_format"
+                id="date_format"
+                value="<?= $this->getSetting('date_format', 'Y-m-d H:i') ?>"
+            >
+            <p class="help">
+                <?= _t('ext.FreshVibesView.settings_date_format_help') ?>
+            </p>
+        </div>
+    </div>
+
+    <div class="form-group form-actions">
+        <div class="group-controls">
+            <button type="submit" class="btn btn-important">
+                <?= _t('ext.FreshVibesView.settings_save_button') ?>
+            </button>
+        </div>
+    </div>
+</form>

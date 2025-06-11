@@ -1,0 +1,187 @@
+/* --- Base & General --- */
+#notification { display: none; } /* Hide notification element by default to prevent CSP errors and let core JS manage it */
+.freshvibes-view { padding-bottom: 20px; display: flex; flex-direction: column; }
+.element-hidden { display: none !important; }
+
+/* --- Header & Tabs --- */
+.freshvibes-header { display: flex; align-items: flex-end; gap: 20px; border-bottom: 1px solid var(--border-color); margin-bottom: 15px; flex-wrap: wrap; }
+.freshvibes-tabs { display: flex; list-style: none; padding: 0; margin: 0; align-items: center; }
+.freshvibes-tab { padding: 8px 15px; cursor: pointer; border: 1px solid transparent; border-bottom: none; border-radius: var(--border-radius) var(--border-radius) 0 0; margin-bottom: -1px; position: relative; display: flex; align-items: center; gap: 8px; background-color: var(--background-color-grey); color: var(--font-color-grey); }
+.freshvibes-tab:hover { background-color: var(--background-color-light-shadowed); }
+.freshvibes-tab.active { background-color: var(--background-color-light-shadowed); border-color: var(--border-color); font-weight: bold; color: var(--font-color); }
+.tab-name-input { border: 1px solid var(--border-color-focus); padding: 2px 4px; font: inherit; background-color: var(--background-color-light); color: var(--font-color); }
+
+.tab-add-button { 
+    padding: 4px 12px; 
+    font-weight: bold; 
+    font-size: 1.5em;
+    line-height: 1; 
+    border: 1px solid var(--border-color); 
+    border-radius: var(--border-radius); 
+    background-color: var(--background-color-grey);
+    color: var(--font-color);
+    cursor: pointer; 
+    margin-left: 8px; 
+}
+.tab-add-button:hover { 
+    background-color: var(--link-color);
+    border-color: var(--link-color);
+    color: white;
+}
+
+.tab-settings { position: relative; }
+.tab-settings-button { 
+    background: none; 
+    border: none; 
+    cursor: pointer; 
+    padding: 0 4px;
+    color: var(--font-color-grey);
+    font-size: 1em; /* Adjusted size */
+    line-height: 1; 
+    margin-left: 5px;
+    font-weight: normal;
+}
+.freshvibes-tab:hover .tab-settings-button, .tab-settings-button:focus { 
+    color: var(--font-color);
+}
+.tab-icon { font-size: 1.2em; line-height: 1; }
+.icon-settings { display: flex; gap: 4px; align-items: center; }
+.tab-icon-input { flex: 1 1 auto; min-width: 2ch; width: auto; text-align: center; }
+.tab-icon-color-input { flex: 0 0 auto; padding: 0; border: none; background: none; width: 2.2em; }
+#tab-icon-list { width: auto; }
+.tab-settings-menu { display: none; position: absolute; top: 100%; right: 0; z-index: 50; background: var(--background-color-light-shadowed); border: 1px solid var(--border-color); border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.15); padding: 10px; min-width: 180px; flex-direction: column; gap: 10px; }
+.tab-settings-menu.active { display: flex; }
+.tab-settings-menu .menu-section { display: flex; flex-direction: column; gap: 5px; }
+.tab-settings-menu label { font-weight: bold; font-size: 0.9em; margin-bottom: 4px; }
+.tab-settings-menu .icon-settings { flex-direction: row; align-items: center; }
+.tab-settings-menu .icon-settings label { margin-bottom: 0; margin-right: 4px; }
+.tab-settings-menu .icon-settings .tab-icon-input,
+.tab-settings-menu .icon-settings .tab-icon-color-input {
+    max-width: none;
+}
+.tab-settings-menu .icon-settings .tab-icon-input {
+    flex: 1 1 auto;
+    min-width: 2ch;
+    width: auto;
+    text-align: center;
+}
+.tab-settings-menu .icon-settings .tab-icon-color-input {
+    flex: 0 0 auto;
+    width: 2.2em;
+    padding: 0;
+    border: none;
+    background: none;
+}
+.columns-selector { display: flex; justify-content: space-between; gap: 2px; }
+.columns-selector button { flex: 1; padding: 4px 8px; border: 1px solid var(--border-color);  background-color: var(--link-color);
+    color: white;
+    border-color: var(--link-color); cursor: pointer; }
+
+/* Change for request #3 */
+.columns-selector button.active { 
+    background: var(--background-color-light-shadowed);
+    color: var(--link-color); 
+    border-color: var(--link-color);
+    box-shadow: 0 0 2px var(--link-color);
+}
+.tab-action-delete { margin-top: 10px; padding: 5px; text-align: center; background-color: #d9534f; color: white; border: none; border-radius: var(--border-radius); cursor: pointer; }
+.tab-action-delete:hover { background-color: #c9302c; }
+
+/* --- Tab Panels & Columns --- */
+.freshvibes-panels { position: relative; flex-grow: 1; padding: 0 12px; }
+.freshvibes-panel { display: none; }
+.freshvibes-panel.active { display: block; }
+.freshvibes-columns { display: flex; gap: 15px; align-items: flex-start; }
+.freshvibes-column { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 15px; }
+
+/* --- Feed Containers & Settings --- */
+.freshvibes-container { border: 1px solid var(--border-color-shadow-side); background-color: var(--background-color-light-shadowed); border-radius: var(--border-radius); box-shadow: 0 1px 3px rgba(0,0,0,0.05); }
+.freshvibes-container-header { padding: 8px 12px; background-color: var(--background-color-grey); border-bottom: 1px solid var(--border-color); cursor: grab; display: flex; align-items: center; gap: 8px; font-weight: bold; }
+.freshvibes-container-header .feed-title { flex-grow: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-right: 5px; }
+.feed-settings { position: relative; margin-left: auto; flex-shrink: 0; }
+.feed-settings-button { display: inline-flex; align-items: center; background: transparent; border: none; padding: 0; margin: 0; cursor: pointer; color: var(--font-color-grey); line-height: 1; }
+.feed-settings-button:hover, .feed-settings-button:focus { color: var(--font-color); }
+.feed-settings-button svg { width: 1em; height: 1em; }
+.feed-settings-editor { display: none; flex-direction: column; gap: 10px; position: absolute; top: calc(100% + 5px); right: 0; background-color: var(--background-color-light-shadowed); border: 1px solid var(--border-color-shadow-side); padding: 10px 15px; border-radius: var(--border-radius); box-shadow: 0 2px 8px rgba(0,0,0,0.15); z-index: 20; min-width: 240px; }
+.feed-settings-editor.active { display: flex; }
+.setting-row { display: flex; gap: 8px; align-items: center; justify-content: space-between; }
+.setting-row label { flex-shrink: 0; white-space: nowrap; font-size: 0.9em; }
+.setting-row select { flex-grow: 1; }
+
+.setting-row.setting-row-buttons { margin-top: 10px; justify-content: flex-end; }
+.setting-row button {
+    padding: 4px 10px;
+    border: 1px solid var(--border-color);
+    border-radius: var(--border-radius);
+    cursor: pointer;
+}
+.setting-row button:hover {
+    border-color: var(--border-color-focus);
+}
+.feed-settings-save {
+    background-color: var(--link-color);
+    color: white;
+    border-color: var(--link-color);
+}
+
+.feed-settings-cancel {
+    background-color: var(--link-color);
+    color: white;
+    border-color: var(--link-color);
+}
+.feed-settings-save:hover {
+    opacity: 0.9;
+}
+
+
+.feed-move-to { border-top: 1px solid var(--border-color); margin-top: 8px; padding-top: 8px; }
+.feed-move-to label { font-weight: bold; font-size: 0.9em; margin-bottom: 4px; display: block; }
+.feed-move-to-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; }
+.feed-move-to-list li button {
+    width: 100%;
+    text-align: left;
+    background: none;
+    border: none;
+    padding: 6px 4px;
+    cursor: pointer;
+    border-radius: var(--border-radius);
+    font-size: 0.9em;
+    background-color: var(--link-color);
+    color: white;
+    border-color: var(--link-color);    
+}
+.feed-move-to-list li button:hover {
+    background-color: var(--background-color-grey);
+}
+
+
+/* --- Entries --- */
+.freshvibes-container-content { padding: 0 12px; }
+.freshvibes-container-content ul { list-style: none; padding: 6px 0; margin: 0; }
+.freshvibes-container-content li.entry-item { display: flex; justify-content: space-between; align-items: flex-start; gap: 10px; border-bottom: 1px dashed var(--border-color); margin-bottom: 6px; padding-bottom: 6px; line-height: 1.4; }
+.freshvibes-container-content li.entry-item:last-child { border-bottom: none; margin-bottom: 0; padding-bottom: 10px; }
+.entry-main {
+    flex: 1 1 auto;
+    min-width: 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+}
+.entry-title {
+    font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+.entry-snippet {
+    font-size: 0.9em;
+    color: var(--font-color-grey);
+}
+.entry-snippet:before { content: " \2013 "; }
+.entry-snippet:empty { display: none; }
+
+.entry-date { flex-shrink: 0; font-size: 0.85em; color: var(--font-color-grey); white-space: nowrap; }
+
+/* Font size overrides */
+.fontsize-small .freshvibes-container-content { font-size: 0.8em; }
+.fontsize-large .freshvibes-container-content { font-size: 1.1em; }
