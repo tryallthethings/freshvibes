@@ -13,6 +13,9 @@ class FreshVibesViewExtension extends Minz_Extension
 	public const ACTIVE_TAB_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_active_tab';
 	public const LIMIT_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_limit_feedid_';
 	public const FONT_SIZE_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_fontsize_feedid_';
+	public const REFRESH_ENABLED_CONFIG_KEY = 'freshvibes_refresh_enabled';
+	public const REFRESH_INTERVAL_CONFIG_KEY = 'freshvibes_refresh_interval';
+	public const DATE_FORMAT_CONFIG_KEY = 'freshvibes_date_format';
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
 	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50];
@@ -70,9 +73,9 @@ class FreshVibesViewExtension extends Minz_Extension
 		if (Minz_Request::isPost()) {
 			$userConf = FreshRSS_Context::userConf();
 
-			$userConf->_attribute('refresh_enabled', Minz_Request::paramBoolean('refresh_enabled') ? 1 : 0);
-			$userConf->_attribute('refresh_interval', Minz_Request::paramInt('refresh_interval', 15));
-			$userConf->_attribute('date_format', Minz_Request::paramString('date_format') ?: 'Y-m-d H:i');
+			$userConf->_attribute(self::REFRESH_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_refresh_enabled') ? 1 : 0);
+			$userConf->_attribute(self::REFRESH_INTERVAL_CONFIG_KEY, Minz_Request::paramInt('freshvibes_refresh_interval', 15));
+			$userConf->_attribute(self::DATE_FORMAT_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_format') ?: 'Y-m-d H:i');
 
 			$userConf->save();
 		}
@@ -91,11 +94,11 @@ class FreshVibesViewExtension extends Minz_Extension
 		}
 
 		switch ($key) {
-			case 'refresh_enabled':
+			case self::REFRESH_ENABLED_CONFIG_KEY:
 				return (bool)$userConf->attributeInt($key);
-			case 'refresh_interval':
+			case self::REFRESH_INTERVAL_CONFIG_KEY:
 				return $userConf->attributeInt($key) ?? $default;
-			case 'date_format':
+			case self::DATE_FORMAT_CONFIG_KEY:
 				return $userConf->attributeString($key) ?? $default;
 			default:
 				return $default;

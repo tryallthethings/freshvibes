@@ -60,8 +60,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$extConf = $userConf->extensions[FreshVibesViewExtension::EXT_ID] ?? new stdClass();
 		$stateAll = defined('FreshRSS_Entry::STATE_ALL') ? FreshRSS_Entry::STATE_ALL : 0;
 		$feedsData = [];
-
-		$dateFormat = $extConf->date_format ?? 'Y-m-d H:i';
+		$dateFormat = $userConf->param(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i');
 
 		foreach ($feeds as $feed) {
 			$entries = [];
@@ -137,8 +136,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		@$this->view->moveFeedUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'movefeed'], 'json', true);
 		@$this->view->setActiveTabUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'setactivetab'], 'json', true);
 		@$this->view->rss_title = _t('ext.FreshVibesView.title');
-		@$this->view->refreshEnabled = (bool)$userConf->param('refresh_enabled', 0);
-		@$this->view->refreshInterval = (int)$userConf->param('refresh_interval', 15);
+		@$this->view->refreshEnabled = (bool)$userConf->param(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, 0);
+		@$this->view->refreshInterval = (int)$userConf->param(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15);
 		@$this->view->html_url = Minz_Url::display(['c' => $controllerParam, 'a' => 'index']);
 
 		@$this->view->categories = FreshRSS_Context::categories();
