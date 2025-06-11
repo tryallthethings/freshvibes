@@ -17,7 +17,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
         data-xextension-freshvibesview-set-active-tab-url="<?php echo htmlspecialchars($this->setActiveTabUrl, ENT_QUOTES); ?>"
         data-xextension-freshvibesview-refresh-interval="<?php echo htmlspecialchars((string)($this->refreshInterval ?? 15), ENT_QUOTES); ?>"
         data-xextension-freshvibesview-date-format="<?php echo htmlspecialchars((string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'), ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-move-feed-url="<?= $this->moveFeedUrl; ?>"
+        data-xextension-freshvibesview-move-feed-url="<?= htmlspecialchars($this->moveFeedUrl, ENT_QUOTES); ?>"
         data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
         <header class="freshvibes-header">
