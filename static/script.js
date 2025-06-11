@@ -280,6 +280,18 @@ function initializeDashboard(freshvibesView) {
 
 	function initializeSortable(columns) {
 		if (typeof Sortable === 'undefined') return;
+
+		const savePanelLayout = panel => {
+			const layoutData = {};
+			panel.querySelectorAll('.freshvibes-column').forEach(col => {
+				const colId = col.dataset.columnId;
+				layoutData[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
+			});
+			const tab = state.layout.find(t => t.id === panel.id);
+			if (tab) tab.columns = layoutData;
+			return api(saveLayoutUrl, { layout: JSON.stringify(layoutData), tab_id: panel.id });
+		};
+
 		columns.forEach(column => {
 			new Sortable(column, {
 				group: 'freshvibes-feeds',
@@ -292,45 +304,19 @@ function initializeDashboard(freshvibesView) {
 					const targetPanel = evt.to.closest('.freshvibes-panel');
 					if (!sourcePanel || !targetPanel) return;
 
-					if (sourcePanel.id !== targetPanel.id) {
-						const sourceLayout = {};
-						sourcePanel.querySelectorAll('.freshvibes-column').forEach(col => {
-							const colId = col.dataset.columnId;
-							sourceLayout[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
-						});
-						const targetLayout = {};
-						targetPanel.querySelectorAll('.freshvibes-column').forEach(col => {
-							const colId = col.dataset.columnId;
-							targetLayout[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
-						});
-
-						const srcTab = state.layout.find(t => t.id === sourcePanel.id);
-						if (srcTab) srcTab.columns = sourceLayout;
-						const tgtTab = state.layout.find(t => t.id === targetPanel.id);
-						if (tgtTab) tgtTab.columns = targetLayout;
+					requestAnimationFrame(() => {
+						const saves = [];
+						if (sourcePanel.id !== targetPanel.id) {
+							saves.push(savePanelLayout(sourcePanel));
+							saves.push(savePanelLayout(targetPanel));
+							evt.item.dataset.sourceTabId = targetPanel.id;
+						} else {
+							saves.push(savePanelLayout(targetPanel));
+						}
 
 						state.allPlacedFeedIds = new Set(state.layout.flatMap(t => Object.values(t.columns).flat()).map(String));
-
-						Promise.all([
-							api(saveLayoutUrl, { layout: JSON.stringify(sourceLayout), tab_id: sourcePanel.id }),
-							api(saveLayoutUrl, { layout: JSON.stringify(targetLayout), tab_id: targetPanel.id })
-						]).catch(console.error);
-
-						evt.item.dataset.sourceTabId = targetPanel.id;
-					} else {
-						const layoutData = {};
-						targetPanel.querySelectorAll('.freshvibes-column').forEach(col => {
-							const colId = col.dataset.columnId;
-							layoutData[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
-						});
-
-						const tab = state.layout.find(t => t.id === targetPanel.id);
-						if (tab) tab.columns = layoutData;
-
-						state.allPlacedFeedIds = new Set(state.layout.flatMap(t => Object.values(t.columns).flat()).map(String));
-
-						api(saveLayoutUrl, { layout: JSON.stringify(layoutData), tab_id: targetPanel.id }).catch(console.error);
-					}
+						Promise.all(saves).catch(console.error);
+					});
 				}
 			});
 		});
@@ -417,16 +403,20 @@ function initializeDashboard(freshvibesView) {
 							state.layout = data.new_layout;
 							state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
 
+							// Close the settings editor
+							const editor = container.querySelector('.feed-settings-editor');
+							if (editor) {
+								editor.classList.remove('active');
+							}
+
 							// Remove feed container from its original position
 							container.remove();
 
-							const targetTab = state.layout.find(t => t.id === targetTabId);
+							// If the target tab is currently active, re-render it to show the moved feed
 							const targetPanel = document.getElementById(targetTabId);
-
-							// If target tab is active, re-render its content. Otherwise, just clear it.
-							if (targetTab && targetPanel) {
-								targetPanel.querySelector('.freshvibes-columns').innerHTML = '';
-								if (targetPanel.classList.contains('active')) {
+							if (targetPanel && targetPanel.classList.contains('active')) {
+								const targetTab = state.layout.find(t => t.id === targetTabId);
+								if (targetTab) {
 									renderTabContent(targetTab);
 								}
 							}

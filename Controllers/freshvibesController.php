@@ -425,7 +425,6 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
-		// FIX: Treat all IDs as strings to prevent type mismatch issues.
 		$feedId = Minz_Request::paramString('feed_id');
 		$targetTabId = Minz_Request::paramString('target_tab_id');
 		$sourceTabId = Minz_Request::paramString('source_tab_id');
@@ -442,11 +441,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			foreach ($layout as &$tab) {
 				if ($tab['id'] === $sourceTabId) {
 					foreach ($tab['columns'] as &$column) {
-						// Ensure we are working with an array
 						if (!is_array($column)) {
 							continue;
 						}
-						// Use a temporary variable to hold the filtered array
 						$filtered_column = [];
 						foreach ($column as $id) {
 							if ((string)$id !== $feedId) {
@@ -460,14 +457,13 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			}
 			unset($tab);
 
-			// Add the feed to the target tab
+			// Add the feed to the target tab (first column)
 			foreach ($layout as &$tab) {
 				if ($tab['id'] === $targetTabId) {
 					$firstColKey = !empty($tab['columns']) ? key($tab['columns']) : 'col1';
 					if (!isset($tab['columns'][$firstColKey])) {
 						$tab['columns'][$firstColKey] = [];
 					}
-					// Add the feed ID if it's not already there
 					if (!in_array($feedId, $tab['columns'][$firstColKey], true)) {
 						$tab['columns'][$firstColKey][] = $feedId;
 					}
