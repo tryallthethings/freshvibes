@@ -287,19 +287,50 @@ function initializeDashboard(freshvibesView) {
 				delay: 0,
 				touchStartThreshold: 0,
 				handle: '.freshvibes-container-header',
-				onEnd: () => {
-					const panel = column.closest('.freshvibes-panel');
-					const tabId = panel.id;
-					const layoutData = {};
-					panel.querySelectorAll('.freshvibes-column').forEach(col => {
-						const colId = col.dataset.columnId;
-						layoutData[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
-					});
+				onEnd: evt => {
+					const sourcePanel = evt.from.closest('.freshvibes-panel');
+					const targetPanel = evt.to.closest('.freshvibes-panel');
+					if (!sourcePanel || !targetPanel) return;
 
-					const tab = state.layout.find(t => t.id === tabId);
-					if (tab) tab.columns = layoutData;
+					if (sourcePanel.id !== targetPanel.id) {
+						const sourceLayout = {};
+						sourcePanel.querySelectorAll('.freshvibes-column').forEach(col => {
+							const colId = col.dataset.columnId;
+							sourceLayout[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
+						});
+						const targetLayout = {};
+						targetPanel.querySelectorAll('.freshvibes-column').forEach(col => {
+							const colId = col.dataset.columnId;
+							targetLayout[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
+						});
 
-					api(saveLayoutUrl, { layout: JSON.stringify(layoutData), tab_id: tabId }).catch(console.error);
+						const srcTab = state.layout.find(t => t.id === sourcePanel.id);
+						if (srcTab) srcTab.columns = sourceLayout;
+						const tgtTab = state.layout.find(t => t.id === targetPanel.id);
+						if (tgtTab) tgtTab.columns = targetLayout;
+
+						state.allPlacedFeedIds = new Set(state.layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+
+						Promise.all([
+							api(saveLayoutUrl, { layout: JSON.stringify(sourceLayout), tab_id: sourcePanel.id }),
+							api(saveLayoutUrl, { layout: JSON.stringify(targetLayout), tab_id: targetPanel.id })
+						]).catch(console.error);
+
+						evt.item.dataset.sourceTabId = targetPanel.id;
+					} else {
+						const layoutData = {};
+						targetPanel.querySelectorAll('.freshvibes-column').forEach(col => {
+							const colId = col.dataset.columnId;
+							layoutData[colId] = Array.from(col.querySelectorAll('.freshvibes-container')).map(c => c.dataset.feedId);
+						});
+
+						const tab = state.layout.find(t => t.id === targetPanel.id);
+						if (tab) tab.columns = layoutData;
+
+						state.allPlacedFeedIds = new Set(state.layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+
+						api(saveLayoutUrl, { layout: JSON.stringify(layoutData), tab_id: targetPanel.id }).catch(console.error);
+					}
 				}
 			});
 		});

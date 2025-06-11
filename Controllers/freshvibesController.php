@@ -57,8 +57,11 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 	public function indexAction()
 	{
 		$this->noCacheHeaders();
-		$feedDAO = new FreshRSS_FeedDAO();
-		$entryDAO = new FreshRSS_EntryDAO();
+
+		$factory = new FreshRSS_Factory();
+		$feedDAO = $factory->createFeedDAO();
+		$entryDAO = $factory->createEntryDAO();
+
 		try {
 			FreshRSS_Context::updateUsingRequest(true);
 		} catch (FreshRSS_Context_Exception $e) {
@@ -68,14 +71,11 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 
 		$feeds = $feedDAO->listFeeds();
 		$userConf = FreshRSS_Context::userConf();
-		// FIX: Access 'extensions' as an array and provide a default to prevent errors
-		$extConf = $userConf->extensions[FreshVibesViewExtension::EXT_ID] ?? new stdClass();
 		$stateAll = defined('FreshRSS_Entry::STATE_ALL') ? FreshRSS_Entry::STATE_ALL : 0;
 		$feedsData = [];
 		$dateFormat = $userConf->param(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i');
 
 		foreach ($feeds as $feed) {
-			$entries = [];
 			$feedId = $feed->id();
 			$limitKey = FreshVibesViewExtension::LIMIT_CONFIG_PREFIX . $feedId;
 			$fontSizeKey = FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX . $feedId;
@@ -100,32 +100,30 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			}
 
 			try {
-				$entryGenerator = $entryDAO->listWhere('f', $feedId, $stateAll, null, '0', '0', 'date', 'DESC', '0', 0, 0, 0, true);
-				$fetchedEntries = [];
-				$fetchedCount = 0;
-
-				$processEntry = function (FreshRSS_Entry $entry) use (&$fetchedEntries, $dateFormat) {
-					$fetchedEntries[] = [
-						'link' => $entry->link(),
-						'title' => $entry->title(),
-						'dateShort' => date($dateFormat, $entry->date(true)),
-						'dateFull' => (string) $entry->date(true),
-						'snippet' => $this->generateSnippet($entry)
-					];
-				};
+				$entryGenerator = $entryDAO->listWhere(
+					type: 'f',
+					id: $feedId,
+					state: $stateAll,
+					sort: 'date',
+					order: 'DESC',
+					limit: $limit
+				);
+				$entries = [];
 
 				foreach ($entryGenerator as $entry) {
 					if ($entry instanceof FreshRSS_Entry) {
-						$processEntry($entry);
-						$fetchedCount++;
-						if ($fetchedCount >= $limit) {
-							break; // Stop after fetching the desired limit
-						}
+						$entries[] = [
+							'link' => $entry->link(),
+							'title' => $entry->title(),
+							'dateShort' => date($dateFormat, $entry->date(true)),
+							'dateFull' => (string) $entry->date(true),
+							'snippet' => $this->generateSnippet($entry)
+						];
 					}
 				}
-				$entries = $fetchedEntries;
-			} catch (Exception $e) {
-				$entries = ['error' => 'Error loading entries (' . $feedId . ')'];
+			} catch (Throwable $e) {
+				error_log('FreshVibesView error in indexAction for feed ' . $feedId . ': ' . $e->getMessage());
+				$entries = ['error' => 'Error loading entries for feed ' . $feedId . '. Please check system logs.'];
 			}
 
 			$feedsData[$feedId] = [
@@ -138,6 +136,30 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				'currentFontSize' => $fontSize,
 			];
 		}
+
+		$controllerParam = strtolower(FreshVibesViewExtension::CONTROLLER_NAME_BASE);
+		@$this->view->feedsData = $feedsData;
+		@$this->view->getLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'getlayout'], 'json', true);
+		@$this->view->saveLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savelayout'], 'json', true);
+		@$this->view->saveFeedSettingsUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savefeedsettings'], 'json', true);
+		@$this->view->tabActionUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'updatetab'], 'json', true);
+		@$this->view->moveFeedUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'movefeed'], 'json', true);
+		@$this->view->setActiveTabUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'setactivetab'], 'json', true);
+		@$this->view->rss_title = _t('ext.FreshVibesView.title');
+		@$this->view->refreshEnabled = (bool)$userConf->param(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, 0);
+		@$this->view->refreshInterval = (int)$userConf->param(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15);
+		@$this->view->html_url = Minz_Url::display(['c' => $controllerParam, 'a' => 'index']);
+
+		@$this->view->categories = FreshRSS_Context::categories();
+		$tags = FreshRSS_Context::labels(true);
+		@$this->view->tags = $tags;
+		$nbUnreadTags = 0;
+		foreach ($tags as $tag) {
+			$nbUnreadTags += $tag->nbUnread();
+		}
+		@$this->view->nbUnreadTags = $nbUnreadTags;
+
+		$this->view->_path(FreshVibesViewExtension::CONTROLLER_NAME_BASE . '/index.phtml');
 
 		$controllerParam = strtolower(FreshVibesViewExtension::CONTROLLER_NAME_BASE);
 		@$this->view->feedsData = $feedsData;
