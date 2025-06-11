@@ -354,7 +354,7 @@ function initializeDashboard(freshvibesView) {
 					if (data.status === 'success') {
 						state.layout.push(data.new_tab);
 						render();
-						activateTab(data.new_tab.id);
+
 					}
 				}).catch(console.error);
 				return;
@@ -380,7 +380,13 @@ function initializeDashboard(freshvibesView) {
 						if (data.status === 'success') {
 							state.layout = data.new_layout;
 							state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+							if (state.activeTabId === tabId) {
+								state.activeTabId = state.layout[0]?.id || null;
+							}
 							render();
+							if (state.activeTabId) {
+								activateTab(state.activeTabId);
+							}
 						}
 					}).catch(console.error);
 				}
