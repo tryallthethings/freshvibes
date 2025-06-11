@@ -21,13 +21,25 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			: null;
 
 		if ($layout === null) {
+			$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
+			$columns = $this->buildEmptyColumns($numCols);
+
+			$feedDAO = new FreshRSS_FeedDAO();
+			$feeds = $feedDAO->listFeeds();
+			$i = 0;
+			foreach ($feeds as $feed) {
+				$colKey = 'col' . (($i % $numCols) + 1);
+				$columns[$colKey][] = $feed->id();
+				$i++;
+			}
+
 			$layout = [[
 				'id' => 'tab-' . microtime(true),
 				'name' => _t('ext.FreshVibesView.default_tab_name', 'Main'),
 				'icon' => '',
 				'icon_color' => '',
-				'num_columns' => FreshVibesViewExtension::DEFAULT_TAB_COLUMNS,
-				'columns' => $this->buildEmptyColumns(FreshVibesViewExtension::DEFAULT_TAB_COLUMNS),
+				'num_columns' => $numCols,
+				'columns' => $columns,
 			]];
 
 			$this->saveLayout($layout);

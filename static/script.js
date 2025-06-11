@@ -283,7 +283,9 @@ function initializeDashboard(freshvibesView) {
 		columns.forEach(column => {
 			new Sortable(column, {
 				group: 'freshvibes-feeds',
-				animation: 150,
+				animation: 0,
+				delay: 0,
+				touchStartThreshold: 0,
 				handle: '.freshvibes-container-header',
 				onEnd: () => {
 					const panel = column.closest('.freshvibes-panel');
