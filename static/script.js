@@ -491,6 +491,12 @@ function createFeedContainer(feed, sourceTabId) {
 						if (data.status === 'success') {
 							const tabInState = state.layout.find(t => t.id === tabId);
 							if (tabInState) tabInState.name = newName;
+							
+							// Update all move-to dropdown buttons with the new tab name
+							document.querySelectorAll(`.feed-move-to-list button[data-target-tab-id="${tabId}"]`).forEach(button => {
+								button.textContent = newName;
+								button.setAttribute('aria-label', `Move feed to tab: ${newName}`);
+							});
 						} else {
 							tabNameSpan.textContent = oldName;
 						}

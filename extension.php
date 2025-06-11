@@ -59,19 +59,19 @@ class FreshVibesViewExtension extends Minz_Extension {
 	 * Handles the logic when the configuration form is submitted.
 	 */
 	 #[\Override]
-    public function handleConfigureAction(): void {
-        $this->registerTranslates();
+	public function handleConfigureAction(): void {
+		$this->registerTranslates();
 
-        if (Minz_Request::isPost()) {
-            $userConf = FreshRSS_Context::userConf();
-            
-			$userConf->_attribute('refresh_enabled', Minz_Request::paramBoolean(self::CONTROLLER_NAME_BASE . '_refresh_enabled') ? 1 : 0);
-            $userConf->_attribute('refresh_interval', Minz_Request::paramInt(self::CONTROLLER_NAME_BASE . '_refresh_interval', 15));
-            $userConf->_attribute('date_format', Minz_Request::paramString(self::CONTROLLER_NAME_BASE . '_date_format', 'Y-m-d H:i'));
-            
-            $userConf->save();
-        }
-    }
+		if (Minz_Request::isPost()) {
+			$userConf = FreshRSS_Context::userConf();
+			
+			$userConf->_attribute('refresh_enabled', Minz_Request::paramBoolean('refresh_enabled') ? 1 : 0);
+			$userConf->_attribute('refresh_interval', Minz_Request::paramInt('refresh_interval', 15));
+			$userConf->_attribute('date_format', Minz_Request::paramString('date_format') ?: 'Y-m-d H:i');
+			
+			$userConf->save();
+		}
+	}
 	/**
 	 * A helper to get a specific setting's value for this extension.
 	 * @param string $key The setting key.
