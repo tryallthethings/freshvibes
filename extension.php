@@ -4,6 +4,9 @@ declare(strict_types=1);
 
 class FreshVibesViewExtension extends Minz_Extension
 {
+		protected array $csp_policies = [
+		'connect-src' => "'self'",
+	];
 
 	// --- Constants ---
 	public const CONTROLLER_NAME_BASE = 'freshvibes';
@@ -104,14 +107,5 @@ class FreshVibesViewExtension extends Minz_Extension
 			default:
 				return $default;
 		}
-	}
-
-	public function cspRules(): array {
-		$host = parse_url(Minz_Url::base(), PHP_URL_HOST);
-		return [
-			'connect-src' => [
-				$host,
-			],
-		];
 	}
 }
