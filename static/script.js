@@ -10,7 +10,7 @@ function initializeDashboard(freshvibesView) {
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
 	// --- DOM & CONFIG ---
-	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl } = freshvibesView.dataset;
+	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl, xextensionFreshvibesviewMarkReadUrl: markReadUrl, xextensionFreshvibesviewFeedUrl: feedUrl, xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl, xextensionFreshvibesviewSearchTagUrl: searchTagUrl, xextensionFreshvibesviewDateFormat: dateFormat } = freshvibesView.dataset;
 	const trEl = document.getElementById('freshvibes-i18n');
 	const tr = trEl ? JSON.parse(trEl.textContent) : {};
 	if (trEl) trEl.remove();
@@ -22,6 +22,21 @@ function initializeDashboard(freshvibesView) {
 		tabPanel: document.getElementById('template-tab-panel'),
 		feedContainer: document.getElementById('template-feed-container'),
 	};
+
+	const entryModal = document.getElementById('freshvibes-entry-modal');
+	const modalTitle = entryModal?.querySelector('.fv-modal-title');
+	const modalDate = entryModal?.querySelector('.fv-modal-date');
+	const modalExcerpt = entryModal?.querySelector('.fv-modal-excerpt');
+	const modalLink = entryModal?.querySelector('.fv-modal-link');
+	const modalFeed = entryModal?.querySelector('.fv-modal-feed');
+	const modalFeedIcon = entryModal?.querySelector('.fv-modal-feed-icon');
+	const modalFeedName = entryModal?.querySelector('.fv-modal-feed-name');
+	const modalAuthor = entryModal?.querySelector('.fv-modal-author');
+	const modalTags = entryModal?.querySelector('.fv-modal-tags');
+	const modalTagsContainer = entryModal?.querySelector('.fv-modal-tags-container');
+	const modalMarkUnread = entryModal?.querySelector('.fv-modal-mark-unread');
+	const modalAuthorWrapper = entryModal?.querySelector('.fv-modal-author-wrapper');
+	const modalAuthorPrefix = entryModal?.querySelector('.fv-modal-author-prefix');
 
 	// --- RENDER FUNCTIONS ---
 	function render() {
@@ -175,8 +190,10 @@ function initializeDashboard(freshvibesView) {
 
 		container.dataset.feedId = String(feed.id);
 		container.dataset.sourceTabId = sourceTabId;
+		container.classList.toggle('fontsize-xsmall', feed.currentFontSize === 'xsmall');
 		container.classList.toggle('fontsize-small', feed.currentFontSize === 'small');
 		container.classList.toggle('fontsize-large', feed.currentFontSize === 'large');
+		container.classList.toggle('fontsize-xlarge', feed.currentFontSize === 'xlarge');
 
 		const favicon = container.querySelector('.feed-favicon');
 		if (favicon) {
@@ -201,13 +218,15 @@ function initializeDashboard(freshvibesView) {
 				feed.entries.forEach(entry => {
 					const li = document.createElement('li');
 					li.className = 'entry-item';
+					li.dataset.entryId = String(entry.id);
+					li.dataset.feedId = String(feed.id);
+					if (entry.isRead) li.classList.add('read');
 
 					const main = document.createElement('div');
 					main.className = 'entry-main';
 
 					const a = document.createElement('a');
 					a.href = entry.link;
-					a.target = '_blank';
 					a.rel = 'noopener noreferrer';
 					a.className = 'entry-title';
 					a.textContent = entry.title || '(No title)';
@@ -250,8 +269,11 @@ function initializeDashboard(freshvibesView) {
 
 			const fontSelect = editor.querySelector('.feed-fontsize-select');
 			if (fontSelect) {
-				['small', 'regular', 'large'].forEach(val => {
-					const opt = new Option(val.charAt(0).toUpperCase() + val.slice(1), val, val === feed.currentFontSize, val === feed.currentFontSize);
+				['xsmall', 'small', 'regular', 'large', 'xlarge'].forEach(val => {
+					let label = val.charAt(0).toUpperCase() + val.slice(1);
+					if (val === 'xsmall') label = 'Extra Small';
+					if (val === 'xlarge') label = 'Extra Large';
+					const opt = new Option(label, val, val === feed.currentFontSize, val === feed.currentFontSize);
 					fontSelect.add(opt);
 				});
 			}
@@ -280,6 +302,116 @@ function initializeDashboard(freshvibesView) {
 			}
 		}
 		return container;
+	}
+
+	function showEntryModal(entry, li) {
+		if (!entryModal) return;
+
+		const feedData = state.feeds[entry.feedId];
+
+		if (modalTitle) modalTitle.textContent = entry.title || '';
+
+		if (modalFeed && feedData) {
+			modalFeed.href = feedUrl.replace('f_', 'f_' + feedData.id);
+			if (modalFeedIcon) {
+				if (feedData.favicon) {
+					modalFeedIcon.src = feedData.favicon;
+					modalFeedIcon.style.display = '';
+				} else {
+					modalFeedIcon.style.display = 'none';
+				}
+			}
+			if (modalFeedName) modalFeedName.textContent = feedData.name || '';
+		}
+
+		if (modalAuthorWrapper && modalAuthor && modalAuthorPrefix) {
+			if (entry.author) {
+				// Clean the author - FreshRSS sometimes includes semicolons
+				const cleanAuthor = entry.author.replace(/^[;:\s]+/, '').trim();
+				modalAuthorPrefix.textContent = tr.by_author || 'By: ';
+				modalAuthor.textContent = cleanAuthor;
+				modalAuthor.href = searchAuthorUrl + '&search=' + encodeURIComponent('author:"' + cleanAuthor + '"');
+				modalAuthorWrapper.style.display = '';
+			} else {
+				modalAuthorWrapper.style.display = 'none';
+			}
+		}
+
+		if (modalDate) modalDate.textContent = entry.dateShort;
+		if (modalExcerpt) modalExcerpt.textContent = entry.excerpt || entry.snippet || '';
+		if (modalLink) modalLink.href = entry.link || '#';
+
+		if (modalTagsContainer) {
+			if (entry.tags && entry.tags.length > 0) {
+				modalTagsContainer.style.display = '';
+				modalTags.innerHTML = '';
+				entry.tags.forEach(tag => {
+					const a = document.createElement('a');
+					a.className = 'fv-modal-tag';
+					a.textContent = `#${tag}`;
+					a.href = searchTagUrl + '&search=' + encodeURIComponent('#' + tag);
+					modalTags.appendChild(a);
+				});
+			} else {
+				modalTagsContainer.style.display = 'none';
+			}
+		}
+
+		if (modalMarkUnread) {
+			modalMarkUnread.style.display = 'inline-flex';
+			modalMarkUnread.dataset.entryId = entry.id;
+			modalMarkUnread.dataset.feedId = entry.feedId;
+		}
+
+		entryModal.classList.add('active');
+
+		if (!entry.isRead && markReadUrl) {
+			entry.isRead = true;
+			li.classList.add('read');
+			const url = `${markReadUrl}&id=${encodeURIComponent(entry.id)}&ajax=1`;
+			fetch(url, {
+				method: 'GET',
+				credentials: 'same-origin',
+				headers: {
+					'X-Requested-With': 'XMLHttpRequest'
+				}
+			}).catch(console.error);
+		}
+	}
+
+	if (entryModal) {
+		entryModal.addEventListener('click', e => {
+			if (e.target === entryModal || e.target.closest('.fv-modal-close')) {
+				entryModal.classList.remove('active');
+			}
+			if (e.target.closest('.fv-modal-mark-unread')) {
+				const entryId = e.target.closest('.fv-modal-mark-unread').dataset.entryId;
+				const feedId = e.target.closest('.fv-modal-mark-unread').dataset.feedId;
+				if (markReadUrl && entryId && feedId) {
+					const url = `${markReadUrl}&id=${encodeURIComponent(entryId)}&is_read=0&ajax=1`;
+					fetch(url, {
+						method: 'GET',
+						credentials: 'same-origin',
+						headers: {
+							'X-Requested-With': 'XMLHttpRequest'
+						}
+					}).then(() => {
+						const li = document.querySelector(`[data-entry-id="${entryId}"]`);
+						if (li) li.classList.remove('read');
+						const feedData = state.feeds[feedId];
+						const entry = feedData?.entries?.find(e => String(e.id) === entryId);
+						if (entry) entry.isRead = false;
+						entryModal.classList.remove('active');
+					}).catch(console.error);
+				}
+			}
+		});
+
+		document.addEventListener('keydown', e => {
+			if (e.key === 'Escape' && entryModal.classList.contains('active')) {
+				entryModal.classList.remove('active');
+			}
+		});
 	}
 
 	// --- ACTIONS ---
@@ -366,47 +498,47 @@ function initializeDashboard(freshvibesView) {
 				return;
 			}
 
-       if (e.target.closest('.tab-settings-button')) {
-                               const button = e.target.closest('.tab-settings-button');
-                               const menu = button.nextElementSibling;
+			if (e.target.closest('.tab-settings-button')) {
+				const button = e.target.closest('.tab-settings-button');
+				const menu = button.nextElementSibling;
 
-                               document.querySelectorAll('.tab-settings-menu.active').forEach(m => {
-                                       if (m !== menu) {
-                                               m.classList.remove('active');
-                                               m.style.position = '';
-                                               m.style.left = '';
-                                               m.style.right = '';
-                                               m.style.transform = '';
-                                               m.style.top = '';
-                                       }
-                               });
+				document.querySelectorAll('.tab-settings-menu.active').forEach(m => {
+					if (m !== menu) {
+						m.classList.remove('active');
+						m.style.position = '';
+						m.style.left = '';
+						m.style.right = '';
+						m.style.transform = '';
+						m.style.top = '';
+					}
+				});
 
-                               const isActive = menu.classList.toggle('active');
-                               if (isActive) {
-                                       if (window.matchMedia('(max-width: 600px)').matches) {
-                                               const rect = button.getBoundingClientRect();
-                                               menu.style.position = 'fixed';
-                                               menu.style.left = '50%';
-                                               menu.style.right = 'auto';
-                                               menu.style.transform = 'translateX(-50%)';
-                                               menu.style.top = rect.bottom + 'px';
-                                       } else {
-                                               menu.style.position = '';
-                                               menu.style.left = '';
-                                               menu.style.right = '';
-                                               menu.style.transform = '';
-                                               menu.style.top = '';
-                                       }
-                               } else {
-                                       menu.style.position = '';
-                                       menu.style.left = '';
-                                       menu.style.right = '';
-                                       menu.style.transform = '';
-                                       menu.style.top = '';
-                               }
-                               e.stopPropagation();
-                               return;
-                       }
+				const isActive = menu.classList.toggle('active');
+				if (isActive) {
+					if (window.matchMedia('(max-width: 600px)').matches) {
+						const rect = button.getBoundingClientRect();
+						menu.style.position = 'fixed';
+						menu.style.left = '50%';
+						menu.style.right = 'auto';
+						menu.style.transform = 'translateX(-50%)';
+						menu.style.top = rect.bottom + 'px';
+					} else {
+						menu.style.position = '';
+						menu.style.left = '';
+						menu.style.right = '';
+						menu.style.transform = '';
+						menu.style.top = '';
+					}
+				} else {
+					menu.style.position = '';
+					menu.style.left = '';
+					menu.style.right = '';
+					menu.style.transform = '';
+					menu.style.top = '';
+				}
+				e.stopPropagation();
+				return;
+			}
 
 			if (e.target.closest('.tab-action-delete')) {
 				const tabId = e.target.closest('.freshvibes-tab').dataset.tabId;
@@ -516,8 +648,10 @@ function initializeDashboard(freshvibesView) {
 							location.reload();
 						} else {
 							container.className = 'freshvibes-container';
+							container.classList.toggle('fontsize-xsmall', fontSize === 'xsmall');
 							container.classList.toggle('fontsize-small', fontSize === 'small');
 							container.classList.toggle('fontsize-large', fontSize === 'large');
+							container.classList.toggle('fontsize-xlarge', fontSize === 'xlarge');
 						}
 					}
 				}).catch(console.error);
@@ -528,6 +662,23 @@ function initializeDashboard(freshvibesView) {
 				e.target.closest('.feed-settings-editor').classList.remove('active');
 				return;
 			}
+
+			const entryLink = e.target.closest('.entry-title');
+			if (entryLink) {
+				const li = entryLink.closest('.entry-item');
+				if (li) {
+					const feedId = li.dataset.feedId;
+					const entryId = li.dataset.entryId;
+					const feedData = state.feeds[feedId];
+					const entry = feedData?.entries?.find(en => String(en.id) === entryId);
+					if (entry) {
+						showEntryModal(entry, li);
+						e.preventDefault();
+						return;
+					}
+				}
+			}
+
 
 			if (!e.target.closest('.tab-settings-menu')) {
 				document.querySelectorAll('.tab-settings-menu.active').forEach(m => m.classList.remove('active'));

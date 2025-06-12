@@ -113,11 +113,17 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				foreach ($entryGenerator as $entry) {
 					if ($entry instanceof FreshRSS_Entry) {
 						$entries[] = [
+							'id' => $entry->id(),
 							'link' => $entry->link(),
 							'title' => $entry->title(),
 							'dateShort' => date($dateFormat, $entry->date(true)),
 							'dateFull' => (string) $entry->date(true),
-							'snippet' => $this->generateSnippet($entry)
+							'snippet' => $this->generateSnippet($entry),
+							'excerpt' => $this->generateSnippet($entry, 100),
+							'isRead' => $entry->isRead(),
+							'author' => $entry->author(),
+							'tags' => $entry->tags(),
+							'feedId' => $feedId,
 						];
 					}
 				}
@@ -148,32 +154,11 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		@$this->view->rss_title = _t('ext.FreshVibesView.title');
 		@$this->view->refreshEnabled = (bool)$userConf->param(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, 0);
 		@$this->view->refreshInterval = (int)$userConf->param(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15);
+		@$this->view->markReadUrl = Minz_Url::display(['c' => 'entry', 'a' => 'read'], 'json', true);
 		@$this->view->html_url = Minz_Url::display(['c' => $controllerParam, 'a' => 'index']);
-
-		@$this->view->categories = FreshRSS_Context::categories();
-		$tags = FreshRSS_Context::labels(true);
-		@$this->view->tags = $tags;
-		$nbUnreadTags = 0;
-		foreach ($tags as $tag) {
-			$nbUnreadTags += $tag->nbUnread();
-		}
-		@$this->view->nbUnreadTags = $nbUnreadTags;
-
-		$this->view->_path(FreshVibesViewExtension::CONTROLLER_NAME_BASE . '/index.phtml');
-
-		$controllerParam = strtolower(FreshVibesViewExtension::CONTROLLER_NAME_BASE);
-		@$this->view->feedsData = $feedsData;
-		@$this->view->getLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'getlayout'], 'json', true);
-		@$this->view->saveLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savelayout'], 'json', true);
-		@$this->view->saveFeedSettingsUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savefeedsettings'], 'json', true);
-		@$this->view->tabActionUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'updatetab'], 'json', true);
-		@$this->view->moveFeedUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'movefeed'], 'json', true);
-		@$this->view->setActiveTabUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'setactivetab'], 'json', true);
-		@$this->view->rss_title = _t('ext.FreshVibesView.title');
-		@$this->view->refreshEnabled = (bool)$userConf->param(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, 0);
-		@$this->view->refreshInterval = (int)$userConf->param(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15);
-		@$this->view->html_url = Minz_Url::display(['c' => $controllerParam, 'a' => 'index']);
-
+		@$this->view->feedUrl = Minz_Url::display([], 'html', false) . '?get=f_';
+		@$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
+		@$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		@$this->view->categories = FreshRSS_Context::categories();
 		$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;

@@ -27,6 +27,10 @@ return array(
         'settings_date_format_label' => 'Datumsformat der Artikel',
         'settings_date_format_help' => 'Verwendet PHP-Datumsformat-Codes. Beispiele: `Y-m-d H:i`, `d.m.Y H:i`',
         'settings_save_button' => 'Einstellungen speichern',
-        'tabicon' => 'Icon / Emoji'
+        'tabicon' => 'Icon / Emoji',
+        'open_link' => 'Open original',
+        'mark_unread' => 'Mark as unread',
+        'tags_label' => 'Tags:',
+        'by_author' => 'Von: ',
     ),
 );

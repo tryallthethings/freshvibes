@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 class FreshVibesViewExtension extends Minz_Extension
 {
-		protected array $csp_policies = [
+	protected array $csp_policies = [
 		'connect-src' => "'self'",
 	];
 
@@ -24,7 +24,7 @@ class FreshVibesViewExtension extends Minz_Extension
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
 	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50];
 	// Font Sizes
-	public const ALLOWED_FONT_SIZES = ['small', 'regular', 'large'];
+	public const ALLOWED_FONT_SIZES = ['xsmall', 'small', 'regular', 'large', 'xlarge'];
 	public const DEFAULT_FONT_SIZE = 'regular';
 	// --- End Constants ---
 

@@ -28,5 +28,10 @@ return array(
         'settings_date_format_help' => 'Uses PHP date format codes. Examples: `Y-m-d H:i`, `d.m.Y H:i`',
         'settings_save_button' => 'Save Settings',
         'tabicon' => 'Icon / Emoji',
+        'open_link' => 'Original öffnen',
+        'open_link' => 'Original öffnen',
+        'mark_unread' => 'Als ungelesen markieren',
+        'tags_label' => 'Tags:',
+        'by_author' => 'By: ',
     ),
 );

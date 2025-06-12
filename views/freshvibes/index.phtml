@@ -18,6 +18,10 @@ if (!Minz_Request::paramBoolean('ajax')) {
         data-xextension-freshvibesview-refresh-interval="<?php echo htmlspecialchars((string)($this->refreshInterval ?? 15), ENT_QUOTES); ?>"
         data-xextension-freshvibesview-date-format="<?php echo htmlspecialchars((string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'), ENT_QUOTES); ?>"
         data-xextension-freshvibesview-move-feed-url="<?= htmlspecialchars($this->moveFeedUrl, ENT_QUOTES); ?>"
+        data-xextension-freshvibesview-mark-read-url="<?php echo htmlspecialchars($this->markReadUrl, ENT_QUOTES); ?>"
+        data-xextension-freshvibesview-feed-url="<?php echo htmlspecialchars($this->feedUrl, ENT_QUOTES); ?>"
+        data-xextension-freshvibesview-search-author-url="<?php echo htmlspecialchars($this->searchAuthorUrl, ENT_QUOTES); ?>"
+        data-xextension-freshvibesview-search-tag-url="<?php echo htmlspecialchars($this->searchTagUrl, ENT_QUOTES); ?>"
         data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
         <header class="freshvibes-header">
@@ -39,7 +43,8 @@ if (!Minz_Request::paramBoolean('ajax')) {
                 'confirm_delete_tab' => _t('ext.FreshVibesView.confirm_delete_tab', 'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.'),
                 'move_to' => _t('ext.FreshVibesView.move_to', 'Move to:'),
                 'no_entries' => _t('ext.FreshVibesView.no_entries', 'No articles to display.'),
-                'error_dashboard_init' => _t('ext.FreshVibesView.error_dashboard_init', 'Error loading dashboard. Please check the console and try again.')
+                'error_dashboard_init' => _t('ext.FreshVibesView.error_dashboard_init', 'Error loading dashboard. Please check the console and try again.'),
+                'by_author' => _t('ext.FreshVibesView.by_author', 'By: ')
         ]); ?>
 </script>
 
@@ -84,6 +89,42 @@ if (!Minz_Request::paramBoolean('ajax')) {
                 </div>
 </template>
 
+<div id="freshvibes-entry-modal" class="fv-modal">
+        <div class="fv-modal-content">
+                <button type="button" class="fv-modal-close" aria-label="Close">×</button>
+                <article class="fv-modal-article">
+                        <header class="fv-modal-header">
+                                <h2 class="fv-modal-title"></h2>
+                                <div class="fv-modal-meta">
+                                        <div class="fv-modal-meta-left">
+                                                <a class="fv-modal-feed" href="#">
+                                                        <img class="fv-modal-feed-icon" src="" alt="" width="16" height="16" />
+                                                        <span class="fv-modal-feed-name"></span>
+                                                </a>
+                                                <span class="fv-modal-author-wrapper">
+                                                        <span class="fv-modal-author-prefix"></span>
+                                                        <a class="fv-modal-author" href="#"></a>
+                                                </span>
+                                        </div>
+                                        <time class="fv-modal-date"></time>
+                                </div>
+                        </header>
+                        <div class="fv-modal-body">
+                                <p class="fv-modal-excerpt"></p>
+                        </div>
+                        <footer class="fv-modal-footer">
+                                <div class="fv-modal-tags-container">
+                                        <span class="fv-modal-tags-label"><?= _t('ext.FreshVibesView.tags_label', 'Tags:') ?></span>
+                                        <div class="fv-modal-tags"></div>
+                                </div>
+                                <div class="fv-modal-actions">
+                                        <button type="button" class="btn fv-modal-mark-unread"><?= _i('unread') ?> <?= _t('ext.FreshVibesView.mark_unread', 'Mark as unread') ?></button>
+                                        <a class="btn btn-important fv-modal-link" target="_blank" rel="noopener noreferrer"><?= _i('link') ?> <?= _t('ext.FreshVibesView.open_link', 'Open original') ?></a>
+                                </div>
+                        </footer>
+                </article>
+        </div>
+</div>
 <template id="template-tab-panel">
         <div class="freshvibes-panel" role="tabpanel" tabindex="0">
                 <div class="freshvibes-columns"></div>
