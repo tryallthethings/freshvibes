@@ -140,6 +140,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				'entries' => $entries,
 				'currentLimit' => $limit,
 				'currentFontSize' => $fontSize,
+				'nbUnread' => $feed->nbNotRead(),
 			];
 		}
 
@@ -160,7 +161,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		@$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		@$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		@$this->view->categories = FreshRSS_Context::categories();
-		$tags = FreshRSS_Context::labels(true);
+		@$this->view->markFeedReadUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'markfeedread'], 'json', true);
+		@$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;
 		$nbUnreadTags = 0;
 		foreach ($tags as $tag) {
@@ -480,5 +482,41 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		}
 		$words = preg_split('/[\s,]+/', $plainText, $wordLimit + 1);
 		return count($words) > $wordLimit ? implode(' ', array_slice($words, 0, $wordLimit)) . '…' : implode(' ', $words);
+	}
+
+	public function markFeedReadAction()
+	{
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['feed_id'])) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+			exit;
+		}
+
+		$feedId = Minz_Request::paramInt('feed_id');
+		if ($feedId <= 0) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid feed ID']);
+			exit;
+		}
+
+		try {
+			$entryDAO = FreshRSS_Factory::createEntryDao();
+			$idMax = uTimeString(); // Current timestamp
+			$affected = $entryDAO->markReadFeed($feedId, $idMax);
+
+			if ($affected !== false) {
+				echo json_encode(['status' => 'success', 'affected' => $affected]);
+			} else {
+				http_response_code(500);
+				echo json_encode(['status' => 'error', 'message' => 'Failed to mark feed as read']);
+			}
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
 	}
 }

@@ -29,9 +29,10 @@ return array(
         'settings_save_button' => 'Save Settings',
         'tabicon' => 'Icon / Emoji',
         'open_link' => 'Original öffnen',
-        'open_link' => 'Original öffnen',
         'mark_unread' => 'Als ungelesen markieren',
         'tags_label' => 'Tags:',
         'by_author' => 'By: ',
+        'mark_all_read' => 'Mark all as read',
+        'confirm_mark_all_read' => 'Mark all entries as read?',
     ),
 );

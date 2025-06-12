@@ -223,10 +223,10 @@
 }
 
 .columns-selector button.active {
-    background: var(--background-color-light-shadowed);
+    background-color: var(--background-color-dark);
     color: var(--link-color);
     border-color: var(--link-color);
-    box-shadow: 0 0 2px var(--link-color);
+    font-weight: bold;
 }
 
 .tab-action-delete {
@@ -299,6 +299,41 @@
     overflow: hidden;
     text-overflow: ellipsis;
     margin-right: 5px;
+}
+
+.feed-title-link {
+    color: inherit;
+    text-decoration: none;
+    flex-grow: 1;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    margin-right: 5px;
+}
+
+.feed-title-link:hover {
+    color: var(--link-color);
+    text-decoration: underline;
+}
+
+.feed-unread-badge {
+    background-color: var(--background-color-light);
+    color: var(--font-color);
+    padding: 2px 8px;
+    border-radius: calc(var(--border-radius) * 2);
+    font-size: 0.85em;
+    font-weight: normal;
+    margin-left: auto;
+    margin-right: 8px;
+    cursor: pointer;
+    flex-shrink: 0;
+    border: 1px solid var(--border-color);
+}
+
+.feed-unread-badge:hover {
+    background-color: var(--link-color);
+    color: white;
+    border-color: var(--link-color);
 }
 
 .feed-settings {

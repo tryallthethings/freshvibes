@@ -22,7 +22,9 @@ if (!Minz_Request::paramBoolean('ajax')) {
         data-xextension-freshvibesview-feed-url="<?php echo htmlspecialchars($this->feedUrl, ENT_QUOTES); ?>"
         data-xextension-freshvibesview-search-author-url="<?php echo htmlspecialchars($this->searchAuthorUrl, ENT_QUOTES); ?>"
         data-xextension-freshvibesview-search-tag-url="<?php echo htmlspecialchars($this->searchTagUrl, ENT_QUOTES); ?>"
+        data-xextension-freshvibesview-mark-feed-read-url="<?php echo htmlspecialchars($this->markFeedReadUrl, ENT_QUOTES); ?>"
         data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
+
 
         <header class="freshvibes-header">
                 <nav class="freshvibes-tabs" aria-label="<?php echo _t('ext.FreshVibesView.aria_dashboard_tabs', 'Dashboard tabs'); ?>"></nav>

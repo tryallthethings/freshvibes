@@ -32,5 +32,7 @@ return array(
         'mark_unread' => 'Mark as unread',
         'tags_label' => 'Tags:',
         'by_author' => 'Von: ',
+        'mark_all_read' => 'Alle als gelesen markieren',
+        'confirm_mark_all_read' => 'Alle Einträge als gelesen markieren?',
     ),
 );

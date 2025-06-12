@@ -10,7 +10,7 @@ function initializeDashboard(freshvibesView) {
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
 	// --- DOM & CONFIG ---
-	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl, xextensionFreshvibesviewMarkReadUrl: markReadUrl, xextensionFreshvibesviewFeedUrl: feedUrl, xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl, xextensionFreshvibesviewSearchTagUrl: searchTagUrl, xextensionFreshvibesviewDateFormat: dateFormat } = freshvibesView.dataset;
+	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl, xextensionFreshvibesviewMarkReadUrl: markReadUrl, xextensionFreshvibesviewFeedUrl: feedUrl, xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl, xextensionFreshvibesviewSearchTagUrl: searchTagUrl, xextensionFreshvibesviewDateFormat: dateFormat, xextensionFreshvibesviewMarkFeedReadUrl: markFeedReadUrl } = freshvibesView.dataset;
 	const trEl = document.getElementById('freshvibes-i18n');
 	const tr = trEl ? JSON.parse(trEl.textContent) : {};
 	if (trEl) trEl.remove();
@@ -79,6 +79,12 @@ function initializeDashboard(freshvibesView) {
 		if (settingsButton) {
 			settingsButton.innerHTML = '&#x25BC;';
 		}
+
+		// Set active column button
+		const columnButtons = link.querySelectorAll('.columns-selector button');
+		columnButtons.forEach(btn => {
+			btn.classList.toggle('active', parseInt(btn.dataset.columns) === tab.num_columns);
+		});
 
 		return link;
 	}
@@ -206,8 +212,25 @@ function initializeDashboard(freshvibesView) {
 		}
 
 		const titleElement = container.querySelector('.feed-title');
-		if (titleElement) {
+		if (titleElement && feed.website) {
+			const titleLink = document.createElement('a');
+			titleLink.href = feed.website;
+			titleLink.target = '_blank';
+			titleLink.rel = 'noopener noreferrer';
+			titleLink.className = 'feed-title-link';
+			titleLink.textContent = feed.name || 'Unnamed Feed';
+			titleElement.appendChild(titleLink);
+		} else if (titleElement) {
 			titleElement.textContent = feed.name || 'Unnamed Feed';
+		}
+
+		const headerElement = container.querySelector('.freshvibes-container-header');
+		if (headerElement && feed.nbUnread > 0) {
+			const unreadBadge = document.createElement('span');
+			unreadBadge.className = 'feed-unread-badge';
+			unreadBadge.textContent = feed.nbUnread;
+			unreadBadge.title = tr.mark_all_read || 'Mark all as read';
+			headerElement.insertBefore(unreadBadge, headerElement.querySelector('.feed-settings'));
 		}
 
 		const contentDiv = container.querySelector('.freshvibes-container-content');
@@ -564,6 +587,13 @@ function initializeDashboard(freshvibesView) {
 			if (columnsButton) {
 				const numCols = columnsButton.dataset.columns;
 				const tabId = columnsButton.closest('.freshvibes-tab').dataset.tabId;
+				const tabLink = tabsContainer.querySelector(`[data-tab-id="${tabId}"]`);
+
+				// Update active state immediately
+				columnsButton.parentElement.querySelectorAll('button').forEach(btn => {
+					btn.classList.toggle('active', btn.dataset.columns === numCols);
+				});
+
 				api(tabActionUrl, { operation: 'set_columns', tab_id: tabId, value: numCols }).then(data => {
 					if (data.status === 'success') {
 						state.layout = data.new_layout;
@@ -630,6 +660,7 @@ function initializeDashboard(freshvibesView) {
 					});
 				return;
 			}
+
 			if (e.target.closest('.feed-settings-save')) {
 				const editor = e.target.closest('.feed-settings-editor');
 				const container = editor.closest('.freshvibes-container');
@@ -660,6 +691,26 @@ function initializeDashboard(freshvibesView) {
 
 			if (e.target.closest('.feed-settings-cancel')) {
 				e.target.closest('.feed-settings-editor').classList.remove('active');
+				return;
+			}
+
+			if (e.target.closest('.feed-unread-badge')) {
+				const badge = e.target.closest('.feed-unread-badge');
+				const container = badge.closest('.freshvibes-container');
+				const feedId = container.dataset.feedId;
+				const feedData = state.feeds[feedId];
+
+				if (confirm(tr.confirm_mark_all_read || `Mark all ${feedData.nbUnread} entries in "${feedData.name}" as read?`)) {
+					api(markFeedReadUrl, { feed_id: feedId }).then(data => {
+						if (data.status === 'success') {
+							badge.remove();
+							feedData.nbUnread = 0;
+							container.querySelectorAll('.entry-item:not(.read)').forEach(li => li.classList.add('read'));
+							feedData.entries.forEach(entry => entry.isRead = true);
+						}
+					}).catch(console.error);
+				}
+				e.stopPropagation();
 				return;
 			}
 
