@@ -13,9 +13,14 @@ class FreshVibesViewExtension extends Minz_Extension
 	public const EXT_ID = 'FreshVibesView';
 	// Config Keys
 	public const LAYOUT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_layout';
+	public const CATEGORY_LAYOUT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_category_layout';
+	public const MODE_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_mode';
 	public const ACTIVE_TAB_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_active_tab';
+	public const ACTIVE_TAB_CATEGORY_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_category_active_tab';
 	public const LIMIT_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_limit_feedid_';
+	public const CATEGORY_LIMIT_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_limit_feedid_';
 	public const FONT_SIZE_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_fontsize_feedid_';
+	public const CATEGORY_FONT_SIZE_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_fontsize_feedid_';
 	public const REFRESH_ENABLED_CONFIG_KEY = 'freshvibes_refresh_enabled';
 	public const REFRESH_INTERVAL_CONFIG_KEY = 'freshvibes_refresh_interval';
 	public const DATE_FORMAT_CONFIG_KEY = 'freshvibes_date_format';
@@ -26,6 +31,13 @@ class FreshVibesViewExtension extends Minz_Extension
 	// Font Sizes
 	public const ALLOWED_FONT_SIZES = ['xsmall', 'small', 'regular', 'large', 'xlarge'];
 	public const DEFAULT_FONT_SIZE = 'regular';
+	public const TAB_BG_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_tab_bgcolor_';
+	public const CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_tab_bgcolor_';
+	public const TAB_FONT_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_tab_fontcolor_';
+	public const CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_tab_fontcolor_';
+	public const FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_feed_headercolor_';
+	public const CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_feed_headercolor_';
+
 	// --- End Constants ---
 
 	public function getId(): string
@@ -80,6 +92,8 @@ class FreshVibesViewExtension extends Minz_Extension
 			$userConf->_attribute(self::REFRESH_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_refresh_enabled') ? 1 : 0);
 			$userConf->_attribute(self::REFRESH_INTERVAL_CONFIG_KEY, Minz_Request::paramInt('freshvibes_refresh_interval', 15));
 			$userConf->_attribute(self::DATE_FORMAT_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_format') ?: 'Y-m-d H:i');
+			$mode = Minz_Request::paramStringNull('freshvibes_view_mode') ?? 'custom';
+			$userConf->_attribute(self::MODE_CONFIG_KEY, $mode === 'categories' ? 'categories' : 'custom');
 
 			$userConf->save();
 		}
@@ -103,6 +117,8 @@ class FreshVibesViewExtension extends Minz_Extension
 			case self::REFRESH_INTERVAL_CONFIG_KEY:
 				return $userConf->attributeInt($key) ?? $default;
 			case self::DATE_FORMAT_CONFIG_KEY:
+				return $userConf->attributeString($key) ?? $default;
+			case self::MODE_CONFIG_KEY:
 				return $userConf->attributeString($key) ?? $default;
 			default:
 				return $default;

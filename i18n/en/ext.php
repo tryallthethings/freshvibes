@@ -26,6 +26,9 @@ return array(
         'settings_refresh_interval_help' => 'The dashboard will automatically reload at this interval.',
         'settings_date_format_label' => 'Article date format',
         'settings_date_format_help' => 'Uses PHP date format codes. Examples: `Y-m-d H:i`, `d.m.Y H:i`',
+        'settings_view_mode_label' => 'Dashboard mode',
+        'view_mode_custom' => 'Custom tabs',
+        'view_mode_categories' => 'Category tabs',
         'settings_save_button' => 'Save Settings',
         'tabicon' => 'Icon / Emoji',
         'open_link' => 'Original öffnen',
@@ -34,5 +37,8 @@ return array(
         'by_author' => 'By: ',
         'mark_all_read' => 'Mark all as read',
         'confirm_mark_all_read' => 'Mark all entries as read?',
+        'tab_bg_color' => 'Tab background',
+        'header_color' => 'Header color',
+        'confirm_mark_tab_read' => 'Mark all entries in this tab as read?',
     ),
 );
