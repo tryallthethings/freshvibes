@@ -18,7 +18,7 @@ return array(
         'cancel' => 'Abbrechen',
         'add_tab' => 'Neuen Tab hinzufügen',
         'confirm_delete_tab' => 'Diesen Tab wirklich löschen? Feeds werden auf den ersten Tab verschoben.',
-        'move_to' => 'Verschieben nach:',
+        'move_to' => 'Verschieben nach Tab:',
         'error_dashboard_init' => 'Fehler beim Laden des Dashboards. Bitte Konsole prüfen und erneut versuchen.',
         'settings_refresh_enabled_label' => 'Automatische Aktualisierung aktivieren',
         'settings_refresh_enabled_help' => 'Bei Aktivierung wird das Dashboard automatisch neu geladen.',
