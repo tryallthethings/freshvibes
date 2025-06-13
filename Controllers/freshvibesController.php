@@ -819,7 +819,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 		try {
 			$layout = $this->getLayout();
-			$entryDAO = FreshRSS_Factory::createEntryDao();
+			$entryDAO = FreshRSS_Factory::createEntryDAO();
 			$idMax = uTimeString();
 			$totalAffected = 0;
 
