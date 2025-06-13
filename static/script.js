@@ -10,8 +10,12 @@ function initializeDashboard(freshvibesView) {
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
 	// --- DOM & CONFIG ---
-	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshEnabled: refreshEnabled, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewDashboardUrl: dashboardUrl, xextensionFreshvibesviewMarkReadUrl: markReadUrl, xextensionFreshvibesviewFeedUrl: feedUrl, xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl, xextensionFreshvibesviewSearchTagUrl: searchTagUrl, xextensionFreshvibesviewDateFormat: dateFormat, xextensionFreshvibesviewMarkFeedReadUrl: markFeedReadUrl, xextensionFreshvibesviewMarkTabReadUrl: markTabReadUrl, xextensionFreshvibesviewMode: viewMode } = freshvibesView.dataset;
+	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewMarkReadUrl: markReadUrl, xextensionFreshvibesviewFeedUrl: feedUrl, xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl, xextensionFreshvibesviewSearchTagUrl: searchTagUrl, xextensionFreshvibesviewDateFormat: dateFormat, xextensionFreshvibesviewMarkFeedReadUrl: markFeedReadUrl, xextensionFreshvibesviewMarkTabReadUrl: markTabReadUrl, xextensionFreshvibesviewMode: viewMode } = freshvibesView.dataset;
 	const isCategoryMode = viewMode === 'categories';
+
+	// Handle potentially undefined values gracefully
+	const dashboardUrl = freshvibesView.dataset.xextensionFreshvibesviewDashboardUrl;
+	const refreshEnabled = freshvibesView.dataset.xextensionFreshvibesviewRefreshEnabled === 'true' || freshvibesView.dataset.xextensionFreshvibesviewRefreshEnabled === '1';
 
 	const trEl = document.getElementById('freshvibes-i18n');
 	const tr = trEl ? JSON.parse(trEl.textContent) : {};
@@ -166,8 +170,7 @@ function initializeDashboard(freshvibesView) {
 	}
 
 	function setupAutoRefresh() {
-		const isRefreshEnabled = refreshEnabled === 'true' || refreshEnabled === '1';
-		if (!isRefreshEnabled) {
+		if (!refreshEnabled) {
 			return;
 		}
 
