@@ -487,13 +487,18 @@ function initializeDashboard(freshvibesView) {
 		if (!entry.isRead && markReadUrl) {
 			entry.isRead = true;
 			li.classList.add('read');
-			const url = `${markReadUrl}&id=${encodeURIComponent(entry.id)}&ajax=1`;
-			fetch(url, {
-				method: 'GET',
+			fetch(markReadUrl, {
+				method: 'POST',
 				credentials: 'same-origin',
 				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
 					'X-Requested-With': 'XMLHttpRequest'
-				}
+				},
+				body: new URLSearchParams({
+					'id': entry.id,
+					'ajax': 1,
+					'_csrf': csrfToken
+				})
 			}).catch(console.error);
 		}
 	}
@@ -507,13 +512,19 @@ function initializeDashboard(freshvibesView) {
 				const entryId = e.target.closest('.fv-modal-mark-unread').dataset.entryId;
 				const feedId = e.target.closest('.fv-modal-mark-unread').dataset.feedId;
 				if (markReadUrl && entryId && feedId) {
-					const url = `${markReadUrl}&id=${encodeURIComponent(entryId)}&is_read=0&ajax=1`;
-					fetch(url, {
-						method: 'GET',
+					fetch(markReadUrl, {
+						method: 'POST',
 						credentials: 'same-origin',
 						headers: {
+							'Content-Type': 'application/x-www-form-urlencoded',
 							'X-Requested-With': 'XMLHttpRequest'
-						}
+						},
+						body: new URLSearchParams({
+							'id': entryId,
+							'is_read': 0,
+							'ajax': 1,
+							'_csrf': csrfToken
+						})
 					}).then(() => {
 						const li = document.querySelector(`[data-entry-id="${entryId}"]`);
 						if (li) li.classList.remove('read');
