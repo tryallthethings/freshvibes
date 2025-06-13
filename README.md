@@ -1,12 +1,28 @@
 # FreshVibes: an iGoogle / Netvibes-like extension for FreshRSS
 
-A modern, customizable dashboard view extension for [FreshRSS](https://freshrss.org/) that looks and feels like iGoogle / NetVibes.
+A modern, customizable dashboard view extension for [FreshRSS](https://freshrss.org/) that looks and feels like iGoogle / NetVibes.  
 With the recent shutdown of Netvibes I was looking for an alternative. FreshRSS was recommended to me, but it unfortunately lacked the dashboard I was used to. So I created my own extension that brings the functionality to FreshRSS.
+<br /><br />
+
 <p align="center">
-<img src="https://github.com/user-attachments/assets/a1e737d0-3886-4cf0-a4b3-59988281ffa4" width="80%">
+    <b>Dashboard in dark and category tabs mode</b>
 </p>
 <p align="center">
-<img src="https://github.com/user-attachments/assets/de2c71ba-d16d-42a1-8203-8a2993275f58" width="80%">
+    <img src="https://github.com/user-attachments/assets/a1e737d0-3886-4cf0-a4b3-59988281ffa4" width="80%">
+</p>
+
+<p align="center">
+    <b>Dashboard in light and custom tabs mode</b>
+</p>
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/972ad955-ca82-48b1-91f7-14232245b382" width="80%">
+</p>
+
+<p align="center">
+    <b>Article excerpt in modal</b>
+</p>
+<p align="center">
+    <img src="https://github.com/user-attachments/assets/de2c71ba-d16d-42a1-8203-8a2993275f58" width="80%">
 </p>
 
 ## ✨ Features
