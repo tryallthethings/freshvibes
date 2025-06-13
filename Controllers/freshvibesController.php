@@ -441,7 +441,10 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				case 'set_colors':
 					$tabId = Minz_Request::paramString('tab_id');
 					$bgColor = Minz_Request::paramString('bg_color');
-					$fontColor = $this->getContrastColor($bgColor);
+					$fontColor = Minz_Request::paramString('font_color', '');
+					if ($fontColor === '') {
+						$fontColor = $bgColor !== '' ? $this->getContrastColor($bgColor) : '';
+					}
 
 					$userConf = FreshRSS_Context::userConf();
 					$bgPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
