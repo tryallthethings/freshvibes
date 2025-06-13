@@ -78,7 +78,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
                                 </div>
                                 <div class="menu-section icon-settings">
                                         <label><?php echo _t('ext.FreshVibesView.tabicon', 'Tab icon'); ?></label>
-                                        <input type="text" class="tab-icon-input" placeholder="😀" />
+                                        <input type="text" class="tab-icon-input" />
                                         <input type="color" class="tab-icon-color-input" value="#000000" />
                                 </div>
                                 <div class="menu-section color-settings">
@@ -158,6 +158,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
 </template>
 
 <div id="tab-icon-picker" class="icon-picker">
+        <span data-icon="😀">😀</span>
         <span data-icon="⭐">⭐</span>
         <span data-icon="📰">📰</span>
         <span data-icon="🖥️">🖥️</span>
