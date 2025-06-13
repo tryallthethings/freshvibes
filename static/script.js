@@ -672,7 +672,8 @@ function initializeDashboard(freshvibesView) {
 		for (const tab of state.layout) {
 			if (tab.columns) {
 				for (const feedIds of Object.values(tab.columns)) {
-					if (feedIds.includes(String(feedId))) {
+					// Normalize both sides to strings for comparison
+					if (feedIds.map(String).includes(String(feedId))) {
 						containingTabId = tab.id;
 						break;
 					}
