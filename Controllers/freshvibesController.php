@@ -599,18 +599,41 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 
 		// For modal excerpts, preserve some HTML
 		if ($wordLimit > 50) {
-			// Use FreshRSS's built-in sanitization
+			// Use FreshRSS's built-in sanitization first
 			$content = $entry->content();
 
-			// Limit length
 			if (mb_strlen($content) > 500) {
-				// Find a good break point
-				$content = mb_substr($content, 0, 500);
-				$lastSpace = mb_strrpos($content, ' ');
-				if ($lastSpace !== false) {
-					$content = mb_substr($content, 0, $lastSpace);
+				// Use DOM parsing to safely truncate HTML
+				$dom = new DOMDocument();
+				$dom->encoding = 'UTF-8';
+
+				// Suppress warnings for malformed HTML and load content
+				libxml_use_internal_errors(true);
+				$dom->loadHTML('<?xml encoding="UTF-8"><div>' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
+				libxml_clear_errors();
+
+				$textContent = $dom->textContent;
+
+				if (mb_strlen($textContent) > 500) {
+					// Find truncation point in text content
+					$truncatedText = mb_substr($textContent, 0, 500);
+					$lastSpace = mb_strrpos($truncatedText, ' ');
+					if ($lastSpace !== false) {
+						$truncatedText = mb_substr($truncatedText, 0, $lastSpace);
+					}
+
+					// Walk through DOM and truncate at the right point
+					$currentLength = 0;
+					$targetLength = mb_strlen($truncatedText);
+					$this->truncateNode($dom->documentElement, $currentLength, $targetLength);
+
+					// Get the cleaned HTML
+					$content = '';
+					foreach ($dom->documentElement->childNodes as $child) {
+						$content .= $dom->saveHTML($child);
+					}
+					$content .= '…';
 				}
-				$content .= '…';
 			}
 
 			return $content;
@@ -623,6 +646,43 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		}
 		$words = preg_split('/[\s,]+/', $plainText, $wordLimit + 1);
 		return count($words) > $wordLimit ? implode(' ', array_slice($words, 0, $wordLimit)) . '…' : implode(' ', $words);
+	}
+
+	private function truncateNode(DOMNode $node, int &$currentLength, int $targetLength): bool
+	{
+		$nodesToRemove = [];
+
+		foreach ($node->childNodes as $child) {
+			if ($currentLength >= $targetLength) {
+				$nodesToRemove[] = $child;
+				continue;
+			}
+
+			if ($child->nodeType === XML_TEXT_NODE) {
+				$textLength = mb_strlen($child->textContent);
+				if ($currentLength + $textLength > $targetLength) {
+					// Truncate this text node
+					$remaining = $targetLength - $currentLength;
+					$truncatedText = mb_substr($child->textContent, 0, $remaining);
+					$child->textContent = $truncatedText;
+					$currentLength = $targetLength;
+				} else {
+					$currentLength += $textLength;
+				}
+			} else {
+				// Recursively process child elements
+				if (!$this->truncateNode($child, $currentLength, $targetLength)) {
+					$nodesToRemove[] = $child;
+				}
+			}
+		}
+
+		// Remove nodes that exceed the limit
+		foreach ($nodesToRemove as $nodeToRemove) {
+			$node->removeChild($nodeToRemove);
+		}
+
+		return $node->hasChildNodes() || $node->nodeType === XML_TEXT_NODE;
 	}
 
 	public function markFeedReadAction()
@@ -644,7 +704,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		}
 
 		try {
-			$entryDAO = FreshRSS_Factory::createEntryDao();
+			$entryDAO = FreshRSS_Factory::createEntryDAO();
 			$idMax = uTimeString(); // Current timestamp
 			$affected = $entryDAO->markReadFeed($feedId, $idMax);
 

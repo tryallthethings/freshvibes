@@ -1202,10 +1202,10 @@ function initializeDashboard(freshvibesView) {
 				if (!tabEl) return;
 				const tabId = tabEl.dataset.tabId;
 				const bgColor = e.target.value;
-				api(tabActionUrl, { operation: 'set_color', tab_id: tabId, bg_color: bgColor })
+				api(tabActionUrl, { operation: 'set_colors', tab_id: tabId, bg_color: bgColor })
 					.then(() => {
 						const badge = tabsContainer
-							.querySelector(`[data-tab-id="${tabId}"] .tab-unread-badge`);
+							.querySelector(`[data-tab-id="${tabId}"] .tab-unread-count`);
 						if (badge) {
 							badge.style.backgroundColor = bgColor;
 							badge.style.color = getContrastColor(bgColor);
