@@ -1196,26 +1196,6 @@ function initializeDashboard(freshvibesView) {
 			}
 		});
 
-		tabsContainer.addEventListener('change', e => {
-			if (e.target.classList.contains('tab-bg-color-input')) {
-				const tabEl = e.target.closest('.freshvibes-tab');
-				if (!tabEl) return;
-				const tabId = tabEl.dataset.tabId;
-				const bgColor = e.target.value;
-				api(tabActionUrl, { operation: 'set_colors', tab_id: tabId, bg_color: bgColor })
-					.then(() => {
-						const badge = tabsContainer
-							.querySelector(`[data-tab-id="${tabId}"] .tab-unread-count`);
-						if (badge) {
-							badge.style.backgroundColor = bgColor;
-							badge.style.color = getContrastColor(bgColor);
-							badge.style.borderColor = getContrastColor(bgColor);
-						}
-					})
-					.catch(console.error);
-			}
-		});
-
 		// Icon picker functionality
 		const iconPicker = document.getElementById('tab-icon-picker');
 		let activeIconInput = null;
