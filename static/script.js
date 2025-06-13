@@ -144,11 +144,15 @@ function initializeDashboard(freshvibesView) {
 			settingsButton.innerHTML = '&#x25BC;';
 		}
 
-		if (isCategoryMode) {
-			const delBtn = link.querySelector('.tab-action-delete');
-			if (delBtn) delBtn.remove();
+		const delBtn = link.querySelector('.tab-action-delete');
+		if (delBtn) {
+			if (isCategoryMode) {
+				delBtn.remove();
+			} else if (state.layout.length <= 1) {
+				delBtn.style.display = 'none';
+			}
 		}
-
+		
 		// Set active column button
 		const columnButtons = link.querySelectorAll('.columns-selector button');
 		columnButtons.forEach(btn => {
