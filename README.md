@@ -76,9 +76,9 @@ _or via command line:_
   ```
 
 3. In FreshRSS:
-  - Go to **Configuration** → **Extensions**
-  - Find "Fresh Vibes View" in the list
-  - Click **Enable**
+    - Go to **Configuration** → **Extensions**
+    - Find "Fresh Vibes View" in the list
+    - Click **Enable**
 
 ## 🎯 Usage
 
