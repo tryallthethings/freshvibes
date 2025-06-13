@@ -10,7 +10,24 @@ function initializeDashboard(freshvibesView) {
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
 	// --- DOM & CONFIG ---
-	const { xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl, xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl, xextensionFreshvibesviewTabActionUrl: tabActionUrl, xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl, xextensionFreshvibesviewCsrfToken: csrfToken, xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl, xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl, xextensionFreshvibesviewRefreshInterval: refreshInterval, xextensionFreshvibesviewMarkReadUrl: markReadUrl, xextensionFreshvibesviewFeedUrl: feedUrl, xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl, xextensionFreshvibesviewSearchTagUrl: searchTagUrl, xextensionFreshvibesviewDateFormat: dateFormat, xextensionFreshvibesviewMarkFeedReadUrl: markFeedReadUrl, xextensionFreshvibesviewMarkTabReadUrl: markTabReadUrl, xextensionFreshvibesviewMode: viewMode } = freshvibesView.dataset;
+	const {
+		xextensionFreshvibesviewGetLayoutUrl: getLayoutUrl = '',
+		xextensionFreshvibesviewSaveLayoutUrl: saveLayoutUrl = '',
+		xextensionFreshvibesviewTabActionUrl: tabActionUrl = '',
+		xextensionFreshvibesviewSetActiveTabUrl: setActiveTabUrl = '',
+		xextensionFreshvibesviewCsrfToken: csrfToken = '',
+		xextensionFreshvibesviewSaveFeedSettingsUrl: saveFeedSettingsUrl = '',
+		xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl = '',
+		xextensionFreshvibesviewRefreshInterval: refreshInterval = '',
+		xextensionFreshvibesviewMarkReadUrl: markReadUrl = '',
+		xextensionFreshvibesviewFeedUrl: feedUrl = '',
+		xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl = '',
+		xextensionFreshvibesviewSearchTagUrl: searchTagUrl = '',
+		xextensionFreshvibesviewDateFormat: dateFormat = '',
+		xextensionFreshvibesviewMarkFeedReadUrl: markFeedReadUrl = '',
+		xextensionFreshvibesviewMarkTabReadUrl: markTabReadUrl = '',
+		xextensionFreshvibesviewMode: viewMode = ''
+	} = freshvibesView.dataset;
 	const isCategoryMode = viewMode === 'categories';
 
 	// Handle potentially undefined values gracefully
@@ -1289,18 +1306,17 @@ function initializeDashboard(freshvibesView) {
 		const iconPicker = document.getElementById('tab-icon-picker');
 		let activeIconInput = null;
 
-		tabsContainer.addEventListener('click', e => {
-			if (e.target.classList.contains('tab-icon-input')) {
-				e.stopPropagation();
-				activeIconInput = e.target;
-				const rect = e.target.getBoundingClientRect();
-				iconPicker.style.left = rect.left + 'px';
-				iconPicker.style.top = (rect.bottom + 5) + 'px';
-				iconPicker.classList.add('active');
-			}
-		});
-
 		if (iconPicker) {
+			tabsContainer.addEventListener('click', e => {
+				if (e.target.classList.contains('tab-icon-input')) {
+					e.stopPropagation();
+					activeIconInput = e.target;
+					const rect = e.target.getBoundingClientRect();
+					iconPicker.style.left = `${rect.left}px`;
+					iconPicker.style.top = `${rect.bottom + 5}px`;
+					iconPicker.classList.add('active');
+				}
+			});
 			iconPicker.addEventListener('click', e => {
 				if (e.target.dataset.icon && activeIconInput) {
 					activeIconInput.value = e.target.dataset.icon;
