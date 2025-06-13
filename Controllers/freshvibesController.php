@@ -501,7 +501,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$feedId = Minz_Request::paramInt('feed_id');
 		$limit = Minz_Request::paramInt('limit');
 		$fontSize = Minz_Request::paramString('font_size');
-		$headerColor = Minz_Request::paramString('header_color');
+		$headerColor = Minz_Request::paramStringNull('header_color');
 
 		if ($feedId <= 0 || !in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) || !in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES)) {
 			http_response_code(400);
