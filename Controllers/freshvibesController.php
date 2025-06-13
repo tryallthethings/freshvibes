@@ -441,7 +441,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				case 'set_colors':
 					$tabId = Minz_Request::paramString('tab_id');
 					$bgColor = Minz_Request::paramString('bg_color');
-					$fontColor = Minz_Request::paramString('font_color', '');
+					$fontColor = Minz_Request::paramString('font_color');
 					if ($fontColor === '') {
 						$fontColor = $bgColor !== '' ? $this->getContrastColor($bgColor) : '';
 					}
