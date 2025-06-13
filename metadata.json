@@ -2,7 +2,7 @@
     "name": "Fresh Vibes View",
     "author": "Try all the things",
     "description": "Provides a Netvibes-like dashboard view with draggable feed containers.",
-    "version": "1.0.0",
+    "version": "1.5.0",
     "entrypoint": "FreshVibesView",
     "type": "user"
 }
