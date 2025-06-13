@@ -490,6 +490,23 @@ function initializeDashboard(freshvibesView) {
 		if (!entry.isRead && markReadUrl) {
 			entry.isRead = true;
 			li.classList.add('read');
+
+			// Update unread counters
+			if (feedData && feedData.nbUnread > 0) {
+				feedData.nbUnread--;
+				const badge = document.querySelector(
+					`.freshvibes-container[data-feed-id="${feedData.id}"] .feed-unread-badge`
+				);
+				if (badge) {
+					if (feedData.nbUnread > 0) {
+						badge.textContent = feedData.nbUnread;
+					} else {
+						badge.remove();
+					}
+				}
+				updateTabBadge(feedData.id);
+			}
+
 			fetch(markReadUrl, {
 				method: 'POST',
 				credentials: 'same-origin',
@@ -533,7 +550,35 @@ function initializeDashboard(freshvibesView) {
 						if (li) li.classList.remove('read');
 						const feedData = state.feeds[feedId];
 						const entry = feedData?.entries?.find(e => String(e.id) === entryId);
-						if (entry) entry.isRead = false;
+						if (entry) {
+							entry.isRead = false;
+
+							// Update unread counters
+							if (feedData) {
+								feedData.nbUnread = (feedData.nbUnread || 0) + 1;
+								const container = document.querySelector(`.freshvibes-container[data-feed-id="${feedId}"]`);
+								if (container) {
+									let badge = container.querySelector('.feed-unread-badge');
+									if (!badge) {
+										// Create badge if it doesn't exist
+										const header = container.querySelector('.freshvibes-container-header');
+										badge = document.createElement('span');
+										badge.className = 'feed-unread-badge';
+										badge.textContent = feedData.nbUnread;
+										badge.title = tr.mark_all_read || 'Mark all as read';
+										if (feedData.currentHeaderColor) {
+											badge.style.backgroundColor = feedData.currentHeaderColor;
+											badge.style.color = getContrastColor(feedData.currentHeaderColor);
+											badge.style.borderColor = getContrastColor(feedData.currentHeaderColor);
+										}
+										header.insertBefore(badge, header.querySelector('.feed-settings'));
+									} else {
+										badge.textContent = feedData.nbUnread;
+									}
+								}
+								updateTabBadge(feedId);
+							}
+						}
 						entryModal.classList.remove('active');
 					}).catch(console.error);
 				}
@@ -619,6 +664,49 @@ function initializeDashboard(freshvibesView) {
 		const b = parseInt(hex.substr(4, 2), 16);
 		const luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
 		return luminance > 0.5 ? '#000000' : '#ffffff';
+	}
+
+	function updateTabBadge(feedId) {
+		// Find which tab contains this feed
+		let containingTabId = null;
+		for (const tab of state.layout) {
+			if (tab.columns) {
+				for (const feedIds of Object.values(tab.columns)) {
+					if (feedIds.includes(String(feedId))) {
+						containingTabId = tab.id;
+						break;
+					}
+				}
+			}
+			if (containingTabId) break;
+		}
+
+		if (!containingTabId) return;
+
+		// Recalculate tab unread count
+		let tabUnreadCount = 0;
+		const tab = state.layout.find(t => t.id === containingTabId);
+		if (tab && tab.columns) {
+			Object.values(tab.columns).forEach(feedIds => {
+				feedIds.forEach(fId => {
+					const feed = state.feeds[fId];
+					if (feed && feed.nbUnread) {
+						tabUnreadCount += feed.nbUnread;
+					}
+				});
+			});
+		}
+
+		// Update tab badge
+		const tabBadge = document.querySelector(`.freshvibes-tab[data-tab-id="${containingTabId}"] .tab-unread-count`);
+		if (tabBadge) {
+			if (tabUnreadCount > 0) {
+				tabBadge.textContent = tabUnreadCount;
+				tabBadge.style.display = '';
+			} else {
+				tabBadge.style.display = 'none';
+			}
+		}
 	}
 
 	// --- EVENT LISTENERS ---

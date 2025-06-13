@@ -599,15 +599,57 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 
 		// For modal excerpts, preserve some HTML
 		if ($wordLimit > 50) {
-			// Use FreshRSS's built-in sanitization first
-			$content = $entry->content();
+			// Create a whitelist of allowed tags and attributes
+			$allowedTags = ['a', 'b', 'i', 'em', 'strong', 'p', 'br', 'ul', 'ol', 'li', 'blockquote', 'code', 'pre'];
+			$allowedAttributes = ['href', 'target', 'rel'];
 
+			// Use strip_tags with allowed tags to remove dangerous elements
+			$allowedTagsString = '<' . implode('><', $allowedTags) . '>';
+			$content = strip_tags($content, $allowedTagsString);
+
+			// Additional safety: ensure links have safe attributes
+			$dom = new DOMDocument();
+			$dom->encoding = 'UTF-8';
+			libxml_use_internal_errors(true);
+			if ($dom->loadHTML('<?xml encoding="UTF-8"><div>' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD)) {
+				$xpath = new DOMXPath($dom);
+
+				// Sanitize all links
+				$links = $xpath->query('//a');
+				foreach ($links as $link) {
+					if ($link instanceof DOMElement) {
+						// Remove all attributes except allowed ones
+						$attrs = [];
+						foreach ($link->attributes as $attr) {
+							if (!in_array($attr->nodeName, $allowedAttributes)) {
+								$attrs[] = $attr->nodeName;
+							}
+						}
+						foreach ($attrs as $attr) {
+							$link->removeAttribute($attr);
+						}
+
+						// Ensure target="_blank" links have rel="noopener noreferrer"
+						if ($link->getAttribute('target') === '_blank') {
+							$link->setAttribute('rel', 'noopener noreferrer');
+						}
+					}
+				}
+
+				// Get the cleaned content
+				$content = '';
+				foreach ($dom->documentElement->childNodes as $child) {
+					$content .= $dom->saveHTML($child);
+				}
+			}
+			libxml_clear_errors();
+
+			// Truncate if needed
 			if (mb_strlen($content) > 500) {
 				// Use DOM parsing to safely truncate HTML
 				$dom = new DOMDocument();
 				$dom->encoding = 'UTF-8';
 
-				// Suppress warnings for malformed HTML and load content
 				libxml_use_internal_errors(true);
 				$dom->loadHTML('<?xml encoding="UTF-8"><div>' . $content . '</div>', LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD);
 				libxml_clear_errors();
