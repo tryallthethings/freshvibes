@@ -152,7 +152,7 @@ function initializeDashboard(freshvibesView) {
 				delBtn.style.display = 'none';
 			}
 		}
-		
+
 		// Set active column button
 		const columnButtons = link.querySelectorAll('.columns-selector button');
 		columnButtons.forEach(btn => {
@@ -1026,6 +1026,7 @@ function initializeDashboard(freshvibesView) {
 							feedData.nbUnread = 0;
 							container.querySelectorAll('.entry-item:not(.read)').forEach(li => li.classList.add('read'));
 							feedData.entries.forEach(entry => entry.isRead = true);
+							updateTabBadge(feedId);
 						}
 					}).catch(console.error);
 				}
