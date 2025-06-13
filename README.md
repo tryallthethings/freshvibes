@@ -1,7 +1,13 @@
 # FreshVibes: an iGoogle / Netvibes-like extension for FreshRSS
 
-A modern, customizable dashboard extension for [FreshRSS](https://freshrss.org/) that looks and feels like iGoogle / NetVibes.
+A modern, customizable dashboard view extension for [FreshRSS](https://freshrss.org/) that looks and feels like iGoogle / NetVibes.
 With the recent shutdown of Netvibes I was looking for an alternative. FreshRSS was recommended to me, but it unfortunately lacked the dashboard I was used to. So I created my own extension that brings the functionality to FreshRSS.
+<p align="center">
+<img src="https://github.com/user-attachments/assets/a1e737d0-3886-4cf0-a4b3-59988281ffa4" width="80%">
+</p>
+<p align="center">
+<img src="https://github.com/user-attachments/assets/de2c71ba-d16d-42a1-8203-8a2993275f58" width="80%">
+</p>
 
 ## ✨ Features
 
@@ -13,13 +19,18 @@ With the recent shutdown of Netvibes I was looking for an alternative. FreshRSS 
 ### 🎨 Customization Options
 - **Multi-column Layouts**: Configure 1-6 columns per tab for optimal feed organization
 - **Tab Customization**:
- - Custom icons/emojis for each tab
- - Configurable background colors with automatic contrast adjustment
- - Rename tabs with double-click
+    - Custom icons/emojis for each tab
+    - Configurable background colors with automatic contrast adjustment
+    - Rename tabs with double-click  
+ 
+<img src="https://github.com/user-attachments/assets/848771d7-4ef9-4b02-a7c1-75a98e7c37b2" width="400px">
+
 - **Feed Settings**:
- - Adjust the amount of articles shown for each feed
- - Multiple font sizes for each feed
- - Custom header colors for each feed
+    - Adjust the amount of articles shown for each feed
+    - Multiple font sizes for each feed
+    - Custom header colors for each feed
+ 
+<img src="https://github.com/user-attachments/assets/2e0ad702-6657-4f7b-a514-322ed66032ce" width="400px">
 
 ### 📱 User Experience
 - **Article Preview Modal**: Quickly peek into any article with a modal
@@ -34,12 +45,16 @@ With the recent shutdown of Netvibes I was looking for an alternative. FreshRSS 
 
 ## 🚀 Installation
 
+1. Download the latest [Release](https://github.com/tryallthethings/freshvibes/releases)
+2. Extract the .ZIP-file and copy / upload the contents to /path/to/freshrss/extensions/
+
+_or via command line:_
 1. Navigate to your FreshRSS extensions folder:
   ```bash
   cd /path/to/freshrss/extensions/
   ```
 
-2. Clone this repository:
+2. Clone this repository
   ```bash
   git clone https://github.com/tryallthethings/freshvibes.git
   ```
