@@ -41,7 +41,7 @@ With the recent shutdown of Netvibes I was looking for an alternative. FreshRSS 
 
 2. Clone this repository:
   ```bash
-  git clone https://github.com/yourusername/xExtension-FreshVibesView.git
+  git clone https://github.com/tryallthethings/freshvibes.git
   ```
 
 3. In FreshRSS:
