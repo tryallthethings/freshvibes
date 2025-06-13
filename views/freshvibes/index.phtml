@@ -3,195 +3,195 @@
 declare(strict_types=1);
 
 if (!Minz_Request::paramBoolean('ajax')) {
-        $this->partial('aside_feed');
-        $this->partial('nav_menu');
+	$this->partial('aside_feed');
+	$this->partial('nav_menu');
 }
 ?>
 
 <section class="freshvibes-view"
-        role="main"
-        data-xextension-freshvibesview-get-layout-url="<?php echo htmlspecialchars($this->getLayoutUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-save-layout-url="<?php echo htmlspecialchars($this->saveLayoutUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-save-feed-settings-url="<?php echo htmlspecialchars($this->saveFeedSettingsUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-tab-action-url="<?php echo htmlspecialchars($this->tabActionUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-set-active-tab-url="<?php echo htmlspecialchars($this->setActiveTabUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-refresh-interval="<?php echo htmlspecialchars((string)($this->refreshInterval ?? 15), ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-date-format="<?php echo htmlspecialchars((string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'), ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-move-feed-url="<?= htmlspecialchars($this->moveFeedUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-mark-read-url="<?php echo htmlspecialchars($this->markReadUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-feed-url="<?php echo htmlspecialchars($this->feedUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-search-author-url="<?php echo htmlspecialchars($this->searchAuthorUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-search-tag-url="<?php echo htmlspecialchars($this->searchTagUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-mark-feed-read-url="<?php echo htmlspecialchars($this->markFeedReadUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-mark-tab-read-url="<?php echo htmlspecialchars($this->markTabReadUrl, ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-mode="<?php echo htmlspecialchars($this->viewMode ?? 'custom', ENT_QUOTES); ?>"
-        data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
+	role="main"
+	data-xextension-freshvibesview-get-layout-url="<?php echo htmlspecialchars($this->getLayoutUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-save-layout-url="<?php echo htmlspecialchars($this->saveLayoutUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-save-feed-settings-url="<?php echo htmlspecialchars($this->saveFeedSettingsUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-tab-action-url="<?php echo htmlspecialchars($this->tabActionUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-set-active-tab-url="<?php echo htmlspecialchars($this->setActiveTabUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-refresh-interval="<?php echo htmlspecialchars((string)($this->refreshInterval ?? 15), ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-date-format="<?php echo htmlspecialchars((string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'), ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-move-feed-url="<?= htmlspecialchars($this->moveFeedUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-mark-read-url="<?php echo htmlspecialchars($this->markReadUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-feed-url="<?php echo htmlspecialchars($this->feedUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-search-author-url="<?php echo htmlspecialchars($this->searchAuthorUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-search-tag-url="<?php echo htmlspecialchars($this->searchTagUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-mark-feed-read-url="<?php echo htmlspecialchars($this->markFeedReadUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-mark-tab-read-url="<?php echo htmlspecialchars($this->markTabReadUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-mode="<?php echo htmlspecialchars($this->viewMode ?? 'custom', ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 
-        <header class="freshvibes-header">
-                <nav class="freshvibes-tabs" aria-label="<?php echo _t('ext.FreshVibesView.aria_dashboard_tabs', 'Dashboard tabs'); ?>"></nav>
-        </header>
+	<header class="freshvibes-header">
+		<nav class="freshvibes-tabs" aria-label="<?php echo _t('ext.FreshVibesView.aria_dashboard_tabs', 'Dashboard tabs'); ?>"></nav>
+	</header>
 
-        <div class="freshvibes-panels">
-                <?php // Tab panels will be dynamically inserted here by script.js 
-                ?>
-        </div>
+	<div class="freshvibes-panels">
+		<?php // Tab panels will be dynamically inserted here by script.js
+		?>
+	</div>
 </section>
 
 <script id="feeds-data-script" type="application/json">
-        <?php echo json_encode($this->feedsData); ?>
+	<?php echo json_encode($this->feedsData); ?>
 </script>
 <script id="freshvibes-i18n" type="application/json">
-        <?php echo json_encode([
-                'add_tab' => _t('ext.FreshVibesView.add_tab', 'Add new tab'),
-                'confirm_delete_tab' => _t('ext.FreshVibesView.confirm_delete_tab', 'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.'),
-                'move_to' => _t('ext.FreshVibesView.move_to', 'Move to:'),
-                'no_entries' => _t('ext.FreshVibesView.no_entries', 'No articles to display.'),
-                'error_dashboard_init' => _t('ext.FreshVibesView.error_dashboard_init', 'Error loading dashboard. Please check the console and try again.'),
-                'by_author' => _t('ext.FreshVibesView.by_author', 'By: '),
-                'confirm_mark_all_read' => _t('ext.FreshVibesView.confirm_mark_all_read', 'Mark all entries as read?'),
-                'confirm_mark_tab_read' => _t('ext.FreshVibesView.confirm_mark_tab_read', 'Mark all entries in this tab as read?'),
-                'mark_all_read' => _t('ext.FreshVibesView.mark_all_read', 'Mark all as read'),
-                'header_color' => _t('ext.FreshVibesView.header_color', 'Header color'),
-                'tab_bg_color' => _t('ext.FreshVibesView.tab_bg_color', 'Tab background')
-        ]); ?>
+	<?php echo json_encode([
+		'add_tab' => _t('ext.FreshVibesView.add_tab', 'Add new tab'),
+		'confirm_delete_tab' => _t('ext.FreshVibesView.confirm_delete_tab', 'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.'),
+		'move_to' => _t('ext.FreshVibesView.move_to', 'Move to:'),
+		'no_entries' => _t('ext.FreshVibesView.no_entries', 'No articles to display.'),
+		'error_dashboard_init' => _t('ext.FreshVibesView.error_dashboard_init', 'Error loading dashboard. Please check the console and try again.'),
+		'by_author' => _t('ext.FreshVibesView.by_author', 'By: '),
+		'confirm_mark_all_read' => _t('ext.FreshVibesView.confirm_mark_all_read', 'Mark all entries as read?'),
+		'confirm_mark_tab_read' => _t('ext.FreshVibesView.confirm_mark_tab_read', 'Mark all entries in this tab as read?'),
+		'mark_all_read' => _t('ext.FreshVibesView.mark_all_read', 'Mark all as read'),
+		'header_color' => _t('ext.FreshVibesView.header_color', 'Header color'),
+		'tab_bg_color' => _t('ext.FreshVibesView.tab_bg_color', 'Tab background')
+	]); ?>
 </script>
 
 <template id="template-tab-link">
-        <div class="freshvibes-tab" role="tab" tabindex="-1">
-                <span class="tab-icon"></span>
-                <span class="tab-name"></span>
-                <span class="tab-unread-count"></span>
-                <div class="tab-settings">
-                        <button type="button" class="tab-settings-button" aria-label="<?php echo _t('ext.FreshVibesView.aria_tab_settings', 'Tab settings'); ?>">▾</button>
-                        <div class="tab-settings-menu">
-                                <div class="menu-section">
-                                        <label><?php echo _t('ext.FreshVibesView.columns_label', 'Number of columns'); ?></label>
-                                        <div class="columns-selector">
-                                                <button data-columns="1">1</button>
-                                                <button data-columns="2">2</button>
-                                                <button data-columns="3">3</button>
-                                                <button data-columns="4">4</button>
-                                                <button data-columns="5">5</button>
-                                                <button data-columns="6">6</button>
-                                        </div>
-                                </div>
-                                <div class="menu-section icon-settings">
-                                        <label><?php echo _t('ext.FreshVibesView.tabicon', 'Tab icon'); ?></label>
-                                        <input type="text" class="tab-icon-input" />
-                                        <input type="color" class="tab-icon-color-input" value="#000000" />
-                                </div>
-                                <div class="menu-section color-settings">
-                                        <label><?php echo _t('ext.FreshVibesView.tab_bg_color', 'Tab background'); ?></label>
-                                        <input type="color" class="color-picker tab-bg-color-input" value="#ffffff" />
-                                        <button type="button" class="color-reset" title="Reset">↺</button>
-                                </div>
-                                <button type="button" class="btn btn-danger tab-action-delete"><?php echo _t('ext.FreshVibesView.delete_tab', 'Delete tab'); ?></button>
-                        </div>
-                </div>
+	<div class="freshvibes-tab" role="tab" tabindex="-1">
+		<span class="tab-icon"></span>
+		<span class="tab-name"></span>
+		<span class="tab-unread-count"></span>
+		<div class="tab-settings">
+			<button type="button" class="tab-settings-button" aria-label="<?php echo _t('ext.FreshVibesView.aria_tab_settings', 'Tab settings'); ?>">▾</button>
+			<div class="tab-settings-menu">
+				<div class="menu-section">
+					<label><?php echo _t('ext.FreshVibesView.columns_label', 'Number of columns'); ?></label>
+					<div class="columns-selector">
+						<button data-columns="1">1</button>
+						<button data-columns="2">2</button>
+						<button data-columns="3">3</button>
+						<button data-columns="4">4</button>
+						<button data-columns="5">5</button>
+						<button data-columns="6">6</button>
+					</div>
+				</div>
+				<div class="menu-section icon-settings">
+					<label><?php echo _t('ext.FreshVibesView.tabicon', 'Tab icon'); ?></label>
+					<input type="text" class="tab-icon-input" />
+					<input type="color" class="tab-icon-color-input" value="#000000" />
+				</div>
+				<div class="menu-section color-settings">
+					<label><?php echo _t('ext.FreshVibesView.tab_bg_color', 'Tab background'); ?></label>
+					<input type="color" class="color-picker tab-bg-color-input" value="#ffffff" />
+					<button type="button" class="color-reset" title="Reset">↺</button>
+				</div>
+				<button type="button" class="btn btn-danger tab-action-delete"><?php echo _t('ext.FreshVibesView.delete_tab', 'Delete tab'); ?></button>
+			</div>
+		</div>
 </template>
 
 <div id="freshvibes-entry-modal" class="fv-modal" role="dialog" aria-modal="true" aria-labelledby="fv-modal-title">
-        <div class="fv-modal-content">
-                <button type="button" class="fv-modal-close" aria-label="Close">×</button>
-                <article class="fv-modal-article">
-                        <header class="fv-modal-header">
-                                <h2 class="fv-modal-title"></h2>
-                                <div class="fv-modal-meta">
-                                        <div class="fv-modal-meta-left">
-                                                <a class="fv-modal-feed" href="#">
-                                                        <img class="fv-modal-feed-icon" src="" alt="" width="16" height="16" />
-                                                        <span class="fv-modal-feed-name"></span>
-                                                </a>
-                                                <span class="fv-modal-author-wrapper">
-                                                        <span class="fv-modal-author-prefix"></span>
-                                                        <a class="fv-modal-author" href="#"></a>
-                                                </span>
-                                        </div>
-                                        <time class="fv-modal-date"></time>
-                                </div>
-                        </header>
-                        <div class="fv-modal-body">
-                                <p class="fv-modal-excerpt"></p>
-                        </div>
-                        <footer class="fv-modal-footer">
-                                <div class="fv-modal-tags-container">
-                                        <span class="fv-modal-tags-label"><?= _t('ext.FreshVibesView.tags_label', 'Tags:') ?></span>
-                                        <div class="fv-modal-tags"></div>
-                                </div>
-                                <div class="fv-modal-actions">
-                                        <button type="button" class="btn fv-modal-mark-unread"><?= _i('unread') ?> <?= _t('ext.FreshVibesView.mark_unread', 'Mark as unread') ?></button>
-                                        <a class="btn btn-important fv-modal-link" target="_blank" rel="noopener noreferrer"><?= _i('link') ?> <?= _t('ext.FreshVibesView.open_link', 'Open original') ?></a>
-                                </div>
-                        </footer>
-                </article>
-        </div>
+	<div class="fv-modal-content">
+		<button type="button" class="fv-modal-close" aria-label="Close">×</button>
+		<article class="fv-modal-article">
+			<header class="fv-modal-header">
+				<h2 class="fv-modal-title"></h2>
+				<div class="fv-modal-meta">
+					<div class="fv-modal-meta-left">
+						<a class="fv-modal-feed" href="#">
+							<img class="fv-modal-feed-icon" src="" alt="" width="16" height="16" />
+							<span class="fv-modal-feed-name"></span>
+						</a>
+						<span class="fv-modal-author-wrapper">
+							<span class="fv-modal-author-prefix"></span>
+							<a class="fv-modal-author" href="#"></a>
+						</span>
+					</div>
+					<time class="fv-modal-date"></time>
+				</div>
+			</header>
+			<div class="fv-modal-body">
+				<p class="fv-modal-excerpt"></p>
+			</div>
+			<footer class="fv-modal-footer">
+				<div class="fv-modal-tags-container">
+					<span class="fv-modal-tags-label"><?= _t('ext.FreshVibesView.tags_label', 'Tags:') ?></span>
+					<div class="fv-modal-tags"></div>
+				</div>
+				<div class="fv-modal-actions">
+					<button type="button" class="btn fv-modal-mark-unread"><?= _i('unread') ?> <?= _t('ext.FreshVibesView.mark_unread', 'Mark as unread') ?></button>
+					<a class="btn btn-important fv-modal-link" target="_blank" rel="noopener noreferrer"><?= _i('link') ?> <?= _t('ext.FreshVibesView.open_link', 'Open original') ?></a>
+				</div>
+			</footer>
+		</article>
+	</div>
 </div>
 <template id="template-tab-panel">
-        <div class="freshvibes-panel" role="tabpanel" tabindex="0">
-                <div class="freshvibes-columns"></div>
-        </div>
+	<div class="freshvibes-panel" role="tabpanel" tabindex="0">
+		<div class="freshvibes-columns"></div>
+	</div>
 </template>
 
 <template id="template-feed-container">
-        <div class="freshvibes-container" role="region">
-                <div class="freshvibes-container-header">
-                        <img src="" alt="" class="feed-favicon" width="16" height="16" loading="lazy" />
-                        <span class="feed-title"></span>
-                        <div class="feed-settings">
-                                <button type="button" class="feed-settings-button" title="<?php echo _t('ext.FreshVibesView.feed_settings', 'Feed settings') ?>" aria-label="<?php echo _t('ext.FreshVibesView.feed_settings_aria', 'Settings for this feed'); ?>">
-                                        <?= _i('configure') ?>
-                                </button>
-                                <div class="feed-settings-editor">
-                                        <div class="setting-row"><label><?php echo _t('ext.FreshVibesView.limit_label', 'Limit:'); ?></label><select class="feed-limit-select"></select></div>
-                                        <div class="setting-row"><label><?php echo _t('ext.FreshVibesView.font_label', 'Font:'); ?></label><select class="feed-fontsize-select"></select></div>
-                                        <div class="setting-row color-settings">
-                                                <label><?php echo _t('ext.FreshVibesView.header_color', 'Header color'); ?></label>
-                                                <input type="color" class="color-picker feed-header-color-input" />
-                                                <button type="button" class="color-reset" title="Reset">↺</button>
-                                        </div>
-                                </div>
-                        </div>
-                </div>
-                <div class="freshvibes-container-content"></div>
-        </div>
+	<div class="freshvibes-container" role="region">
+		<div class="freshvibes-container-header">
+			<img src="" alt="" class="feed-favicon" width="16" height="16" loading="lazy" />
+			<span class="feed-title"></span>
+			<div class="feed-settings">
+				<button type="button" class="feed-settings-button" title="<?php echo _t('ext.FreshVibesView.feed_settings', 'Feed settings') ?>" aria-label="<?php echo _t('ext.FreshVibesView.feed_settings_aria', 'Settings for this feed'); ?>">
+					<?= _i('configure') ?>
+				</button>
+				<div class="feed-settings-editor">
+					<div class="setting-row"><label><?php echo _t('ext.FreshVibesView.limit_label', 'Limit:'); ?></label><select class="feed-limit-select"></select></div>
+					<div class="setting-row"><label><?php echo _t('ext.FreshVibesView.font_label', 'Font:'); ?></label><select class="feed-fontsize-select"></select></div>
+					<div class="setting-row color-settings">
+						<label><?php echo _t('ext.FreshVibesView.header_color', 'Header color'); ?></label>
+						<input type="color" class="color-picker feed-header-color-input" />
+						<button type="button" class="color-reset" title="Reset">↺</button>
+					</div>
+				</div>
+			</div>
+		</div>
+		<div class="freshvibes-container-content"></div>
+	</div>
 </template>
 
 <div id="tab-icon-picker" class="icon-picker">
-        <span data-icon="😀">😀</span>
-        <span data-icon="⭐">⭐</span>
-        <span data-icon="📰">📰</span>
-        <span data-icon="🖥️">🖥️</span>
-        <span data-icon="🎮">🎮</span>
-        <span data-icon="🏠">🏠</span>
-        <span data-icon="💻">💻</span>
-        <span data-icon="📚">📚</span>
-        <span data-icon="✉️">✉️</span>
-        <span data-icon="⚙️">⚙️</span>
-        <span data-icon="💡">💡</span>
-        <span data-icon="🔬">🔬</span>
-        <span data-icon="🎵">🎵</span>
-        <span data-icon="🎥">🎥</span>
-        <span data-icon="🎬">🎬</span>
-        <span data-icon="🎧">🎧</span>
-        <span data-icon="📈">📈</span>
-        <span data-icon="💰">💰</span>
-        <span data-icon="🌐">🌐</span>
-        <span data-icon="✈️">✈️</span>
-        <span data-icon="🍔">🍔</span>
-        <span data-icon="🏥">🏥</span>
-        <span data-icon="⚽">⚽</span>
-        <span data-icon="🏆">🏆</span>
-        <span data-icon="📸">📸</span>
-        <span data-icon="🎨">🎨</span>
-        <span data-icon="📝">📝</span>
-        <span data-icon="💬">💬</span>
-        <span data-icon="🔒">🔒</span>
-        <span data-icon="🛠️">🛠️</span>
-        <span data-icon="📅">📅</span>
-        <span data-icon="🐞">🐞</span>
-        <span data-icon="✔️">✔️</span>
-        <span data-icon="#">#</span>
-        <span data-icon="@">@</span>
-        <span data-icon="*">*</span>
+	<span data-icon="😀">😀</span>
+	<span data-icon="⭐">⭐</span>
+	<span data-icon="📰">📰</span>
+	<span data-icon="🖥️">🖥️</span>
+	<span data-icon="🎮">🎮</span>
+	<span data-icon="🏠">🏠</span>
+	<span data-icon="💻">💻</span>
+	<span data-icon="📚">📚</span>
+	<span data-icon="✉️">✉️</span>
+	<span data-icon="⚙️">⚙️</span>
+	<span data-icon="💡">💡</span>
+	<span data-icon="🔬">🔬</span>
+	<span data-icon="🎵">🎵</span>
+	<span data-icon="🎥">🎥</span>
+	<span data-icon="🎬">🎬</span>
+	<span data-icon="🎧">🎧</span>
+	<span data-icon="📈">📈</span>
+	<span data-icon="💰">💰</span>
+	<span data-icon="🌐">🌐</span>
+	<span data-icon="✈️">✈️</span>
+	<span data-icon="🍔">🍔</span>
+	<span data-icon="🏥">🏥</span>
+	<span data-icon="⚽">⚽</span>
+	<span data-icon="🏆">🏆</span>
+	<span data-icon="📸">📸</span>
+	<span data-icon="🎨">🎨</span>
+	<span data-icon="📝">📝</span>
+	<span data-icon="💬">💬</span>
+	<span data-icon="🔒">🔒</span>
+	<span data-icon="🛠️">🛠️</span>
+	<span data-icon="📅">📅</span>
+	<span data-icon="🐞">🐞</span>
+	<span data-icon="✔️">✔️</span>
+	<span data-icon="#">#</span>
+	<span data-icon="@">@</span>
+	<span data-icon="*">*</span>
 </div>

@@ -4,76 +4,76 @@ declare(strict_types=1);
 /** @var FreshVibesViewExtension $this */
 ?>
 <form
-    action="<?= _url('extension', 'configure', 'e', urlencode($this->getName())) ?>"
-    method="post">
-    <input type="hidden" name="_csrf" value="<?= FreshRSS_Auth::csrfToken() ?>">
+	action="<?= _url('extension', 'configure', 'e', urlencode($this->getName())) ?>"
+	method="post">
+	<input type="hidden" name="_csrf" value="<?= FreshRSS_Auth::csrfToken() ?>">
 
-    <div class="form-group">
-        <label class="group-name" for="freshvibes_view_mode">
-            <?= _t('ext.FreshVibesView.settings_view_mode_label') ?>
-        </label>
-        <div class="group-controls">
-            <select name="freshvibes_view_mode" id="freshvibes_view_mode">
-                <option value="custom" <?= $this->getSetting(FreshVibesViewExtension::MODE_CONFIG_KEY, 'custom') === 'custom' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.view_mode_custom') ?></option>
-                <option value="categories" <?= $this->getSetting(FreshVibesViewExtension::MODE_CONFIG_KEY, 'custom') === 'categories' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.view_mode_categories') ?></option>
-            </select>
-        </div>
-    </div>
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_view_mode">
+			<?= _t('ext.FreshVibesView.settings_view_mode_label') ?>
+		</label>
+		<div class="group-controls">
+			<select name="freshvibes_view_mode" id="freshvibes_view_mode">
+				<option value="custom" <?= $this->getSetting(FreshVibesViewExtension::MODE_CONFIG_KEY, 'custom') === 'custom' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.view_mode_custom') ?></option>
+				<option value="categories" <?= $this->getSetting(FreshVibesViewExtension::MODE_CONFIG_KEY, 'custom') === 'categories' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.view_mode_categories') ?></option>
+			</select>
+		</div>
+	</div>
 
-    <div class="form-group">
-        <label class="group-name" for="freshvibes_refresh_enabled">
-            <?= _t('ext.FreshVibesView.settings_refresh_enabled_label') ?>
-        </label>
-        <div class="group-controls">
-            <input
-                type="checkbox"
-                name="freshvibes_refresh_enabled"
-                id="freshvibes_refresh_enabled"
-                <?= $this->getSetting(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, false) ? 'checked="checked"' : '' ?>>
-            <p class="help">
-                <?= _t('ext.FreshVibesView.settings_refresh_enabled_help') ?>
-            </p>
-        </div>
-    </div>
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_refresh_enabled">
+			<?= _t('ext.FreshVibesView.settings_refresh_enabled_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="checkbox"
+				name="freshvibes_refresh_enabled"
+				id="freshvibes_refresh_enabled"
+				<?= $this->getSetting(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, false) ? 'checked="checked"' : '' ?>>
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_refresh_enabled_help') ?>
+			</p>
+		</div>
+	</div>
 
-    <div class="form-group">
-        <label class="group-name" for="freshvibes_refresh_interval">
-            <?= _t('ext.FreshVibesView.settings_refresh_interval_label') ?>
-        </label>
-        <div class="group-controls">
-            <input
-                type="number"
-                name="freshvibes_refresh_interval"
-                id="freshvibes_refresh_interval"
-                value="<?= $this->getSetting(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15) ?>"
-                min="1">
-            <p class="help">
-                <?= _t('ext.FreshVibesView.settings_refresh_interval_help') ?>
-            </p>
-        </div>
-    </div>
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_refresh_interval">
+			<?= _t('ext.FreshVibesView.settings_refresh_interval_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="number"
+				name="freshvibes_refresh_interval"
+				id="freshvibes_refresh_interval"
+				value="<?= $this->getSetting(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15) ?>"
+				min="1">
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_refresh_interval_help') ?>
+			</p>
+		</div>
+	</div>
 
-    <div class="form-group">
-        <label class="group-name" for="freshvibes_date_format">
-            <?= _t('ext.FreshVibesView.settings_date_format_label') ?>
-        </label>
-        <div class="group-controls">
-            <input
-                type="text"
-                name="freshvibes_date_format"
-                id="freshvibes_date_format"
-                value="<?= $this->getSetting(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i') ?>">
-            <p class="help">
-                <?= _t('ext.FreshVibesView.settings_date_format_help') ?>
-            </p>
-        </div>
-    </div>
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_date_format">
+			<?= _t('ext.FreshVibesView.settings_date_format_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="text"
+				name="freshvibes_date_format"
+				id="freshvibes_date_format"
+				value="<?= $this->getSetting(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i') ?>">
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_date_format_help') ?>
+			</p>
+		</div>
+	</div>
 
-    <div class="form-group form-actions">
-        <div class="group-controls">
-            <button type="submit" class="btn btn-important">
-                <?= _t('ext.FreshVibesView.settings_save_button') ?>
-            </button>
-        </div>
-    </div>
+	<div class="form-group form-actions">
+		<div class="group-controls">
+			<button type="submit" class="btn btn-important">
+				<?= _t('ext.FreshVibesView.settings_save_button') ?>
+			</button>
+		</div>
+	</div>
 </form>

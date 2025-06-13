@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-class FreshVibesViewExtension extends Minz_Extension
-{
+class FreshVibesViewExtension extends Minz_Extension {
 	protected array $csp_policies = [
 		'connect-src' => "'self'",
 	];
@@ -40,13 +39,11 @@ class FreshVibesViewExtension extends Minz_Extension
 
 	// --- End Constants ---
 
-	public function getId(): string
-	{
+	public function getId(): string {
 		return self::EXT_ID;
 	}
 
-	public function init(): void
-	{
+	public function init(): void {
 		$this->registerTranslates();
 		$this->registerController(self::CONTROLLER_NAME_BASE);
 		$this->registerViews();
@@ -58,8 +55,7 @@ class FreshVibesViewExtension extends Minz_Extension
 	}
 
 	/** Hook callback to register the view as a reading mode. */
-	public static function addReadingMode(array $readingModes): array
-	{
+	public static function addReadingMode(array $readingModes): array {
 		$urlParams = array_merge(Minz_Request::currentRequest(), [
 			'c' => self::CONTROLLER_NAME_BASE,
 			'a' => 'index',
@@ -82,8 +78,7 @@ class FreshVibesViewExtension extends Minz_Extension
 	 * Handles the logic when the configuration form is submitted.
 	 */
 	#[\Override]
-	public function handleConfigureAction(): void
-	{
+	public function handleConfigureAction(): void {
 		$this->registerTranslates();
 
 		if (Minz_Request::isPost()) {
@@ -104,8 +99,7 @@ class FreshVibesViewExtension extends Minz_Extension
 	 * @param mixed $default The default value to return if not set.
 	 * @return mixed The setting value.
 	 */
-	public function getSetting(string $key, $default = null)
-	{
+	public function getSetting(string $key, $default = null) {
 		$userConf = FreshRSS_Context::userConf();
 		if (!$userConf->hasParam($key)) {
 			return $default;

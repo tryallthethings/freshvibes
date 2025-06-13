@@ -2,25 +2,21 @@
 
 declare(strict_types=1);
 
-class FreshExtension_freshvibes_Controller extends Minz_ActionController
-{
+class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
-	private function noCacheHeaders()
-	{
+	private function noCacheHeaders() {
 		header('Cache-Control: no-cache, no-store, must-revalidate');
 		header('Pragma: no-cache');
 		header('Expires: 0');
 	}
 
-	private function getMode(): string
-	{
+	private function getMode(): string {
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $userConf->param(FreshVibesViewExtension::MODE_CONFIG_KEY, 'custom');
 		return $mode === 'categories' ? 'categories' : 'custom';
 	}
 
-	private function getLayout(): array
-	{
+	private function getLayout(): array {
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
 		$layoutKey = $mode === 'categories'
@@ -79,8 +75,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return is_array($layout) ? $layout : [];
 	}
 
-	private function saveLayout(array $layout): void
-	{
+	private function saveLayout(array $layout): void {
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
 		$layoutKey = $mode === 'categories'
@@ -90,8 +85,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$userConf->save();
 	}
 
-	public function indexAction()
-	{
+	public function indexAction() {
 		$this->noCacheHeaders();
 
 		$factory = new FreshRSS_Factory();
@@ -114,8 +108,14 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 
 		foreach ($feeds as $feed) {
 			$feedId = $feed->id();
-			$limitKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX : FreshVibesViewExtension::LIMIT_CONFIG_PREFIX) . $feedId;
-			$fontSizeKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX : FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) . $feedId;
+			$limitKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+				FreshVibesViewExtension::LIMIT_CONFIG_PREFIX) .
+				$feedId;
+			$fontSizeKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) .
+				$feedId;
 			if ($userConf->hasParam($limitKey)) {
 				$limit = $userConf->attributeInt($limitKey);
 			} else {
@@ -134,7 +134,10 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				$fontSize = FreshVibesViewExtension::DEFAULT_FONT_SIZE;
 			}
 
-			$headerColorKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX) . $feedId;
+			$headerColorKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX) .
+				$feedId;
 			if ($userConf->hasParam($headerColorKey)) {
 				$headerColor = $userConf->attributeString($headerColorKey);
 			} else {
@@ -221,8 +224,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$this->view->_path(FreshVibesViewExtension::CONTROLLER_NAME_BASE . '/index.phtml');
 	}
 
-	public function getLayoutAction()
-	{
+	public function getLayoutAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 		try {
@@ -251,8 +253,14 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			$feedDAO = new FreshRSS_FeedDAO();
 
 			foreach ($layout as &$tab) {
-				$bgColorKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX) . $tab['id'];
-				$fontColorKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX) . $tab['id'];
+				$bgColorKey = ($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX) .
+					$tab['id'];
+				$fontColorKey = ($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX) .
+					$tab['id'];
 
 				$tab['bg_color'] = $userConf->hasParam($bgColorKey)
 					? $userConf->param($bgColorKey)
@@ -285,8 +293,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function saveLayoutAction()
-	{
+	public function saveLayoutAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['layout']) || !isset($_POST['tab_id'])) {
@@ -324,8 +331,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function updateTabAction()
-	{
+	public function updateTabAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['operation'])) {
@@ -460,8 +466,12 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 					}
 
 					$userConf = FreshRSS_Context::userConf();
-					$bgPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
-					$fontPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
+					$bgPrefix = $mode === 'categories' ?
+						FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+						FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
+					$fontPrefix = $mode === 'categories' ?
+						FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+						FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
 					$userConf->_attribute($bgPrefix . $tabId, $bgColor);
 					$userConf->_attribute($fontPrefix . $tabId, $fontColor);
 					$userConf->save();
@@ -480,8 +490,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	private function buildEmptyColumns(int $count): array
-	{
+	private function buildEmptyColumns(int $count): array {
 		$columns = [];
 		for ($i = 1; $i <= $count; $i++) {
 			$columns['col' . $i] = [];
@@ -489,15 +498,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return $columns;
 	}
 
-	public function setActiveTabAction()
-	{
+	public function setActiveTabAction() {
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['tab_id'])) {
 			http_response_code(400);
 			exit;
 		}
 		try {
 			$mode = $this->getMode();
-			$key = $mode === 'categories' ? FreshVibesViewExtension::ACTIVE_TAB_CATEGORY_CONFIG_KEY : FreshVibesViewExtension::ACTIVE_TAB_CONFIG_KEY;
+			$key = $mode === 'categories' ?
+				FreshVibesViewExtension::ACTIVE_TAB_CATEGORY_CONFIG_KEY :
+				FreshVibesViewExtension::ACTIVE_TAB_CONFIG_KEY;
 			FreshRSS_Context::userConf()->_attribute($key, $_POST['tab_id']);
 			FreshRSS_Context::userConf()->save();
 			echo json_encode(['status' => 'success']);
@@ -507,8 +517,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function saveFeedSettingsAction()
-	{
+	public function saveFeedSettingsAction() {
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['feed_id']) || !isset($_POST['limit']) || !isset($_POST['font_size'])) {
 			http_response_code(400);
 			exit;
@@ -518,16 +527,26 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$fontSize = Minz_Request::paramString('font_size');
 		$headerColor = Minz_Request::paramStringNull('header_color');
 
-		if ($feedId <= 0 || !in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) || !in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES)) {
+		if (
+			$feedId <= 0 ||
+			!in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
+			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES)
+		) {
 			http_response_code(400);
 			exit;
 		}
 		try {
 			$userConf = FreshRSS_Context::userConf();
 			$mode = $this->getMode();
-			$limitPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX : FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
-			$fontPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX : FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
-			$headerPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
+			$limitPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+				FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
+			$fontPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
+			$headerPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
 			$userConf->_attribute($limitPrefix . $feedId, $limit);
 			$userConf->_attribute($fontPrefix . $feedId, $fontSize);
 			if ($headerColor !== null) {
@@ -542,8 +561,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function moveFeedAction()
-	{
+	public function moveFeedAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
@@ -608,8 +626,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15): string
-	{
+	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15): string {
 		$content = $entry->content() ?? '';
 
 		// For modal excerpts, preserve some HTML
@@ -705,8 +722,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return count($words) > $wordLimit ? implode(' ', array_slice($words, 0, $wordLimit)) . '…' : implode(' ', $words);
 	}
 
-	private function truncateNode(DOMNode $node, int &$currentLength, int $targetLength): bool
-	{
+	private function truncateNode(DOMNode $node, int &$currentLength, int $targetLength): bool {
 		$nodesToRemove = [];
 
 		foreach ($node->childNodes as $child) {
@@ -742,8 +758,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return $node->hasChildNodes() || $node->nodeType === XML_TEXT_NODE;
 	}
 
-	public function markFeedReadAction()
-	{
+	public function markFeedReadAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
@@ -778,8 +793,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	private function getContrastColor(string $hexColor): string
-	{
+	private function getContrastColor(string $hexColor): string {
 		$hexColor = ltrim($hexColor, '#');
 		$r = hexdec(substr($hexColor, 0, 2));
 		$g = hexdec(substr($hexColor, 2, 2));
@@ -791,8 +805,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return $luminance > 0.5 ? '#000000' : '#ffffff';
 	}
 
-	public function markTabReadAction()
-	{
+	public function markTabReadAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
