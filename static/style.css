@@ -187,7 +187,7 @@ input[type="color"] {
 	top: 100%;
 	right: 0;
 	z-index: 100;
-	background: var(--background-color-light-shadowed);
+	background: var(--background-color-light-shadowed, var(--background-color-light, #ffffff));
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
@@ -205,11 +205,12 @@ input[type="color"] {
 .tab-settings-menu .menu-section {
 	display: flex;
 	flex-direction: column;
+	color: var(--frss-font-color-dark);
 	gap: 5px;
 }
 
 .tab-settings-menu label {
-	font-size: 0.9em;
+	font-size: 0.95em;
 	margin-bottom: 4px;
 }
 
@@ -294,9 +295,9 @@ input[type="color"] {
 .columns-selector button {
 	flex: 1;
 	padding: 4px 8px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--frss-border-color);
 	background-color: var(--link-color);
-	color: var(--font-color);
+	color: var(--frss-font-color-dark);
 	cursor: pointer;
 	transition: all 0.2s ease;
 
@@ -360,7 +361,7 @@ input[type="color"] {
 /* --- Feed Containers & Settings --- */
 .freshvibes-container {
 	border: 1px solid var(--border-color-shadow-side);
-	background-color: var(--background-color-light-shadowed);
+	background-color: var(--frss-background-color-middle, var(--background-color-light-shadowed));
 	border-radius: var(--border-radius);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 	position: relative;
@@ -462,9 +463,15 @@ input[type="color"] {
 	padding: 10px 15px;
 	border-radius: var(--border-radius);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
-	z-index: 20;
+	z-index: 50;
 	min-width: 240px;
-	font-size: 0.9em;
+	font-size: 0.95em;
+}
+
+/* Also increase the container z-index when settings are active */
+.freshvibes-container:has(.feed-settings-editor.active) {
+	z-index: 10;
+	position: relative;
 }
 
 .feed-settings-editor.active {
@@ -489,7 +496,7 @@ input[type="color"] {
 .feed-settings-editor .setting-row label {
 	flex-shrink: 0;
 	white-space: nowrap;
-	font-size: 0.9em;
+	font-size: 0.95em;
 }
 
 .setting-row {
@@ -502,7 +509,7 @@ input[type="color"] {
 .setting-row label {
 	flex-shrink: 0;
 	white-space: nowrap;
-	font-size: 0.9em;
+	font-size: 0.95em;
 }
 
 .setting-row select {
@@ -519,7 +526,7 @@ input[type="color"] {
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
 	background-color: var(--background-color-grey);
-	color: var(--font-color);
+	color: var(--font-color, var(--frss-font-color-grey-dark, #000000));
 	cursor: pointer;
 	transition: all 0.2s ease;
 
@@ -537,7 +544,7 @@ input[type="color"] {
 }
 
 .feed-settings-save:hover {
-	opacity: 0.9;
+	opacity: 0.95;
 }
 
 .feed-settings-cancel {
@@ -559,7 +566,7 @@ input[type="color"] {
 
 .feed-move-to label {
 	font-weight: bold;
-	font-size: 0.9em;
+	font-size: 0.95em;
 	margin-bottom: 4px;
 	display: block;
 }
@@ -580,9 +587,9 @@ input[type="color"] {
 	padding: 6px 4px;
 	cursor: pointer;
 	border-radius: var(--border-radius);
-	font-size: 0.9em;
+	font-size: 0.95em;
 	background-color: var(--link-color);
-	color: white;
+	color: var(--frss-font-color-grey-dark);
 	border-color: var(--link-color);
 }
 
@@ -641,7 +648,7 @@ input[type="color"] {
 }
 
 .entry-snippet {
-	font-size: 0.9em;
+	font-size: 0.95em;
 	color: var(--font-color-grey);
 }
 
@@ -708,7 +715,7 @@ input[type="color"] {
 }
 
 .fv-modal-content {
-	background: var(--background-color-light);
+	background: var(--frss-background-color-middle, var(--background-color-light, #ffffff));
 	color: var(--font-color);
 	border-radius: calc(var(--border-radius) * 2);
 	max-width: 800px;
@@ -771,7 +778,7 @@ input[type="color"] {
 	display: flex;
 	align-items: center;
 	justify-content: space-between;
-	font-size: 0.9em;
+	font-size: 0.95em;
 	color: var(--font-color-grey);
 	flex-wrap: wrap;
 	gap: 15px;
@@ -920,7 +927,7 @@ input[type="color"] {
 
 .fv-modal-actions .btn {
 	padding: 8px 20px;
-	border: 1px solid var(--border-color);
+	border: 1px solid var(--frss-border-color, var(--border-color, #666666));
 	border-radius: var(--border-radius);
 	background: var(--background-color-light);
 	color: var(--font-color);
@@ -940,7 +947,7 @@ input[type="color"] {
 
 .fv-modal-actions .btn.btn-important {
 	background: var(--link-color);
-	color: white;
+	color: var(--frss-font-color-dark, var(--font-color-grey, #000000));
 	border-color: var(--link-color);
 }
 
@@ -1030,7 +1037,7 @@ input[type="color"] {
 .color-settings label {
 	flex: 1;
 	margin-bottom: 0;
-	font-size: 0.9em;
+	font-size: 0.95em;
 }
 
 .color-reset {
@@ -1065,6 +1072,228 @@ input[type="color"] {
 
 .tab-unread-count:not(:empty) {
 	display: inline-block;
+}
+
+css
+
+/* Widget Styles */
+.freshvibes-widget .freshvibes-container-content {
+	padding: 20px;
+	min-height: 200px;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+}
+
+.freshvibes-widget .feed-title {
+	font-weight: 600;
+}
+
+/* Weather Widget */
+.widget-weather .widget-weather-content {
+	text-align: center;
+	width: 100%;
+}
+
+.weather-loading,
+.weather-error {
+	color: var(--font-color-grey);
+	font-style: italic;
+}
+
+.weather-main {
+	margin-bottom: 15px;
+}
+
+.weather-location {
+	font-size: 1.2em;
+	font-weight: bold;
+	margin-bottom: 5px;
+	color: var(--font-color);
+}
+
+.weather-temp {
+	font-size: 3em;
+	font-weight: 300;
+	line-height: 1;
+	color: var(--link-color);
+}
+
+.weather-desc {
+	font-size: 1.1em;
+	color: var(--font-color-grey);
+	text-transform: capitalize;
+	margin-top: 5px;
+}
+
+.weather-details {
+	display: flex;
+	justify-content: center;
+	gap: 20px;
+	font-size: 0.95em;
+	color: var(--font-color-grey);
+}
+
+/* Clock Widget */
+.clock-digital {
+	font-size: 2.5em;
+	font-weight: 300;
+	font-family: 'Courier New', monospace;
+	color: var(--link-color);
+	text-align: center;
+}
+
+.clock-analog {
+	width: 150px;
+	height: 150px;
+	margin: 0 auto;
+}
+
+.clock-face {
+	width: 100%;
+	height: 100%;
+	border: 2px solid var(--border-color);
+	border-radius: 50%;
+	position: relative;
+	background: var(--background-color-light);
+}
+
+.widget-clock .widget-clock-content {
+	text-align: center;
+	width: 100%;
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: 100px;
+}
+
+.hand {
+	position: absolute;
+	background: var(--font-color);
+	transform-origin: bottom center;
+	bottom: 50%;
+	left: 50%;
+}
+
+.hour-hand {
+	width: 4px;
+	height: 35%;
+	margin-left: -2px;
+}
+
+.minute-hand {
+	width: 3px;
+	height: 45%;
+	margin-left: -1.5px;
+}
+
+.second-hand {
+	width: 1px;
+	height: 48%;
+	margin-left: -0.5px;
+	background: var(--link-color);
+}
+
+.clock-center {
+	position: absolute;
+	width: 10px;
+	height: 10px;
+	background: var(--font-color);
+	border-radius: 50%;
+	top: 50%;
+	left: 50%;
+	transform: translate(-50%, -50%);
+}
+
+/* Widget Menu */
+.widget-add-menu {
+	position: fixed;
+	bottom: 20px;
+	right: 20px;
+	z-index: 100;
+}
+
+.widget-add-button {
+	padding: 12px 20px;
+	background: var(--link-color);
+	color: white;
+	border: none;
+	border-radius: calc(var(--border-radius) * 3);
+	cursor: pointer;
+	font-size: 1em;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+	transition: all 0.2s;
+}
+
+.widget-add-button:hover {
+	transform: translateY(-2px);
+	box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+}
+
+.widget-menu-dropdown {
+	display: none;
+	position: absolute;
+	bottom: 100%;
+	right: 0;
+	background: var(--background-color-light-shadowed);
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	margin-bottom: 10px;
+	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+	min-width: 150px;
+}
+
+.widget-menu-dropdown.active {
+	display: block;
+}
+
+.widget-menu-dropdown button {
+	display: block;
+	width: 100%;
+	padding: 10px 15px;
+	border: none;
+	background: none;
+	text-align: left;
+	cursor: pointer;
+	color: var(--font-color);
+	transition: background-color 0.2s;
+}
+
+.widget-menu-dropdown button:hover {
+	background: var(--background-color-grey);
+}
+
+.widget-menu-dropdown button:first-child {
+	border-radius: var(--border-radius) var(--border-radius) 0 0;
+}
+
+.widget-menu-dropdown button:last-child {
+	border-radius: 0 0 var(--border-radius) var(--border-radius);
+}
+
+/* Widget-specific setting inputs */
+.widget-weather-location,
+.widget-clock-timezone,
+.widget-clock-format,
+.widget-clock-style,
+.widget-weather-units {
+	flex-grow: 1;
+	padding: 4px 8px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: var(--background-color-light);
+	color: var(--font-color);
+}
+
+.widget-settings {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.widget-delete {
+	width: 100%;
+	text-align: center;
 }
 
 @media (max-width: 600px) {
@@ -1179,5 +1408,29 @@ input[type="color"] {
 	.fv-modal-actions .btn {
 		width: 100%;
 		justify-content: center;
+	}
+
+	/* Responsive adjustments for widgets */
+	.widget-add-menu {
+		bottom: 10px;
+		right: 10px;
+	}
+
+	.widget-add-button {
+		padding: 10px 16px;
+		font-size: 0.95em;
+	}
+
+	.clock-analog {
+		width: 120px;
+		height: 120px;
+	}
+
+	.clock-digital {
+		font-size: 2em;
+	}
+
+	.weather-temp {
+		font-size: 2.5em;
 	}
 }
