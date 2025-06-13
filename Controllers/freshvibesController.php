@@ -330,16 +330,21 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		header('Content-Type: application/json');
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['operation'])) {
 			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid request.']);
 			exit;
 		}
+
 		$operation = Minz_Request::paramString('operation');
 		$layout = $this->getLayout();
 		$mode = $this->getMode();
+
 		try {
 			switch ($operation) {
 				case 'add':
 					if ($mode === 'categories') {
-						throw new Exception('Operation not allowed.');
+						http_response_code(403);
+						echo json_encode(['status' => 'error', 'message' => 'Operation not allowed.']);
+						exit;
 					}
 					$newTab = [
 						'id' => 'tab-' . microtime(true) . rand(),
@@ -355,12 +360,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 					break;
 				case 'delete':
 					if ($mode === 'categories') {
-						throw new Exception('Operation not allowed.');
+						http_response_code(403);
+						echo json_encode(['status' => 'error', 'message' => 'Operation not allowed.']);
+						exit;
+					}
+					if (count($layout) <= 1) {
+						http_response_code(400);
+						echo json_encode(['status' => 'error', 'message' => 'Cannot delete the last tab.']);
+						exit;
 					}
 					$tabId = Minz_Request::paramString('tab_id');
-					if (count($layout) <= 1) {
-						throw new Exception('Cannot delete the last tab.');
-					}
 					$feedsToMove = [];
 					$deletedTabIndex = -1;
 					foreach ($layout as $index => $tab) {
@@ -385,12 +394,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 					break;
 				case 'rename':
 					if ($mode === 'categories') {
-						throw new Exception('Operation not allowed.');
+						http_response_code(403);
+						echo json_encode(['status' => 'error', 'message' => 'Operation not allowed.']);
+						exit;
 					}
 					$tabId = Minz_Request::paramString('tab_id');
 					$newName = trim(Minz_Request::paramString('value'));
 					if (empty($newName)) {
-						throw new Exception('Tab name cannot be empty.');
+						http_response_code(400);
+						echo json_encode(['status' => 'error', 'message' => 'Tab name cannot be empty.']);
+						exit;
 					}
 					foreach ($layout as &$tab) {
 						if ($tab['id'] === $tabId) {
@@ -456,7 +469,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 					echo json_encode(['status' => 'success', 'font_color' => $fontColor]);
 					break;
 				default:
-					throw new Exception('Unknown tab operation.');
+					http_response_code(400);
+					echo json_encode(['status' => 'error', 'message' => 'Unknown tab operation.']);
+					exit;
 			}
 		} catch (Exception $e) {
 			http_response_code(500);
