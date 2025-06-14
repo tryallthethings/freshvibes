@@ -36,7 +36,6 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_tab_fontcolor_';
 	public const FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_feed_headercolor_';
 	public const CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_feed_headercolor_';
-
 	// --- End Constants ---
 
 	public function getId(): string {
@@ -48,6 +47,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 		$this->registerController(self::CONTROLLER_NAME_BASE);
 		$this->registerViews();
 		$this->registerHook('nav_reading_modes', [self::class, 'addReadingMode']);
+		$this->registerHook('view_modes', [self::class, 'addViewMode']);
 
 		Minz_View::appendStyle($this->getFileUrl('style.css', 'css'));
 		Minz_View::appendScript($this->getFileUrl('Sortable.min.js', 'js'), false, true, false);
@@ -74,6 +74,16 @@ class FreshVibesViewExtension extends Minz_Extension {
 		return $readingModes;
 	}
 
+	public static function addViewMode(array $modes): array {
+		$modes[] = new FreshRSS_ViewMode(
+			self::CONTROLLER_NAME_BASE,
+			_t('ext.' . self::EXT_ID . '.title'),
+			self::CONTROLLER_NAME_BASE,
+			'index'
+		);
+		return $modes;
+	}
+
 	/**
 	 * Handles the logic when the configuration form is submitted.
 	 */
@@ -93,6 +103,21 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->save();
 		}
 	}
+
+	public function uninstall() {
+		$userConf = FreshRSS_Context::userConf();
+
+		// Only change the view_mode if it's currently set to this extension's view
+		if ($userConf->hasParam('view_mode') && $userConf->view_mode === self::CONTROLLER_NAME_BASE) {
+			$userConf->_attribute('view_mode', 'reader');
+			$userConf->save();
+		}
+
+		// The uninstall method must return true on success.
+		return true;
+	}
+
+
 	/**
 	 * A helper to get a specific setting's value for this extension.
 	 * @param string $key The setting key.
