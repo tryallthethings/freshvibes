@@ -1,0 +1,21 @@
+{
+  // — Format on save globally —
+  "editor.formatOnSave": true,
+
+  // — JS / TS: keep '{' on same line —
+  "javascript.format.placeOpenBraceOnNewLineForControlBlocks": false,     // :contentReference[oaicite:0]{index=0}
+  "javascript.format.placeOpenBraceOnNewLineForFunctions":      false,     // :contentReference[oaicite:1]{index=1}
+  "typescript.format.placeOpenBraceOnNewLineForControlBlocks": false,     // :contentReference[oaicite:2]{index=2}
+  "typescript.format.placeOpenBraceOnNewLineForFunctions":      false,     // :contentReference[oaicite:3]{index=3}
+
+  // — Make sure VS Code uses its built-in formatter for HTML & CSS —
+  "[html]": { "editor.defaultFormatter": "vscode.html-language-features" },
+  "[css]":  { "editor.defaultFormatter": "vscode.css-language-features" },
+
+  // — PHP: use Intelephense’s formatter —
+  "[php]": {
+    "editor.defaultFormatter": "bmewburn.vscode-intelephense-client"
+  },
+  // and switch Intelephense to K&R (same-line) brace style:
+  "intelephense.format.braces": "k&r"                              // :contentReference[oaicite:4]{index=4}
+}

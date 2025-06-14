@@ -2,8 +2,7 @@
 
 declare(strict_types=1);
 
-class FreshVibesViewExtension extends Minz_Extension
-{
+class FreshVibesViewExtension extends Minz_Extension {
 	protected array $csp_policies = [
 		'connect-src' => "'self'",
 	];
@@ -37,20 +36,18 @@ class FreshVibesViewExtension extends Minz_Extension
 	public const CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_tab_fontcolor_';
 	public const FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_feed_headercolor_';
 	public const CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_feed_headercolor_';
-
 	// --- End Constants ---
 
-	public function getId(): string
-	{
+	public function getId(): string {
 		return self::EXT_ID;
 	}
 
-	public function init(): void
-	{
+	public function init(): void {
 		$this->registerTranslates();
 		$this->registerController(self::CONTROLLER_NAME_BASE);
 		$this->registerViews();
 		$this->registerHook('nav_reading_modes', [self::class, 'addReadingMode']);
+		$this->registerHook('view_modes', [self::class, 'addViewMode']);
 
 		Minz_View::appendStyle($this->getFileUrl('style.css', 'css'));
 		Minz_View::appendScript($this->getFileUrl('Sortable.min.js', 'js'), false, true, false);
@@ -58,8 +55,7 @@ class FreshVibesViewExtension extends Minz_Extension
 	}
 
 	/** Hook callback to register the view as a reading mode. */
-	public static function addReadingMode(array $readingModes): array
-	{
+	public static function addReadingMode(array $readingModes): array {
 		$urlParams = array_merge(Minz_Request::currentRequest(), [
 			'c' => self::CONTROLLER_NAME_BASE,
 			'a' => 'index',
@@ -78,12 +74,21 @@ class FreshVibesViewExtension extends Minz_Extension
 		return $readingModes;
 	}
 
+	public static function addViewMode(array $modes): array {
+		$modes[] = new FreshRSS_ViewMode(
+			self::CONTROLLER_NAME_BASE,
+			_t('ext.' . self::EXT_ID . '.title'),
+			self::CONTROLLER_NAME_BASE,
+			'index'
+		);
+		return $modes;
+	}
+
 	/**
 	 * Handles the logic when the configuration form is submitted.
 	 */
 	#[\Override]
-	public function handleConfigureAction(): void
-	{
+	public function handleConfigureAction(): void {
 		$this->registerTranslates();
 
 		if (Minz_Request::isPost()) {
@@ -98,14 +103,28 @@ class FreshVibesViewExtension extends Minz_Extension
 			$userConf->save();
 		}
 	}
+
+	public function uninstall() {
+		$userConf = FreshRSS_Context::userConf();
+
+		// Only change the view_mode if it's currently set to this extension's view
+		if ($userConf->hasParam('view_mode') && $userConf->view_mode === self::CONTROLLER_NAME_BASE) {
+			$userConf->_attribute('view_mode', 'reader');
+			$userConf->save();
+		}
+
+		// The uninstall method must return true on success.
+		return true;
+	}
+
+
 	/**
 	 * A helper to get a specific setting's value for this extension.
 	 * @param string $key The setting key.
 	 * @param mixed $default The default value to return if not set.
 	 * @return mixed The setting value.
 	 */
-	public function getSetting(string $key, $default = null)
-	{
+	public function getSetting(string $key, $default = null) {
 		$userConf = FreshRSS_Context::userConf();
 		if (!$userConf->hasParam($key)) {
 			return $default;
