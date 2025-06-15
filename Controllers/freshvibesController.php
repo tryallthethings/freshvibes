@@ -173,6 +173,19 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				$fontSize = FreshVibesViewExtension::DEFAULT_FONT_SIZE;
 			}
 
+			$maxHeightKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+				FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY) .
+				$feedId;
+			if ($userConf->hasParam($maxHeightKey)) {
+				$maxHeight = $userConf->attributeString($maxHeightKey);
+			} else {
+				$maxHeight = FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY;
+			}
+			if (!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY)) {
+				$maxHeight = FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY;
+			}
+
 			$headerColorKey = ($mode === 'categories' ?
 				FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
 				FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX) .
@@ -184,12 +197,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			}
 
 			try {
+				// Get sorting from FreshRSS context
+				$sort = FreshRSS_Context::$sort;
+				$order = FreshRSS_Context::$order;
+
 				$entryGenerator = $entryDAO->listWhere(
 					type: 'f',
 					id: $feedId,
 					state: $stateAll,
-					sort: 'date',
-					order: 'DESC',
+					sort: $sort,
+					order: $order,
 					limit: $limit
 				);
 				$entries = [];
@@ -226,10 +243,13 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				'currentFontSize' => $fontSize,
 				'nbUnread' => $feed->nbNotRead(),
 				'currentHeaderColor' => $headerColor,
+				'currentMaxHeight' => $maxHeight,
 			];
 		}
 
 		$controllerParam = strtolower(FreshVibesViewExtension::CONTROLLER_NAME_BASE);
+		@$this->view->currentSort = FreshRSS_Context::$sort;
+		@$this->view->currentOrder = FreshRSS_Context::$order;
 		@$this->view->feedsData = $feedsData;
 		@$this->view->getLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'getlayout'], 'json', false);
 		@$this->view->saveLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savelayout'], 'json', false);
@@ -252,7 +272,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		@$this->view->categories = FreshRSS_Context::categories();
 		@$this->view->confirmTabDelete = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY, 1);
 		@$this->view->entryClickMode = $userConf->param(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal');
-		@$this->view->entryUrl = Minz_Url::display(['c' => 'index', 'a' => 'reader', 'get' => 'e_'], 'html', false);
+		@$this->view->entryUrl = Minz_Url::display(['c' => 'index', 'a' => 'index'], 'html', false) . '#e_';
 
 		@$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;
@@ -589,14 +609,18 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			exit;
 		}
 		$feedId = Minz_Request::paramInt('feed_id');
-		$limit = Minz_Request::paramInt('limit');
+		$limit = Minz_Request::paramString('limit');
 		$fontSize = Minz_Request::paramString('font_size');
 		$headerColor = Minz_Request::paramStringNull('header_color');
+		$maxHeight = Minz_Request::paramString('max_height');
+
+		$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
 
 		if (
 			$feedId <= 0 ||
-			!in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
-			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES)
+			!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
+			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES) ||
+			!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY)
 		) {
 			http_response_code(400);
 			exit;
@@ -613,8 +637,14 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			$headerPrefix = $mode === 'categories' ?
 				FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
 				FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
-			$userConf->_attribute($limitPrefix . $feedId, $limit);
+			$maxHeightPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+				FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
+
+			$userConf->_attribute($limitPrefix . $feedId, $limitForValidation);
 			$userConf->_attribute($fontPrefix . $feedId, $fontSize);
+			$userConf->_attribute($maxHeightPrefix . $feedId, $maxHeight);
+
 			if ($headerColor !== null) {
 				$userConf->_attribute($headerPrefix . $feedId, $headerColor);
 			}

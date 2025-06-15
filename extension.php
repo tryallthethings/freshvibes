@@ -28,11 +28,17 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_hide_subscription_control';
 	public const CONFIRM_TAB_DELETE_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_confirm_tab_delete';
 	public const ENTRY_CLICK_MODE_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_entry_click_mode';
-	public const ENTRY_CLICK_MODES = ['modal', 'freshrss', 'external'];
+	public const ENTRY_CLICK_MODES = ['modal', 'external'];
+
+	public const CATEGORY_MAX_HEIGHT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_category_feed_max_height';
+	public const MAX_HEIGHT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_feed_max_height';
+	public const ALLOWED_MAX_HEIGHTS_CONFIG_KEY = ['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'];
+	public const DEFAULT_MAX_HEIGHT_CONFIG_KEY = '400';
 
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
-	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50];
+	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50, 'unlimited'];
+
 	// Font Sizes
 	public const ALLOWED_FONT_SIZES = ['xsmall', 'small', 'regular', 'large', 'xlarge'];
 	public const DEFAULT_FONT_SIZE = 'regular';

@@ -124,7 +124,6 @@ declare(strict_types=1);
 		<div class="group-controls">
 			<select name="freshvibes_entry_click_mode" id="freshvibes_entry_click_mode">
 				<option value="modal" <?= $this->getSetting(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal') === 'modal' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_modal') ?></option>
-				<option value="freshrss" <?= $this->getSetting(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal') === 'freshrss' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_freshrss') ?></option>
 				<option value="external" <?= $this->getSetting(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal') === 'external' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_external') ?></option>
 			</select>
 			<p class="help">

@@ -347,6 +347,10 @@ function initializeDashboard(freshvibesView) {
 		const contentDiv = container.querySelector('.freshvibes-container-content');
 		if (contentDiv) {
 			contentDiv.innerHTML = '';
+			// Apply max-height
+			if (feed.currentMaxHeight && feed.currentMaxHeight !== 'unlimited') {
+				contentDiv.style.maxHeight = feed.currentMaxHeight + 'px';
+			}
 			if (feed.entries && Array.isArray(feed.entries) && feed.entries.length > 0 && !feed.entries.error) {
 				const ul = document.createElement('ul');
 				feed.entries.forEach(entry => {
@@ -356,13 +360,21 @@ function initializeDashboard(freshvibesView) {
 					li.dataset.feedId = String(feed.id);
 					if (entry.isRead) li.classList.add('read');
 
+					const entryLink = document.createElement('a');
+					entryLink.className = 'entry-link';
+					entryLink.href = entry.link || '#';
+					entryLink.target = '_blank';
+					entryLink.rel = 'noopener noreferrer';
+					entryLink.dataset.entryId = String(entry.id);
+					entryLink.dataset.feedId = String(feed.id);
+
 					const main = document.createElement('div');
 					main.className = 'entry-main';
 
-					const a = document.createElement('span');
-					a.className = 'entry-title';
-					a.appendChild(document.createTextNode(entry.title || '(No title)'));
-					main.appendChild(a);
+					const titleSpan = document.createElement('span');
+					titleSpan.className = 'entry-title';
+					titleSpan.appendChild(document.createTextNode(entry.title || '(No title)'));
+					main.appendChild(titleSpan);
 
 					if (entry.snippet) {
 						const snippet = document.createElement('span');
@@ -370,6 +382,14 @@ function initializeDashboard(freshvibesView) {
 						snippet.textContent = entry.snippet;
 						main.appendChild(snippet);
 					}
+
+					entryLink.appendChild(main);
+
+					const date = document.createElement('span');
+					date.className = 'entry-date';
+					date.textContent = entry.dateShort;
+					date.setAttribute('title', entry.dateFull);
+					entryLink.appendChild(date);
 
 					// Add action buttons
 					const actions = document.createElement('div');
@@ -385,14 +405,8 @@ function initializeDashboard(freshvibesView) {
 					readBtn.title = entry.isRead ? (tr.mark_unread || 'Mark as unread') : (tr.mark_read || 'Mark as read');
 					actions.appendChild(readBtn);
 
-					const date = document.createElement('span');
-					date.className = 'entry-date';
-					date.textContent = entry.dateShort;
-					date.setAttribute('title', entry.dateFull);
-
-					li.appendChild(main);
+					li.appendChild(entryLink);
 					li.appendChild(actions);
-					li.appendChild(date);
 					ul.appendChild(li);
 				});
 				contentDiv.appendChild(ul);
@@ -429,6 +443,15 @@ function initializeDashboard(freshvibesView) {
 			const headerColorInput = editor.querySelector('.feed-header-color-input');
 			if (headerColorInput && feed.currentHeaderColor) {
 				headerColorInput.value = feed.currentHeaderColor;
+			}
+
+			const maxHeightSelect = editor.querySelector('.feed-maxheight-select');
+			if (maxHeightSelect) {
+				['300', '400', '500', '600', '700', '800', 'unlimited'].forEach(val => {
+					const label = val === 'unlimited' ? 'Unlimited' : val + 'px';
+					const opt = new Option(label, val, val === feed.currentMaxHeight, val === feed.currentMaxHeight);
+					maxHeightSelect.add(opt);
+				});
 			}
 
 			// Add move-to options if there are other tabs
@@ -1012,6 +1035,7 @@ function initializeDashboard(freshvibesView) {
 				const fontSize = editor.querySelector('.feed-fontsize-select').value;
 				const headerColorInput = editor.querySelector('.feed-header-color-input');
 				const headerColor = headerColorInput ? headerColorInput.value : '';
+				const maxHeight = editor.querySelector('.feed-maxheight-select').value;
 
 				// Apply font size immediately
 				container.className = 'freshvibes-container';
@@ -1020,13 +1044,23 @@ function initializeDashboard(freshvibesView) {
 				container.classList.toggle('fontsize-large', fontSize === 'large');
 				container.classList.toggle('fontsize-xlarge', fontSize === 'xlarge');
 
-				api(saveFeedSettingsUrl, { feed_id: feedId, limit, font_size: fontSize, header_color: headerColor }).then(data => {
+				const contentDiv = container.querySelector('.freshvibes-container-content');
+				if (contentDiv) {
+					if (maxHeight === 'unlimited') {
+						contentDiv.style.maxHeight = '';
+					} else {
+						contentDiv.style.maxHeight = maxHeight + 'px';
+					}
+				}
+
+				api(saveFeedSettingsUrl, { feed_id: feedId, limit, font_size: fontSize, header_color: headerColor, max_height: maxHeight }).then(data => {
 					if (data.status === 'success') {
 						editor.classList.remove('active');
 						const oldLimit = state.feeds[feedId].currentLimit;
 						state.feeds[feedId].currentLimit = parseInt(limit, 10);
 						state.feeds[feedId].currentFontSize = fontSize;
 						state.feeds[feedId].currentHeaderColor = headerColor;
+						state.feeds[feedId].currentMaxHeight = maxHeight;
 
 						if (oldLimit !== parseInt(limit, 10)) {
 							location.reload();
@@ -1062,69 +1096,6 @@ function initializeDashboard(freshvibesView) {
 				}
 				e.stopPropagation();
 				return;
-			}
-
-			const entryItem = e.target.closest('.entry-item');
-			if (entryItem && !e.target.closest('a') && !e.target.closest('.entry-actions')) {
-				const feedId = entryItem.dataset.feedId;
-				const entryId = entryItem.dataset.entryId;
-				const feedData = state.feeds[feedId];
-				const entry = feedData?.entries?.find(en => String(en.id) === entryId);
-
-				if (entry) {
-					const clickMode = freshvibesView.dataset.xextensionFreshvibesviewEntryClickMode || 'modal';
-					const entryUrl = freshvibesView.dataset.xextensionFreshvibesviewEntryUrl || '';
-
-					if (clickMode === 'modal') {
-						showEntryModal(entry, entryItem);
-					} else if (clickMode === 'freshrss' && entryUrl) {
-						const url = entryUrl + entryId;
-						if (e.button === 1) { // Middle click
-							window.open(url, '_blank');
-						} else {
-							window.location.href = url;
-						}
-					} else if (clickMode === 'external' && entry.link) {
-						// Mark as read before opening
-						if (!entry.isRead && markReadUrl) {
-							entry.isRead = true;
-							entryItem.classList.add('read');
-
-							if (feedData && feedData.nbUnread > 0) {
-								feedData.nbUnread--;
-								const badge = document.querySelector(
-									`.freshvibes-container[data-feed-id="${feedData.id}"] .feed-unread-badge`
-								);
-								if (badge) {
-									if (feedData.nbUnread > 0) {
-										badge.textContent = feedData.nbUnread;
-									} else {
-										badge.remove();
-									}
-								}
-								updateTabBadge(feedData.id);
-							}
-
-							fetch(markReadUrl, {
-								method: 'POST',
-								credentials: 'same-origin',
-								headers: {
-									'Content-Type': 'application/x-www-form-urlencoded',
-									'X-Requested-With': 'XMLHttpRequest'
-								},
-								body: new URLSearchParams({
-									'id': entry.id,
-									'ajax': 1,
-									'_csrf': csrfToken
-								})
-							}).catch(console.error);
-						}
-
-						window.open(entry.link, '_blank');
-					}
-					e.preventDefault();
-					return;
-				}
 			}
 
 			if (!e.target.closest('.tab-settings-menu')) {
@@ -1170,43 +1141,54 @@ function initializeDashboard(freshvibesView) {
 				const colorInput = resetBtn.previousElementSibling;
 
 				if (colorInput.classList.contains('tab-bg-color-input')) {
+					e.stopPropagation();
 					const tabEl = resetBtn.closest('.freshvibes-tab');
-					if (!tabEl) return;
 					const tabId = tabEl.dataset.tabId;
 
-					// Get the computed default color
-					const tempTab = document.createElement('div');
-					tempTab.className = 'freshvibes-tab';
-					document.body.appendChild(tempTab);
-					const defaultBgColor = window.getComputedStyle(tempTab).backgroundColor;
-					const defaultColor = window.getComputedStyle(tempTab).color;
-					document.body.removeChild(tempTab);
+					// Preview: Revert tab styles immediately
+					tabEl.style.removeProperty('background-color');
+					tabEl.style.removeProperty('color');
+					tabEl.style.removeProperty('--tab-bg-color');
+					tabEl.style.removeProperty('--tab-font-color');
 
-					// Apply default colors immediately
-					tabEl.style.backgroundColor = '';
-					tabEl.style.color = '';
+					const badge = tabEl.querySelector('.tab-unread-count');
+					if (badge) {
+						badge.style.removeProperty('background-color');
+						badge.style.removeProperty('color');
+						badge.style.removeProperty('border-color');
+					}
 
-					api(tabActionUrl, { operation: 'set_colors', tab_id: tabId, bg_color: '', font_color: '' }).then(data => {
-						if (data.status === 'success') {
-							const tabData = state.layout.find(t => t.id === tabId);
-							if (tabData) {
-								tabData.bg_color = '';
-								tabData.font_color = '';
+					// Save: Send empty values to the server to signify a reset
+					api(tabActionUrl, { operation: 'set_colors', tab_id: tabId, bg_color: '', font_color: '' })
+						.then(data => {
+							if (data.status === 'success') {
+								const tabData = state.layout.find(t => t.id === tabId);
+								if (tabData) {
+									tabData.bg_color = '';
+									tabData.font_color = '';
+								}
+								// Reset color-picker to default computed style
+								const tempTab = document.createElement('div');
+								tempTab.className = 'freshvibes-tab';
+								document.body.appendChild(tempTab);
+								const defaultBg = window.getComputedStyle(tempTab).backgroundColor;
+								document.body.removeChild(tempTab);
+
+								const rgb = defaultBg.match(/\d+/g);
+								if (rgb) {
+									const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+									colorInput.value = hex;
+								}
 							}
-							// Set the color input to the computed default
-							const rgb = defaultBgColor.match(/\d+/g);
-							if (rgb) {
-								const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
-								colorInput.value = hex;
-							}
-						}
-					}).catch(console.error);
+						})
+						.catch(console.error);
+
 				} else if (colorInput.classList.contains('feed-header-color-input')) {
 					const container = resetBtn.closest('.freshvibes-container');
 					const feedId = container.dataset.feedId;
 					const header = container.querySelector('.freshvibes-container-header');
 
-					// Remove custom colors immediately
+					// Preview: Remove custom colors immediately
 					header.style.backgroundColor = '';
 					header.style.color = '';
 
@@ -1224,19 +1206,24 @@ function initializeDashboard(freshvibesView) {
 						settingsBtn.style.removeProperty('color');
 					}
 
+					// Get current settings from state to send a complete request
+					const currentFeedState = state.feeds[feedId];
+
+					// Save: send all parameters to the backend
 					api(saveFeedSettingsUrl, {
 						feed_id: feedId,
-						limit: state.feeds[feedId].currentLimit,
-						font_size: state.feeds[feedId].currentFontSize,
-						header_color: ''
+						limit: currentFeedState.currentLimit,
+						font_size: currentFeedState.currentFontSize,
+						max_height: currentFeedState.currentMaxHeight, // This was missing
+						header_color: '' // Reset the color
 					}).then(data => {
 						if (data.status === 'success') {
+							// Update state and UI on success
 							state.feeds[feedId].currentHeaderColor = '';
-							colorInput.value = '#f0f0f0'; // or get computed style
+							colorInput.value = '#f0f0f0'; // A default light gray
 						}
 					}).catch(console.error);
 				}
-
 				return;
 			}
 
@@ -1311,6 +1298,40 @@ function initializeDashboard(freshvibesView) {
 			}
 
 		});
+
+		freshvibesView.addEventListener('click', e => {
+			// This handler is specifically for entry links
+			const entryLink = e.target.closest('.entry-link');
+
+			// Ignore if the click is not on an entry link or is on one of the action buttons
+			if (!entryLink || e.target.closest('.entry-actions')) {
+				return;
+			}
+
+			const clickMode = freshvibesView.dataset.xextensionFreshvibesviewEntryClickMode || 'modal';
+
+			// For 'external' mode, we do nothing. The browser will follow the link's href
+			// and `target="_blank"` will correctly open it in a new tab.
+			if (clickMode === 'external') {
+				return;
+			}
+
+			// For 'modal' mode a left-click should open the modal.
+			// We prevent the default link navigation and trigger the modal.
+			if (clickMode === 'modal') {
+				e.preventDefault();
+
+				const feedId = entryLink.dataset.feedId;
+				const entryId = entryLink.dataset.entryId;
+				const feedData = state.feeds[feedId];
+				const entry = feedData?.entries?.find(en => String(en.id) === entryId);
+
+				if (entry) {
+					const li = entryLink.closest('.entry-item');
+					showEntryModal(entry, li);
+				}
+			}
+		}, true);
 
 		tabsContainer.addEventListener('change', e => {
 			if (e.target.classList.contains('tab-icon-input') || e.target.classList.contains('tab-icon-color-input')) {
@@ -1524,78 +1545,70 @@ function initializeDashboard(freshvibesView) {
 			const feedSettingsEditor = e.target.closest('.feed-settings-editor');
 			if (!feedSettingsEditor) return;
 
-			const container = feedSettingsEditor.closest('.freshvibes-container');
-			const feedId = container.dataset.feedId;
+			if (e.target.matches('.feed-limit-select, .feed-fontsize-select, .feed-maxheight-select, .feed-header-color-input')) {
+				const container = feedSettingsEditor.closest('.freshvibes-container');
+				const feedId = container.dataset.feedId;
 
-			if (e.target.classList.contains('feed-limit-select') ||
-				e.target.classList.contains('feed-fontsize-select') ||
-				e.target.classList.contains('feed-header-color-input')) {
-
-				const limit = feedSettingsEditor.querySelector('.feed-limit-select').value;
+				// --- Live Preview Logic (for immediate visual feedback) ---
 				const fontSize = feedSettingsEditor.querySelector('.feed-fontsize-select').value;
-				const colorInput = feedSettingsEditor.querySelector('.feed-header-color-input');
-				const headerColor = state.feeds[feedId].currentHeaderColor || '';
+				const maxHeight = feedSettingsEditor.querySelector('.feed-maxheight-select').value;
 
-				// Only send color if it was explicitly set
+				// Apply font size class to the main container
+				container.className = 'freshvibes-container'; // Reset classes first
+				container.classList.toggle('fontsize-xsmall', fontSize === 'xsmall');
+				container.classList.toggle('fontsize-small', fontSize === 'small');
+				container.classList.toggle('fontsize-large', fontSize === 'large');
+				container.classList.toggle('fontsize-xlarge', fontSize === 'xlarge');
+
+				// Apply max-height to the scrollable content area
+				const contentDiv = container.querySelector('.freshvibes-container-content');
+				if (contentDiv) {
+					contentDiv.style.maxHeight = maxHeight === 'unlimited' ? '' : `${maxHeight}px`;
+				}
+				// Note: Live preview for header color is handled by a separate 'input' event listener.
+
+				// --- Data Preparation and Saving ---
+				const limit = feedSettingsEditor.querySelector('.feed-limit-select').value;
+				const lastSavedHeaderColor = state.feeds[feedId].currentHeaderColor || '';
 				const params = {
 					feed_id: feedId,
 					limit,
-					font_size: fontSize
+					font_size: fontSize,
+					max_height: maxHeight,
 				};
 
+				// Restore the original logic to handle header color correctly
 				if (e.target.classList.contains('feed-header-color-input')) {
+					// If the color picker was changed, send its new value
 					params.header_color = e.target.value;
-				} else if (headerColor) {
-					params.header_color = headerColor;
+				} else if (lastSavedHeaderColor) {
+					// Otherwise, send the last saved color from our state to avoid overwriting it
+					params.header_color = lastSavedHeaderColor;
 				}
 
+				// Save all settings to the server
 				api(saveFeedSettingsUrl, params).then(data => {
 					if (data.status === 'success') {
-						const oldLimit = state.feeds[feedId].currentLimit;
-						state.feeds[feedId].currentLimit = parseInt(limit, 10);
-						state.feeds[feedId].currentFontSize = fontSize;
+						const feed = state.feeds[feedId];
+						const oldLimit = feed.currentLimit;
 
+						// Update state object with the new values
+						feed.currentLimit = parseInt(limit, 10);
+						feed.currentFontSize = fontSize;
+						feed.currentMaxHeight = maxHeight;
+
+						// Only update the header color state if it was the element that changed
 						if (e.target.classList.contains('feed-header-color-input')) {
-							state.feeds[feedId].currentHeaderColor = e.target.value;
+							feed.currentHeaderColor = e.target.value;
 						}
 
+						// Reload only if the article limit changes
 						if (oldLimit !== parseInt(limit, 10)) {
 							location.reload();
-						} else {
-							container.className = 'freshvibes-container';
-							container.classList.toggle('fontsize-xsmall', fontSize === 'xsmall');
-							container.classList.toggle('fontsize-small', fontSize === 'small');
-							container.classList.toggle('fontsize-large', fontSize === 'large');
-							container.classList.toggle('fontsize-xlarge', fontSize === 'xlarge');
-						}
-
-						if (e.target.classList.contains('feed-header-color-input')) {
-							const newColor = e.target.value;
-							// reapply icon color on save
-							const header = container.querySelector('.freshvibes-container-header');
-							const settingsBtn = container.querySelector('.feed-settings-button');
-							header.style.backgroundColor = newColor;
-							header.style.color = getContrastColor(newColor);
-							if (settingsBtn) settingsBtn.style.color = getContrastColor(newColor);
-							const iconImg = container.querySelector('.feed-settings-button img.icon');
-							if (iconImg) {
-								iconImg.style.filter = getContrastColor(newColor) === '#ffffff'
-									? 'invert(1)'
-									: '';
-							}
 						}
 					}
 				}).catch(console.error);
 			}
-
-			freshvibesView.addEventListener('mousedown', e => {
-				if (e.button === 1) { // Middle click
-					const entryItem = e.target.closest('.entry-item');
-					if (entryItem && !e.target.closest('a') && !e.target.closest('.entry-actions')) {
-						e.preventDefault(); // Prevent autoscroll
-					}
-				}
-			});
 
 			// Close menus when clicking outside
 			if (!e.target.closest('.tab-settings-button, .tab-settings-menu')) {

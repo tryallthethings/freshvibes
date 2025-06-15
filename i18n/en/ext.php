@@ -49,5 +49,10 @@ return array(
 		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header',
 		'mark_read' => 'Mark as read',
 		'mark_unread' => 'Mark as unread',
+		'settings_entry_click_mode_label' => 'Entry click behavior',
+		'settings_entry_click_mode_help' => 'Choose what happens when you click on an entry',
+		'entry_click_mode_modal' => 'Open in modal',
+		'entry_click_mode_external' => 'Open original article',
+		'max_height_label' => 'Max height:',
 	),
 );
