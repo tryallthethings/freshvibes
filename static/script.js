@@ -312,10 +312,11 @@ function initializeDashboard(freshvibesView) {
 			titleLink.target = '_blank';
 			titleLink.rel = 'noopener noreferrer';
 			titleLink.className = 'feed-title-link';
-			titleLink.textContent = feed.name || 'Unnamed Feed';
+			// Create text node to avoid HTML injection
+			titleLink.appendChild(document.createTextNode(feed.name || 'Unnamed Feed'));
 			titleElement.appendChild(titleLink);
 		} else if (titleElement) {
-			titleElement.textContent = feed.name || 'Unnamed Feed';
+			titleElement.appendChild(document.createTextNode(feed.name || 'Unnamed Feed'));
 		}
 
 		const headerElement = container.querySelector('.freshvibes-container-header');
@@ -360,7 +361,7 @@ function initializeDashboard(freshvibesView) {
 
 					const a = document.createElement('span');
 					a.className = 'entry-title';
-					a.textContent = entry.title || '(No title)';
+					a.appendChild(document.createTextNode(entry.title || '(No title)'));
 					main.appendChild(a);
 
 					if (entry.snippet) {
@@ -370,12 +371,27 @@ function initializeDashboard(freshvibesView) {
 						main.appendChild(snippet);
 					}
 
+					// Add action buttons
+					const actions = document.createElement('div');
+					actions.className = 'entry-actions';
+
+					const readBtn = document.createElement('button');
+					readBtn.type = 'button';
+					readBtn.className = 'entry-action-btn';
+					readBtn.dataset.action = 'toggle';
+					readBtn.innerHTML = entry.isRead
+						? `<span class="action-icon">${tr.icon_unread || '○'}</span>`
+						: `<span class="action-icon">${tr.icon_read || '●'}</span>`;
+					readBtn.title = entry.isRead ? (tr.mark_unread || 'Mark as unread') : (tr.mark_read || 'Mark as read');
+					actions.appendChild(readBtn);
+
 					const date = document.createElement('span');
 					date.className = 'entry-date';
 					date.textContent = entry.dateShort;
 					date.setAttribute('title', entry.dateFull);
 
 					li.appendChild(main);
+					li.appendChild(actions);
 					li.appendChild(date);
 					ul.appendChild(li);
 				});
@@ -676,6 +692,38 @@ function initializeDashboard(freshvibesView) {
 				}
 			});
 		});
+
+		// Add tab sorting functionality
+		if (typeof Sortable !== 'undefined' && tabsContainer && !tabsContainer.sortable && !isCategoryMode) {
+			tabsContainer.sortable = new Sortable(tabsContainer, {
+				animation: 150,
+				draggable: '.freshvibes-tab',
+				filter: '.tab-add-button',
+				onEnd: evt => {
+					// Get the new order of tabs
+					const newOrder = Array.from(tabsContainer.querySelectorAll('.freshvibes-tab')).map(tab => tab.dataset.tabId);
+
+					// Reorder the layout array
+					const newLayout = [];
+					newOrder.forEach(tabId => {
+						const tab = state.layout.find(t => t.id === tabId);
+						if (tab) newLayout.push(tab);
+					});
+
+					state.layout = newLayout;
+
+					// Save the new layout order
+					api(tabActionUrl, { operation: 'reorder', tab_ids: newOrder.join(',') })
+						.then(data => {
+							if (data.status !== 'success') {
+								// Revert on failure
+								render();
+							}
+						})
+						.catch(() => render());
+				}
+			});
+		}
 	}
 
 	function getContrastColor(hexColor) {
@@ -771,8 +819,9 @@ function initializeDashboard(freshvibesView) {
 					e.stopPropagation();
 					const tabEl = deleteBtn.closest('.freshvibes-tab');
 					const tabId = tabEl.dataset.tabId;
-					if (confirm(tr.confirm_delete_tab ||
-						'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.')) {
+					const confirmDelete = freshvibesView.dataset.xextensionFreshvibesviewConfirmTabDelete !== '0';
+
+					const performDelete = () => {
 						api(tabActionUrl, { operation: 'delete', tab_id: tabId })
 							.then(data => {
 								if (data.status === 'success') {
@@ -788,6 +837,14 @@ function initializeDashboard(freshvibesView) {
 								}
 							})
 							.catch(console.error);
+					};
+
+					if (confirmDelete) {
+						if (confirm(tr.confirm_delete_tab || 'Are you sure you want to delete this tab? Feeds on it will be moved to your first tab.')) {
+							performDelete();
+						}
+					} else {
+						performDelete();
 					}
 					return;
 				}
@@ -871,37 +928,10 @@ function initializeDashboard(freshvibesView) {
 				document.querySelectorAll('.tab-settings-menu.active').forEach(m => {
 					if (m !== menu) {
 						m.classList.remove('active');
-						m.style.position = '';
-						m.style.left = '';
-						m.style.right = '';
-						m.style.transform = '';
-						m.style.top = '';
 					}
 				});
 
-				const isActive = menu.classList.toggle('active');
-				if (isActive) {
-					if (window.matchMedia('(max-width: 600px)').matches) {
-						const rect = button.getBoundingClientRect();
-						menu.style.position = 'fixed';
-						menu.style.left = '50%';
-						menu.style.right = 'auto';
-						menu.style.transform = 'translateX(-50%)';
-						menu.style.top = rect.bottom + 'px';
-					} else {
-						menu.style.position = '';
-						menu.style.left = '';
-						menu.style.right = '';
-						menu.style.transform = '';
-						menu.style.top = '';
-					}
-				} else {
-					menu.style.position = '';
-					menu.style.left = '';
-					menu.style.right = '';
-					menu.style.transform = '';
-					menu.style.top = '';
-				}
+				menu.classList.toggle('active');
 				e.stopPropagation();
 				return;
 			}
@@ -1035,13 +1065,63 @@ function initializeDashboard(freshvibesView) {
 			}
 
 			const entryItem = e.target.closest('.entry-item');
-			if (entryItem && !e.target.closest('a')) {
+			if (entryItem && !e.target.closest('a') && !e.target.closest('.entry-actions')) {
 				const feedId = entryItem.dataset.feedId;
 				const entryId = entryItem.dataset.entryId;
 				const feedData = state.feeds[feedId];
 				const entry = feedData?.entries?.find(en => String(en.id) === entryId);
+
 				if (entry) {
-					showEntryModal(entry, entryItem);
+					const clickMode = freshvibesView.dataset.xextensionFreshvibesviewEntryClickMode || 'modal';
+					const entryUrl = freshvibesView.dataset.xextensionFreshvibesviewEntryUrl || '';
+
+					if (clickMode === 'modal') {
+						showEntryModal(entry, entryItem);
+					} else if (clickMode === 'freshrss' && entryUrl) {
+						const url = entryUrl + entryId;
+						if (e.button === 1) { // Middle click
+							window.open(url, '_blank');
+						} else {
+							window.location.href = url;
+						}
+					} else if (clickMode === 'external' && entry.link) {
+						// Mark as read before opening
+						if (!entry.isRead && markReadUrl) {
+							entry.isRead = true;
+							entryItem.classList.add('read');
+
+							if (feedData && feedData.nbUnread > 0) {
+								feedData.nbUnread--;
+								const badge = document.querySelector(
+									`.freshvibes-container[data-feed-id="${feedData.id}"] .feed-unread-badge`
+								);
+								if (badge) {
+									if (feedData.nbUnread > 0) {
+										badge.textContent = feedData.nbUnread;
+									} else {
+										badge.remove();
+									}
+								}
+								updateTabBadge(feedData.id);
+							}
+
+							fetch(markReadUrl, {
+								method: 'POST',
+								credentials: 'same-origin',
+								headers: {
+									'Content-Type': 'application/x-www-form-urlencoded',
+									'X-Requested-With': 'XMLHttpRequest'
+								},
+								body: new URLSearchParams({
+									'id': entry.id,
+									'ajax': 1,
+									'_csrf': csrfToken
+								})
+							}).catch(console.error);
+						}
+
+						window.open(entry.link, '_blank');
+					}
 					e.preventDefault();
 					return;
 				}
@@ -1156,6 +1236,76 @@ function initializeDashboard(freshvibesView) {
 						}
 					}).catch(console.error);
 				}
+
+				return;
+			}
+
+			if (e.target.closest('.entry-action-btn')) {
+				e.stopPropagation();
+				e.preventDefault();
+
+				const btn = e.target.closest('.entry-action-btn');
+				const entryItem = btn.closest('.entry-item');
+				const feedId = entryItem.dataset.feedId;
+				const entryId = entryItem.dataset.entryId;
+				const feedData = state.feeds[feedId];
+				const entry = feedData?.entries?.find(e => String(e.id) === entryId);
+
+				if (!entry || !markReadUrl) return;
+
+				const isCurrentlyRead = entry.isRead;
+				const newReadState = !isCurrentlyRead;
+
+				fetch(markReadUrl, {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: new URLSearchParams({
+						'id': entryId,
+						'is_read': newReadState ? 1 : 0,
+						'ajax': 1,
+						'_csrf': csrfToken
+					})
+				}).then(() => {
+					entry.isRead = newReadState;
+					entryItem.classList.toggle('read', newReadState);
+
+					if (feedData) {
+						if (newReadState && feedData.nbUnread > 0) {
+							feedData.nbUnread--;
+						} else if (!newReadState) {
+							feedData.nbUnread = (feedData.nbUnread || 0) + 1;
+						}
+
+						// Update feed badge
+						const container = document.querySelector(`.freshvibes-container[data-feed-id="${feedId}"]`);
+						if (container) {
+							let badge = container.querySelector('.feed-unread-badge');
+							if (feedData.nbUnread > 0) {
+								if (!badge) {
+									const header = container.querySelector('.freshvibes-container-header');
+									badge = document.createElement('span');
+									badge.className = 'feed-unread-badge';
+									badge.title = tr.mark_all_read || 'Mark all as read';
+									header.insertBefore(badge, header.querySelector('.feed-settings'));
+								}
+								badge.textContent = feedData.nbUnread;
+							} else if (badge) {
+								badge.remove();
+							}
+						}
+						updateTabBadge(feedId);
+					}
+
+					// Update button
+					btn.innerHTML = newReadState
+						? `<span class="action-icon">${tr.icon_unread || '○'}</span>`
+						: `<span class="action-icon">${tr.icon_read || '●'}</span>`;
+					btn.title = newReadState ? (tr.mark_unread || 'Mark as unread') : (tr.mark_read || 'Mark as read');
+				}).catch(console.error);
 
 				return;
 			}
@@ -1438,10 +1588,23 @@ function initializeDashboard(freshvibesView) {
 				}).catch(console.error);
 			}
 
+			freshvibesView.addEventListener('mousedown', e => {
+				if (e.button === 1) { // Middle click
+					const entryItem = e.target.closest('.entry-item');
+					if (entryItem && !e.target.closest('a') && !e.target.closest('.entry-actions')) {
+						e.preventDefault(); // Prevent autoscroll
+					}
+				}
+			});
+
 			// Close menus when clicking outside
 			if (!e.target.closest('.tab-settings-button, .tab-settings-menu')) {
 				document.querySelectorAll('.tab-settings-menu.active').forEach(m => {
 					m.classList.remove('active');
+					m.style.position = '';
+					m.style.top = '';
+					m.style.left = '';
+					m.style.transform = '';
 				});
 			}
 

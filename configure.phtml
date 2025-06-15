@@ -69,6 +69,70 @@ declare(strict_types=1);
 		</div>
 	</div>
 
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_confirm_tab_delete">
+			<?= _t('ext.FreshVibesView.settings_confirm_tab_delete_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="checkbox"
+				name="freshvibes_confirm_tab_delete"
+				id="freshvibes_confirm_tab_delete"
+				<?= $this->getSetting(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY, true) ? 'checked="checked"' : '' ?>>
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_confirm_tab_delete_help') ?>
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_hide_sidebar">
+			<?= _t('ext.FreshVibesView.settings_hide_sidebar_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="checkbox"
+				name="freshvibes_hide_sidebar"
+				id="freshvibes_hide_sidebar"
+				<?= $this->getSetting(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY, false) ? 'checked="checked"' : '' ?>>
+			<p class=" help">
+				<?= _t('ext.FreshVibesView.settings_hide_sidebar_help') ?>
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_hide_subscription_control">
+			<?= _t('ext.FreshVibesView.settings_hide_subscription_control') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="checkbox"
+				name="freshvibes_hide_subscription_control"
+				id="freshvibes_hide_subscription_control"
+				<?= $this->getSetting(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, false) ? 'checked="checked"' : '' ?>>
+			<p class=" help">
+				<?= _t('ext.FreshVibesView.settings_hide_subscription_control_help') ?>
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_entry_click_mode">
+			<?= _t('ext.FreshVibesView.settings_entry_click_mode_label') ?>
+		</label>
+		<div class="group-controls">
+			<select name="freshvibes_entry_click_mode" id="freshvibes_entry_click_mode">
+				<option value="modal" <?= $this->getSetting(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal') === 'modal' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_modal') ?></option>
+				<option value="freshrss" <?= $this->getSetting(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal') === 'freshrss' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_freshrss') ?></option>
+				<option value="external" <?= $this->getSetting(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal') === 'external' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_external') ?></option>
+			</select>
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_entry_click_mode_help') ?>
+			</p>
+		</div>
+	</div>
+
 	<div class="form-group form-actions">
 		<div class="group-controls">
 			<button type="submit" class="btn btn-important">
