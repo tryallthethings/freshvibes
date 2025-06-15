@@ -144,6 +144,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$stateAll = defined('FreshRSS_Entry::STATE_ALL') ? FreshRSS_Entry::STATE_ALL : 0;
 		$feedsData = [];
 		$dateFormat = $userConf->param(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i');
+		$dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
 
 		foreach ($feeds as $feed) {
 			$feedId = $feed->id();
@@ -199,6 +200,19 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				$headerColor = '';
 			}
 
+			$displayModeKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX) .
+				$feedId;
+			if ($userConf->hasParam($displayModeKey)) {
+				$displayMode = $userConf->attributeString($displayModeKey);
+			} else {
+				$displayMode = FreshVibesViewExtension::DEFAULT_DISPLAY_MODE;
+			}
+			if (!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)) {
+				$displayMode = FreshVibesViewExtension::DEFAULT_DISPLAY_MODE;
+			}
+
 			try {
 				// Get sorting from FreshRSS context
 				$sort = FreshRSS_Context::$sort ?? 'date';
@@ -227,9 +241,11 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 							'link' => $entry->link(),
 							'title' => html_entity_decode($entry->title(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 							'dateShort' => date($dateFormat, $entry->date(true)),
+							'dateRelative' => $this->getRelativeDate($entry->date(true)),
 							'dateFull' => (string) $entry->date(true),
-							'snippet' => $this->generateSnippet($entry),
-							'excerpt' => $this->generateSnippet($entry, 100),
+							'snippet' => $this->generateSnippet($entry, 15, 1), // tiny view
+							'compactSnippet' => $this->generateSnippet($entry, 30, 1), // compact view
+							'detailedSnippet' => $this->generateSnippet($entry, 100, 3), // detailed view with 3 sentences
 							'isRead' => $entry->isRead(),
 							'author' => html_entity_decode($entry->author(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 							'tags' => $entry->tags(),
@@ -253,6 +269,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				'nbUnread' => $feed->nbNotRead(),
 				'currentHeaderColor' => $headerColor,
 				'currentMaxHeight' => $maxHeight,
+				'currentDisplayMode' => $displayMode,
 			];
 		}
 
@@ -281,7 +298,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		@$this->view->categories = FreshRSS_Context::categories();
 		@$this->view->confirmTabDelete = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY, 1);
 		@$this->view->entryClickMode = $userConf->param(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal');
-		@$this->view->entryUrl = Minz_Url::display(['c' => 'index', 'a' => 'index'], 'html', false) . '#e_';
+		@$this->view->dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
 
 		@$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;
@@ -613,7 +630,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 	}
 
 	public function saveFeedSettingsAction() {
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['feed_id']) || !isset($_POST['limit']) || !isset($_POST['font_size'])) {
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['feed_id'])) {
 			http_response_code(400);
 			exit;
 		}
@@ -622,6 +639,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$fontSize = Minz_Request::paramString('font_size');
 		$headerColor = Minz_Request::paramStringNull('header_color');
 		$maxHeight = Minz_Request::paramString('max_height');
+		$displayMode = Minz_Request::paramString('display_mode');
 
 		$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
 
@@ -629,7 +647,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			$feedId <= 0 ||
 			!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
 			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES) ||
-			!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY)
+			!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY) ||
+			!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)
 		) {
 			http_response_code(400);
 			exit;
@@ -650,9 +669,14 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
 				FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
 
+			$displayModePrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
+
 			$userConf->_attribute($limitPrefix . $feedId, $limitForValidation);
 			$userConf->_attribute($fontPrefix . $feedId, $fontSize);
 			$userConf->_attribute($maxHeightPrefix . $feedId, $maxHeight);
+			$userConf->_attribute($displayModePrefix . $feedId, $displayMode);
 
 			if ($headerColor !== null) {
 				$userConf->_attribute($headerPrefix . $feedId, $headerColor);
@@ -661,6 +685,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			echo json_encode(['status' => 'success']);
 		} catch (Exception $e) {
 			http_response_code(500);
+			error_log('FreshVibesView saveFeedSettingsAction error: ' . $e->getMessage());
 			echo json_encode(['status' => 'error', 'message' => 'Server error']);
 		}
 		exit;
@@ -731,7 +756,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		exit;
 	}
 
-	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15): string {
+	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15, int $sentenceLimit = 1): string {
 		$content = $entry->content() ?? '';
 
 		// Decode HTML entities first
@@ -826,6 +851,18 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		if (empty($plainText)) {
 			return '';
 		}
+
+		// For detailed view with sentence limit
+		if ($sentenceLimit > 1) {
+			// Split by sentence endings
+			$sentences = preg_split('/(?<=[.!?])\s+/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
+			if (count($sentences) <= $sentenceLimit) {
+				return $plainText;
+			}
+			return implode(' ', array_slice($sentences, 0, $sentenceLimit)) . '…';
+		}
+
+		// Original word-based limiting
 		$words = preg_split('/[\s,]+/', $plainText, $wordLimit + 1);
 		return count($words) > $wordLimit ? implode(' ', array_slice($words, 0, $wordLimit)) . '…' : implode(' ', $words);
 	}
@@ -954,5 +991,59 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
 		}
 		exit;
+	}
+
+	private function getRelativeDate(int $timestamp): string {
+		$diff = time() - $timestamp;
+
+		if ($diff < 60) {
+			return _t('ext.FreshVibesView.date_relative_now');
+		}
+
+		$minutes = round($diff / 60);
+		if ($minutes < 60) {
+			if ($minutes == 1) {
+				return _t('ext.FreshVibesView.date_relative_minute_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_minutes_ago'), $minutes);
+		}
+
+		$hours = round($diff / 3600);
+		if ($hours < 24) {
+			if ($hours == 1) {
+				return _t('ext.FreshVibesView.date_relative_hour_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_hours_ago'), $hours);
+		}
+
+		$days = round($diff / 86400);
+		if ($days < 7) {
+			if ($days == 1) {
+				return _t('ext.FreshVibesView.date_relative_day_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_days_ago'), $days);
+		}
+
+		$weeks = round($diff / 604800);
+		if ($weeks < 4.345) { // Average weeks in a month
+			if ($weeks == 1) {
+				return _t('ext.FreshVibesView.date_relative_week_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_weeks_ago'), $weeks);
+		}
+
+		$months = round($diff / 2600640); // Avg seconds in a month
+		if ($months < 12) {
+			if ($months == 1) {
+				return _t('ext.FreshVibesView.date_relative_month_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_months_ago'), $months);
+		}
+
+		$years = round($diff / 31207680); // Avg seconds in a year
+		if ($years == 1) {
+			return _t('ext.FreshVibesView.date_relative_year_ago');
+		}
+		return sprintf(_t('ext.FreshVibesView.date_relative_years_ago'), $years);
 	}
 }

@@ -1,3 +1,7 @@
+:root {
+	--border-radius: 0.25rem
+}
+
 .freshvibes-view {
 	padding-bottom: 20px;
 	display: flex;
@@ -56,9 +60,9 @@
 }
 
 .freshvibes-tab.active {
-	background-color: var(--background-color-light-shadowed);
+	background-color: var(--tab-bg-color, var(--background-color-light-shadowed));
 	border-color: var(--border-color);
-	color: var(--font-color);
+	color: var(--tab-font-color, var(--font-color));
 	position: relative;
 }
 
@@ -134,6 +138,7 @@
 .tab-icon {
 	font-size: 1.2em;
 	line-height: 1;
+	color: var(--tab-icon-color, inherit);
 }
 
 .icon-settings {
@@ -392,6 +397,7 @@ input[type="color"] {
 	align-items: center;
 	gap: 8px;
 	font-weight: bold;
+	color: var(--header-font-color, var(--font-color));
 }
 
 .freshvibes-container-header .feed-title {
@@ -400,6 +406,81 @@ input[type="color"] {
 	overflow: hidden;
 	text-overflow: ellipsis;
 	margin-right: 5px;
+}
+
+/* Compact and Detailed display modes */
+.freshvibes-container.display-compact .entry-item,
+.freshvibes-container.display-detailed .entry-item {
+	display: block;
+	padding: 8px 0;
+}
+
+.freshvibes-container.display-compact .entry-wrapper,
+.freshvibes-container.display-detailed .entry-wrapper {
+	display: flex;
+	flex-direction: column;
+	gap: 4px;
+	width: 100%;
+}
+
+.freshvibes-container .entry-header {
+	display: flex;
+	justify-content: space-between;
+	align-items: baseline;
+	gap: 10px;
+}
+
+.freshvibes-container .entry-header .entry-link {
+	flex: 1;
+	min-width: 0;
+}
+
+.freshvibes-container .entry-header .entry-title {
+	font-weight: bold;
+	color: inherit;
+}
+
+.freshvibes-container .entry-excerpt {
+	font-size: 0.95em;
+	color: var(--font-color-grey);
+	line-height: 1.4;
+	margin-top: 2px;
+}
+
+/* Compact mode: smaller excerpt */
+.freshvibes-container.display-compact .entry-excerpt {
+	display: -webkit-box;
+	-webkit-line-clamp: 1;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+/* Detailed mode: larger excerpt */
+.freshvibes-container.display-detailed .entry-excerpt {
+	display: -webkit-box;
+	-webkit-line-clamp: 3;
+	-webkit-box-orient: vertical;
+	overflow: hidden;
+}
+
+/* Adjust hover styles for new layouts */
+.freshvibes-container.display-compact .entry-item:hover,
+.freshvibes-container.display-detailed .entry-item:hover {
+	background-color: var(--background-color-grey);
+	margin: 0 -12px;
+	padding: 8px 12px;
+}
+
+/* Entry actions positioning for new layouts */
+.freshvibes-container.display-compact .entry-actions,
+.freshvibes-container.display-detailed .entry-actions {
+	right: -48px;
+}
+
+.freshvibes-container.display-compact .entry-item:hover .entry-actions,
+.freshvibes-container.display-detailed .entry-item:hover .entry-actions {
+	right: 12px;
 }
 
 .feed-title-link {
@@ -429,6 +510,12 @@ input[type="color"] {
 	cursor: pointer;
 	flex-shrink: 0;
 	border: 1px solid var(--border-color);
+}
+
+.freshvibes-container-header[style*="--header-bg-color"] .feed-unread-badge {
+	background-color: var(--header-bg-color, var(--background-color-grey));
+	color: var(--header-font-color, var(--font-color));
+	border-color: var(--header-font-color, var(--font-color));
 }
 
 .feed-unread-badge:hover {
@@ -468,8 +555,9 @@ input[type="color"] {
 }
 
 .feed-settings-button svg {
-	width: 1em;
-	height: 1em;
+	width: 1.5rem;
+	height: 1.5rem;
+	display: block;
 }
 
 .feed-settings-editor {
@@ -757,7 +845,7 @@ input[type="color"] {
 	color: var(--font-color);
 	text-decoration: none;
 	transition: all 0.3s ease 0s;
-	transform: scale(1.02);
+	transform: scale(1.01);
 }
 
 .entry-item.read {
@@ -999,7 +1087,7 @@ input[type="color"] {
 	flex-wrap: wrap;
 }
 
-.fv-modal-actions .btn {
+.fv-modal-actions .fvbtn {
 	padding: 8px 20px;
 	border: 1px solid var(--frss-border-color, var(--border-color, #666666));
 	border-radius: var(--border-radius);
@@ -1016,25 +1104,25 @@ input[type="color"] {
 	min-height: 38px;
 }
 
-.fv-modal-actions .btn:hover {
+.fv-modal-actions .fvbtn:hover {
 	background: var(--background-color-grey);
 	border-color: var(--border-color-focus);
 }
 
-.fv-modal-actions .btn.btn-important {
+.fv-modal-actions .fvbtn.fvbtn-important {
 	background: var(--background-color-light);
 	color: var(--frss-font-color-dark, var(--font-color-grey, #000000));
 	border-color: var(--frss-border-color, var(--border-color, #666666));
 }
 
-.fv-modal-actions .btn.btn-important:hover {
+.fv-modal-actions .fvbtn.fvbtn-important:hover {
 	opacity: 0.9;
 	transform: translateY(-1px);
 	box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
 }
 
 /* Modern button styles */
-.btn {
+.fvbtn {
 	padding: 8px 16px;
 	border: 1px solid var(--border-color);
 	border-radius: var(--border-radius);
@@ -1048,28 +1136,28 @@ input[type="color"] {
 	gap: 6px;
 }
 
-.btn:hover {
+.fvbtn:hover {
 	background-color: var(--background-color-grey-hover);
 	border-color: var(--border-color-focus);
 }
 
-.btn.btn-primary {
+.fvbtn.fvbtn-primary {
 	background-color: var(--link-color);
 	color: white;
 	border-color: var(--link-color);
 }
 
-.btn.btn-primary:hover {
+.fvbtn.fvbtn-primary:hover {
 	opacity: 0.9;
 }
 
-.btn.btn-danger {
+.fvbtn.fvbtn-danger {
 	background-color: #d9534f;
 	color: white;
 	border-color: #d9534f;
 }
 
-.btn.btn-danger:hover {
+.fvbtn.fvbtn-danger:hover {
 	background-color: #c9302c;
 }
 
@@ -1086,12 +1174,33 @@ input[type="color"] {
 	border: 1px solid var(--border-color);
 	position: relative;
 	z-index: 1;
+	display: none;
+	/* Hide by default */
+}
+
+.tab-unread-count.has-count {
+	display: inline-block;
+	/* Show with class */
 }
 
 .tab-unread-count:hover {
 	background-color: var(--link-color);
 	color: white;
 	border-color: var(--link-color);
+}
+
+/* Invert badge colors when a tab has a custom color */
+.freshvibes-tab.has-custom-color .tab-unread-count {
+	color: var(--tab-font-color);
+	background-color: transparent;
+	border-color: var(--tab-font-color);
+}
+
+/* Invert badge colors when a feed header has a custom color */
+.freshvibes-container-header.has-custom-color .feed-unread-badge {
+	color: var(--header-font-color);
+	background-color: transparent;
+	border-color: var(--header-font-color);
 }
 
 .tab-settings-menu .color-settings {
@@ -1160,7 +1269,7 @@ input[type="color"] {
 	display: flex;
 	gap: 4px;
 	opacity: 0;
-	transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	z-index: 10;
 }
 
@@ -1199,8 +1308,44 @@ input[type="color"] {
 	vertical-align: middle;
 }
 
+/* Fix for mark read/unread button transition */
+.entry-action-btn .action-icon-read {
+	display: none;
+}
+
+.entry-action-btn .action-icon-unread {
+	display: inline-block;
+}
+
+.entry-action-btn.is-read .action-icon-read {
+	display: inline-block;
+}
+
+.entry-action-btn.is-read .action-icon-unread {
+	display: none;
+}
+
 body.modal-open {
 	overflow: hidden;
+}
+
+#nav_menu_views a.view-freshvibes svg.icon {
+	vertical-align: text-bottom;
+	fill: currentColor;
+}
+
+.feed-settings-button svg {
+	width: 1.1em;
+	height: 1.1em;
+	vertical-align: middle;
+}
+
+.feed-settings-button svg path {
+	fill: currentColor;
+}
+
+.freshvibes-container-header.has-custom-color .feed-settings-button {
+	color: var(--header-font-color, black);
 }
 
 /* Dark mode support */
@@ -1292,10 +1437,9 @@ body.modal-open {
 	}
 
 	.feed-settings-button {
-		padding: 8px 12px;
-		min-width: 40px;
-		min-height: 32px;
-		font-size: 1.1em;
+		display: inline-flex;
+		align-items: center;
+		justify-content: center;
 	}
 
 	.freshvibes-columns {
@@ -1434,7 +1578,7 @@ body.modal-open {
 		justify-content: space-between;
 	}
 
-	.fv-modal-actions .btn {
+	.fv-modal-actions .fvbtn {
 		flex: 1;
 		justify-content: center;
 		padding: 10px 15px;
@@ -1444,5 +1588,17 @@ body.modal-open {
 		overflow: hidden;
 		position: fixed;
 		width: 100%;
+	}
+
+	.freshvibes-container.display-compact .entry-header,
+	.freshvibes-container.display-detailed .entry-header {
+		flex-direction: column;
+		gap: 2px;
+	}
+
+	.freshvibes-container.display-compact .entry-date,
+	.freshvibes-container.display-detailed .entry-date {
+		align-self: flex-start;
+		font-size: 0.85em;
 	}
 }

@@ -34,6 +34,8 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	data-xextension-freshvibesview-entry-click-mode="<?php echo htmlspecialchars($this->entryClickMode ?? 'modal', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-sort="<?php echo htmlspecialchars(FreshRSS_Context::$sort ?? 'date', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-order="<?php echo htmlspecialchars(FreshRSS_Context::$order ?? 'DESC', ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-date-mode="<?php echo htmlspecialchars($this->dateMode ?? 'absolute', ENT_QUOTES); ?>"
+
 	data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 	<header class="freshvibes-header">
@@ -58,8 +60,8 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	<template id="template-entry-actions">
 		<div class="entry-actions">
 			<button type="button" class="entry-action-btn" data-action="toggle">
-				<span class="action-icon-read" style="display:none"><?= _i('read') ?></span>
-				<span class="action-icon-unread"><?= _i('unread') ?></span>
+				<span class="action-icon action-icon-read"><?= _i('read') ?></span>
+				<span class="action-icon action-icon-unread"><?= _i('unread') ?></span>
 			</button>
 		</div>
 	</template>
@@ -86,6 +88,10 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		'icon_unread' => _i('read'),
 		'unlimited' => _t('ext.FreshVibesView.unlimited', 'Unlimited'),
 		'fit_to_content' => _t('ext.FreshVibesView.fit_to_content', 'Fit to content'),
+		'display_mode_label' => _t('ext.FreshVibesView.display_mode_label', 'Display:'),
+		'display_mode_tiny' => _t('ext.FreshVibesView.display_mode_tiny', 'Tiny'),
+		'display_mode_compact' => _t('ext.FreshVibesView.display_mode_compact', 'Compact'),
+		'display_mode_detailed' => _t('ext.FreshVibesView.display_mode_detailed', 'Detailed'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
 </script>
 
@@ -172,11 +178,44 @@ if (!Minz_Request::paramBoolean('ajax')) {
 			<span class="feed-title"></span>
 			<div class="feed-settings">
 				<button type="button" class="feed-settings-button" title="<?php echo _t('ext.FreshVibesView.feed_settings', 'Feed settings') ?>" aria-label="<?php echo _t('ext.FreshVibesView.feed_settings_aria', 'Settings for this feed'); ?>">
-					<?= _i('configure') ?>
+					<?php
+					$icon_url = Minz_Url::display('/themes/icons/configure.svg', 'html', false);
+					if (is_readable($icon_url)) {
+						$svg = file_get_contents($icon_url);
+						// Hack to remove styling and positioning of configure icon to be able to recolor and center it
+						$svg = preg_replace(
+							[
+								'/\sstyle="[^"]*"/',         // kill style=""
+								'/\s(width|height)="[^"]*"/', // kill width/height
+								'/<g[^>]*transform="[^"]*"([^>]*)>/', // un-wrap the group
+							],
+							[
+								'',
+								'',
+								'<g$1>',
+							],
+							$svg
+						);
+
+						// inject the *real* viewBox that matches that 16×16 crop
+						// (we know the transform was "-441,-401" on a 16×16 box)
+						$svg = preg_replace(
+							'/<svg([^>]*)>/',
+							'<svg$1 viewBox="441 401 16 16" preserveAspectRatio="xMidYMid meet">',
+							$svg,
+							1
+						);
+
+						echo $svg;
+					} else {
+						echo '⚙️';
+					}
+					?>
 				</button>
 				<div class="feed-settings-editor">
 					<div class="setting-row"><label><?php echo _t('ext.FreshVibesView.limit_label', 'Limit:'); ?></label><select class="feed-limit-select"></select></div>
 					<div class="setting-row"><label><?php echo _t('ext.FreshVibesView.font_label', 'Font:'); ?></label><select class="feed-fontsize-select"></select></div>
+					<div class="setting-row"><label><?php echo _t('ext.FreshVibesView.display_mode_label', 'Display:'); ?></label><select class="feed-display-mode-select"></select></div>
 					<div class="setting-row color-settings">
 						<label><?php echo _t('ext.FreshVibesView.header_color', 'Header color'); ?></label>
 						<input type="color" class="color-picker feed-header-color-input" />

@@ -35,6 +35,15 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const ALLOWED_MAX_HEIGHTS_CONFIG_KEY = ['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'];
 	public const DEFAULT_MAX_HEIGHT_CONFIG_KEY = 'fit';
 
+	public const DATE_MODE_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_date_mode';
+	public const DATE_MODES = ['absolute', 'relative'];
+	public const DEFAULT_DATE_MODE = 'absolute';
+
+	public const FEED_DISPLAY_MODE_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_display_mode_feedid_';
+	public const CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_display_mode_feedid_';
+	public const ALLOWED_DISPLAY_MODES = ['tiny', 'compact', 'detailed'];
+	public const DEFAULT_DISPLAY_MODE = 'tiny';
+
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
 	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50, 'unlimited'];
@@ -81,7 +90,18 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$urlParams,
 			$isActive
 		);
-		$mode->setName('📊');
+
+		$icon_path = __DIR__ . '/img/freshvibes.svg';
+
+		if (is_readable($icon_path)) {
+			$icon_html = file_get_contents($icon_path);
+			$icon_html = str_replace('<svg', '<svg class="icon"', $icon_html);
+		} else {
+			// Fallback text if the icon cannot be read
+			$icon_html = '📊';
+		}
+
+		$mode->setName($icon_html);
 		$readingModes[] = $mode;
 		return $readingModes;
 	}
@@ -115,6 +135,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_hide_subscription_control') ? 1 : 0);
 			$userConf->_attribute(self::CONFIRM_TAB_DELETE_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_tab_delete') ? 1 : 0);
 			$userConf->_attribute(self::ENTRY_CLICK_MODE_CONFIG_KEY, Minz_Request::paramStringNull('freshvibes_entry_click_mode') ?? 'modal');
+			$userConf->_attribute(self::DATE_MODE_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_mode') ?: 'absolute');
 
 			$userConf->save();
 		}
@@ -132,7 +153,6 @@ class FreshVibesViewExtension extends Minz_Extension {
 		// The uninstall method must return true on success.
 		return true;
 	}
-
 
 	/**
 	 * A helper to get a specific setting's value for this extension.
@@ -156,8 +176,8 @@ class FreshVibesViewExtension extends Minz_Extension {
 				return $userConf->attributeInt($key) ?? $default;
 			case self::DATE_FORMAT_CONFIG_KEY:
 			case self::ENTRY_CLICK_MODE_CONFIG_KEY:
-				return $userConf->attributeString($key) ?? $default;
 			case self::MODE_CONFIG_KEY:
+			case self::DATE_MODE_CONFIG_KEY:
 				return $userConf->attributeString($key) ?? $default;
 			default:
 				return $default;
