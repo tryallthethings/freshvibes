@@ -499,6 +499,8 @@ function initializeDashboard(freshvibesView) {
 	function showEntryModal(entry, li) {
 		if (!entryModal) return;
 
+		document.body.classList.add('modal-open');
+
 		const feedData = state.feeds[entry.feedId];
 
 		if (modalTitle) modalTitle.textContent = entry.title || '';
@@ -600,6 +602,7 @@ function initializeDashboard(freshvibesView) {
 		entryModal.addEventListener('click', e => {
 			if (e.target === entryModal || e.target.closest('.fv-modal-close')) {
 				entryModal.classList.remove('active');
+				document.body.classList.remove('modal-open');
 			}
 			if (e.target.closest('.fv-modal-mark-unread')) {
 				const entryId = e.target.closest('.fv-modal-mark-unread').dataset.entryId;
@@ -661,6 +664,7 @@ function initializeDashboard(freshvibesView) {
 		document.addEventListener('keydown', e => {
 			if (e.key === 'Escape' && entryModal.classList.contains('active')) {
 				entryModal.classList.remove('active');
+				document.body.classList.remove('modal-open');
 			}
 		});
 	}
@@ -708,6 +712,8 @@ function initializeDashboard(freshvibesView) {
 				group: 'freshvibes-feeds',
 				animation: 0,
 				handle: '.freshvibes-container-header',
+				delay: 300, // Add delay
+				delayOnTouchOnly: true, // Only on touch devices				
 				onEnd: evt => {
 					const sourcePanel = evt.from.closest('.freshvibes-panel');
 					const targetPanel = evt.to.closest('.freshvibes-panel');
@@ -735,6 +741,8 @@ function initializeDashboard(freshvibesView) {
 				animation: 150,
 				draggable: '.freshvibes-tab',
 				filter: '.tab-add-button',
+				delay: 300, // Add 300ms delay before drag starts
+				delayOnTouchOnly: true, // Only apply delay on touch devices
 				onEnd: evt => {
 					// Get the new order of tabs
 					const newOrder = Array.from(tabsContainer.querySelectorAll('.freshvibes-tab')).map(tab => tab.dataset.tabId);
