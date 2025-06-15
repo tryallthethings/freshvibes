@@ -111,6 +111,26 @@
 	color: white;
 }
 
+.tab-bulk-button {
+	padding: 4px 12px;
+	font-weight: bold;
+	font-size: 1.5em;
+	line-height: 1;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-color: #d9534f;
+	color: white;
+	cursor: pointer;
+	margin-left: 8px;
+	text-align: center;
+	flex: 0 1 auto;
+}
+
+.tab-bulk-button:hover {
+	background-color: #c9302c;
+	border-color: #c9302c;
+}
+
 .tab-settings {
 	position: relative;
 }
@@ -1280,7 +1300,7 @@ input[type="color"] {
 }
 
 .entry-action-btn {
-	background: rgba(var(--rgb-background-color-grey, 240, 240, 240), 0.9);
+	background: rgba(var(--frss-background-color-middle, 240, 240, 240), 0.9);
 	backdrop-filter: blur(8px);
 	-webkit-backdrop-filter: blur(8px);
 	/* Safari support */
@@ -1297,9 +1317,9 @@ input[type="color"] {
 }
 
 .entry-action-btn:hover {
-	background: var(--link-color);
+	background: var(--frss-background-color-middle);
 	color: white;
-	border-color: var(--link-color);
+	border-color: var(--frss-background-color-middle);
 }
 
 .entry-action-btn img {
@@ -1348,10 +1368,139 @@ body.modal-open {
 	color: var(--header-font-color, black);
 }
 
+
+/* Bulk Settings Modal */
+#bulk-settings-modal .fv-modal-content {
+	max-height: 85vh;
+	overflow: hidden;
+	display: flex;
+	flex-direction: column;
+	max-width: 600px;
+	/* Make it narrower */
+}
+
+#bulk-settings-modal .fv-modal-header {
+	padding: 20px 20px 15px;
+	/* More compact */
+}
+
+#bulk-settings-modal .fv-modal-header p {
+	margin: 5px 0 0 0;
+	font-size: 0.95em;
+	color: var(--font-color-grey);
+}
+
+#bulk-settings-modal .fv-modal-body {
+	overflow-y: auto;
+	flex: 1;
+	min-height: 0;
+	padding: 0 20px 20px;
+	/* More compact */
+}
+
+.bulk-settings-section {
+	margin-bottom: 20px;
+	padding: 15px;
+	background: var(--background-color-grey);
+	border-radius: var(--border-radius);
+	border: 1px solid var(--border-color);
+}
+
+.bulk-settings-section:last-child {
+	margin-bottom: 0;
+}
+
+.bulk-settings-section h3 {
+	margin: 0 0 12px 0;
+	color: var(--font-color);
+	font-size: 1.1em;
+}
+
+.bulk-settings-form {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.bulk-settings-form .setting-row {
+	display: flex;
+	align-items: center;
+	gap: 10px;
+}
+
+.bulk-settings-form .setting-row label {
+	flex: 0 0 120px;
+	/* Narrower labels */
+	font-weight: 500;
+	font-size: 0.95em;
+}
+
+.bulk-settings-form .setting-row select {
+	flex: 1;
+	max-width: 180px;
+	/* Narrower selects */
+}
+
+/* Fix color controls layout */
+.bulk-settings-form .color-controls {
+	display: flex;
+	align-items: center;
+	gap: 4px;
+	flex: 1;
+	max-width: 180px;
+}
+
+.bulk-settings-form .color-controls input[type="color"] {
+	width: 32px;
+	height: 32px;
+	flex-shrink: 0;
+}
+
+.bulk-settings-form .color-controls .color-reset {
+	flex-shrink: 0;
+}
+
+/* More compact action buttons */
+.bulk-actions {
+	display: flex;
+	gap: 8px;
+	margin-top: 15px;
+	padding-top: 12px;
+	border-top: 1px solid var(--border-color);
+}
+
+.bulk-actions .btn {
+	flex: 1;
+	padding: 6px 12px;
+	font-size: 0.95em;
+}
+
+/* Button styles */
+.btn-primary {
+	background-color: var(--link-color);
+	color: white;
+	border-color: var(--link-color);
+}
+
+.btn-primary:hover {
+	opacity: 0.9;
+}
+
+.btn-danger {
+	background-color: #d9534f;
+	color: white;
+	border-color: #d9534f;
+}
+
+.btn-danger:hover {
+	background-color: #c9302c;
+	border-color: #c9302c;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
 	.entry-action-btn {
-		background: rgba(var(--rgb-background-color-grey, 60, 60, 60), 0.9);
+		background: rgba(var(--frss-background-color-middle, 60, 60, 60), 0.9);
 	}
 }
 
@@ -1408,21 +1557,22 @@ body.modal-open {
 		max-width: 100%;
 	}
 
-	.tab-add-button {
+	.tab-add-button,
+	.tab-bulk-button {
 		flex: 0 0 auto;
 		width: 40px;
 		margin: 2px 0;
 	}
 
 	.freshvibes-tab,
-	.tab-add-button {
+	.tab-add-button,
+	.tab-bulk-button {
 		flex: 1 1 auto;
 		margin: 2px;
 		margin-left: 0;
 	}
 
-	.tab-add-button,
-	.columns-selector button {
+	.tab-add-button .columns-selector button {
 		width: 100%;
 	}
 
@@ -1601,4 +1751,43 @@ body.modal-open {
 		align-self: flex-start;
 		font-size: 0.85em;
 	}
+
+	.tab-bulk-button {
+		flex: 0 0 auto;
+		width: 40px;
+		margin: 2px 0;
+		background-color: #d9534f;
+		/* Keep it red on mobile too */
+	}
+
+	#bulk-settings-modal .fv-modal-content {
+		width: 95%;
+		max-width: 95%;
+		max-height: 85vh;
+	}
+
+	.bulk-settings-form .setting-row {
+		flex-direction: column;
+		align-items: flex-start;
+	}
+
+	.bulk-settings-form .setting-row label {
+		flex: none;
+		width: 100%;
+	}
+
+	.bulk-settings-form .setting-row select,
+	.bulk-settings-form .color-controls {
+		max-width: 100%;
+		width: 100%;
+	}
+
+	.bulk-actions {
+		flex-direction: column;
+	}
+
+	.bulk-actions .btn {
+		width: 100%;
+	}
+
 }

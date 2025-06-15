@@ -35,7 +35,10 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	data-xextension-freshvibesview-sort="<?php echo htmlspecialchars(FreshRSS_Context::$sort ?? 'date', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-order="<?php echo htmlspecialchars(FreshRSS_Context::$order ?? 'DESC', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-date-mode="<?php echo htmlspecialchars($this->dateMode ?? 'absolute', ENT_QUOTES); ?>"
-
+	data-xextension-freshvibesview-bulk-apply-feeds-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyFeedSettings'], 'json', false) ?>"
+	data-xextension-freshvibesview-bulk-apply-tabs-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyTabSettings'], 'json', false) ?>"
+	data-xextension-freshvibesview-reset-feeds-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllFeedSettings'], 'json', false) ?>"
+	data-xextension-freshvibesview-reset-tabs-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllTabSettings'], 'json', false) ?>"
 	data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 	<header class="freshvibes-header">
@@ -66,6 +69,117 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		</div>
 	</template>
 
+	<div id="bulk-settings-modal" class="fv-modal" role="dialog" aria-modal="true">
+		<div class="fv-modal-content">
+			<button type="button" class="fv-modal-close" aria-label="<?= _t('ext.FreshVibesView.close', 'Close') ?>">×</button>
+			<div class="fv-modal-article">
+				<header class="fv-modal-header">
+					<h2 class="fv-modal-title"><?= _t('ext.FreshVibesView.bulk_settings', 'Bulk Settings') ?></h2>
+					<p><?= _t('ext.FreshVibesView.bulk_settings_description', 'Apply settings to all items at once') ?></p>
+				</header>
+				<div class="fv-modal-body">
+					<div class="bulk-settings-section">
+						<h3><?= _t('ext.FreshVibesView.apply_to_all_feeds', 'Apply to All Feeds') ?></h3>
+						<div class="bulk-settings-form">
+							<div class="setting-row">
+								<label><?= _t('ext.FreshVibesView.limit_label', 'Limit:') ?></label>
+								<select id="bulk-feed-limit">
+									<option value="5">5</option>
+									<option value="10" selected>10</option>
+									<option value="15">15</option>
+									<option value="20">20</option>
+									<option value="25">25</option>
+									<option value="30">30</option>
+									<option value="40">40</option>
+									<option value="50">50</option>
+									<option value="unlimited"><?= _t('ext.FreshVibesView.unlimited', 'Unlimited') ?></option>
+								</select>
+							</div>
+							<div class="setting-row">
+								<label><?= _t('ext.FreshVibesView.font_label', 'Font:') ?></label>
+								<select id="bulk-feed-fontsize">
+									<option value="xsmall">Extra Small</option>
+									<option value="small">Small</option>
+									<option value="regular" selected>Regular</option>
+									<option value="large">Large</option>
+									<option value="xlarge">Extra Large</option>
+								</select>
+							</div>
+							<div class="setting-row">
+								<label><?= _t('ext.FreshVibesView.display_mode_label', 'Display:') ?></label>
+								<select id="bulk-feed-display">
+									<option value="tiny" selected><?= _t('ext.FreshVibesView.display_mode_tiny', 'Tiny') ?></option>
+									<option value="compact"><?= _t('ext.FreshVibesView.display_mode_compact', 'Compact') ?></option>
+									<option value="detailed"><?= _t('ext.FreshVibesView.display_mode_detailed', 'Detailed') ?></option>
+								</select>
+							</div>
+							<div class="setting-row color-settings">
+								<label><?= _t('ext.FreshVibesView.header_color', 'Header color') ?></label>
+								<div class="color-controls">
+									<input type="color" id="bulk-feed-header-color" />
+									<button type="button" class="color-reset" data-target="bulk-feed-header-color">↺</button>
+								</div>
+							</div>
+							<div class="setting-row">
+								<label><?= _t('ext.FreshVibesView.max_height_label', 'Max height:') ?></label>
+								<select id="bulk-feed-maxheight">
+									<option value="300">300px</option>
+									<option value="400">400px</option>
+									<option value="500">500px</option>
+									<option value="600">600px</option>
+									<option value="700">700px</option>
+									<option value="800">800px</option>
+									<option value="unlimited"><?= _t('ext.FreshVibesView.unlimited', 'Unlimited') ?></option>
+									<option value="fit" selected><?= _t('ext.FreshVibesView.fit_to_content', 'Fit to content') ?></option>
+								</select>
+							</div>
+							<div class="bulk-actions">
+								<button type="button" class="btn btn-primary" id="apply-bulk-feed-settings">
+									<?= _t('ext.FreshVibesView.apply', 'Apply') ?>
+								</button>
+								<button type="button" class="btn btn-danger" id="reset-all-feed-settings">
+									<?= _t('ext.FreshVibesView.reset_all_feeds', 'Reset All Feed Settings') ?>
+								</button>
+							</div>
+						</div>
+					</div>
+
+					<div class="bulk-settings-section">
+						<h3><?= _t('ext.FreshVibesView.apply_to_all_tabs', 'Apply to All Tabs') ?></h3>
+						<div class="bulk-settings-form">
+							<div class="setting-row">
+								<label><?= _t('ext.FreshVibesView.columns_label', 'Number of columns') ?></label>
+								<select id="bulk-tab-columns">
+									<option value="1">1</option>
+									<option value="2">2</option>
+									<option value="3" selected>3</option>
+									<option value="4">4</option>
+									<option value="5">5</option>
+									<option value="6">6</option>
+								</select>
+							</div>
+							<div class="setting-row color-settings">
+								<label><?= _t('ext.FreshVibesView.tab_bg_color', 'Tab background') ?></label>
+								<div class="color-controls">
+									<input type="color" id="bulk-tab-bg-color" />
+									<button type="button" class="color-reset" data-target="bulk-tab-bg-color">↺</button>
+								</div>
+							</div>
+							<div class="bulk-actions">
+								<button type="button" class="btn btn-primary" id="apply-bulk-tab-settings">
+									<?= _t('ext.FreshVibesView.apply', 'Apply') ?>
+								</button>
+								<button type="button" class="btn btn-danger" id="reset-all-tab-settings">
+									<?= _t('ext.FreshVibesView.reset_all_tabs', 'Reset All Tab Settings') ?>
+								</button>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
 </section>
 
 <script id="feeds-data-script" type="application/json">
@@ -92,6 +206,17 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		'display_mode_tiny' => _t('ext.FreshVibesView.display_mode_tiny', 'Tiny'),
 		'display_mode_compact' => _t('ext.FreshVibesView.display_mode_compact', 'Compact'),
 		'display_mode_detailed' => _t('ext.FreshVibesView.display_mode_detailed', 'Detailed'),
+		'confirm_bulk_apply_feeds' => _t('ext.FreshVibesView.confirm_bulk_apply_feeds', 'Are you sure you want to apply these settings to all feeds?'),
+		'confirm_bulk_apply_tabs' => _t('ext.FreshVibesView.confirm_bulk_apply_tabs', 'Are you sure you want to apply these settings to all tabs?'),
+		'confirm_reset_all_feeds' => _t('ext.FreshVibesView.confirm_reset_all_feeds', 'Are you sure you want to reset all feeds to default settings?'),
+		'confirm_reset_all_tabs' => _t('ext.FreshVibesView.confirm_reset_all_tabs', 'Are you sure you want to reset all tabs to default settings?'),
+		'feeds' => _t('ext.FreshVibesView.feeds', 'feeds'),
+		'tabs' => _t('ext.FreshVibesView.tabs', 'tabs'),
+		'bulk_apply_success_feeds' => _t('ext.FreshVibesView.bulk_apply_success_feeds', 'Settings applied to all feeds successfully'),
+		'bulk_apply_success_tabs' => _t('ext.FreshVibesView.bulk_apply_success_tabs', 'Settings applied to all tabs successfully'),
+		'bulk_reset_success_feeds' => _t('ext.FreshVibesView.bulk_reset_success_feeds', 'All feeds reset to defaults successfully'),
+		'bulk_reset_success_tabs' => _t('ext.FreshVibesView.bulk_reset_success_tabs', 'All tabs reset to defaults successfully'),
+		'bulk_settings' => _t('ext.FreshVibesView.bulk_settings', 'Bulk Settings'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
 </script>
 
@@ -121,7 +246,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
 				</div>
 				<div class="menu-section color-settings">
 					<label><?php echo _t('ext.FreshVibesView.tab_bg_color', 'Tab background'); ?></label>
-					<input type="color" class="color-picker tab-bg-color-input" value="#ffffff" />
+					<input type="color" class="color-picker tab-bg-color-input" />
 					<button type="button" class="color-reset" title="Reset">↺</button>
 				</div>
 				<button type="button" class="btn btn-danger tab-action-delete"><?php echo _t('ext.FreshVibesView.delete_tab', 'Delete tab'); ?></button>

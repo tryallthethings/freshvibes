@@ -1046,4 +1046,235 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		}
 		return sprintf(_t('ext.FreshVibesView.date_relative_years_ago'), $years);
 	}
+
+	public function bulkApplyFeedSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+			exit;
+		}
+
+		$limit = Minz_Request::paramString('limit');
+		$fontSize = Minz_Request::paramString('font_size');
+		$headerColor = Minz_Request::paramStringNull('header_color');
+		$maxHeight = Minz_Request::paramString('max_height');
+		$displayMode = Minz_Request::paramString('display_mode');
+
+		$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
+
+		if (
+			!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
+			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES) ||
+			!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY) ||
+			!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)
+		) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid settings']);
+			exit;
+		}
+
+		try {
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+			$feedDAO = new FreshRSS_FeedDAO();
+			$feeds = $feedDAO->listFeeds();
+
+			foreach ($feeds as $feed) {
+				$feedId = $feed->id();
+
+				$limitPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+					FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
+				$headerPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
+				$maxHeightPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+					FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
+				$displayModePrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
+
+				$userConf->_attribute($limitPrefix . $feedId, $limitForValidation);
+				$userConf->_attribute($fontPrefix . $feedId, $fontSize);
+				$userConf->_attribute($maxHeightPrefix . $feedId, $maxHeight);
+				$userConf->_attribute($displayModePrefix . $feedId, $displayMode);
+
+				if ($headerColor !== null) {
+					$userConf->_attribute($headerPrefix . $feedId, $headerColor);
+				}
+			}
+
+			$userConf->save();
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	public function bulkApplyTabSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+			exit;
+		}
+
+		$numColumns = Minz_Request::paramInt('num_columns', FreshVibesViewExtension::DEFAULT_TAB_COLUMNS);
+		$bgColor = Minz_Request::paramString('bg_color');
+		$fontColor = Minz_Request::paramString('font_color');
+
+		if ($numColumns < 1 || $numColumns > 6) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid number of columns']);
+			exit;
+		}
+
+		try {
+			$layout = $this->getLayout();
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+
+			foreach ($layout as &$tab) {
+				$tab['num_columns'] = $numColumns;
+				$allFeeds = array_merge(...array_values($tab['columns']));
+				$newColumns = $this->buildEmptyColumns($numColumns);
+				if (!empty($allFeeds)) {
+					foreach ($allFeeds as $i => $feedId) {
+						$newColumns['col' . (($i % $numColumns) + 1)][] = $feedId;
+					}
+				}
+				$tab['columns'] = $newColumns;
+
+				$bgPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
+
+				if ($bgColor) {
+					$userConf->_attribute($bgPrefix . $tab['id'], $bgColor);
+					$actualFontColor = $fontColor ?: $this->getContrastColor($bgColor);
+					$userConf->_attribute($fontPrefix . $tab['id'], $actualFontColor);
+				}
+			}
+
+			$this->saveLayout($layout);
+			$userConf->save();
+
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	public function resetAllFeedSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			exit;
+		}
+
+		try {
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+			$feedDAO = new FreshRSS_FeedDAO();
+			$feeds = $feedDAO->listFeeds();
+
+			foreach ($feeds as $feed) {
+				$feedId = $feed->id();
+
+				$limitPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+					FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
+				$headerPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
+				$maxHeightPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+					FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
+				$displayModePrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
+
+				$userConf->_attribute($limitPrefix . $feedId, null);
+				$userConf->_attribute($fontPrefix . $feedId, null);
+				$userConf->_attribute($headerPrefix . $feedId, null);
+				$userConf->_attribute($maxHeightPrefix . $feedId, null);
+				$userConf->_attribute($displayModePrefix . $feedId, null);
+			}
+
+			$userConf->save();
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	public function resetAllTabSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			exit;
+		}
+
+		try {
+			$layout = $this->getLayout();
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+
+			foreach ($layout as &$tab) {
+				$tab['num_columns'] = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
+				$allFeeds = array_merge(...array_values($tab['columns']));
+				$newColumns = $this->buildEmptyColumns(FreshVibesViewExtension::DEFAULT_TAB_COLUMNS);
+				if (!empty($allFeeds)) {
+					foreach ($allFeeds as $i => $feedId) {
+						$newColumns['col' . (($i % FreshVibesViewExtension::DEFAULT_TAB_COLUMNS) + 1)][] = $feedId;
+					}
+				}
+				$tab['columns'] = $newColumns;
+
+				$bgPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
+
+				$userConf->_attribute($bgPrefix . $tab['id'], null);
+				$userConf->_attribute($fontPrefix . $tab['id'], null);
+			}
+
+			$this->saveLayout($layout);
+			$userConf->save();
+
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
 }

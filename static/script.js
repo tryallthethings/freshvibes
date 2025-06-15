@@ -61,6 +61,10 @@ function initializeDashboard(freshvibesView) {
 	const modalAuthorWrapper = entryModal?.querySelector('.fv-modal-author-wrapper');
 	const modalAuthorPrefix = entryModal?.querySelector('.fv-modal-author-prefix');
 	const dateMode = freshvibesView.dataset.xextensionFreshvibesviewDateMode || 'absolute';
+	const bulkApplyFeedsUrl = freshvibesView.dataset.xextensionFreshvibesviewBulkApplyFeedsUrl || '';
+	const bulkApplyTabsUrl = freshvibesView.dataset.xextensionFreshvibesviewBulkApplyTabsUrl || '';
+	const resetFeedsUrl = freshvibesView.dataset.xextensionFreshvibesviewResetFeedsUrl || '';
+	const resetTabsUrl = freshvibesView.dataset.xextensionFreshvibesviewResetTabsUrl || '';
 
 	// --- RENDER FUNCTIONS ---
 	function render() {
@@ -100,9 +104,20 @@ function initializeDashboard(freshvibesView) {
 			addButton.type = 'button';
 			addButton.className = 'tab-add-button';
 			addButton.textContent = '+';
+			addButton.title = tr.add_tab || 'Add new tab';
 			addButton.ariaLabel = tr.add_tab || 'Add new tab';
 			tabsContainer.appendChild(addButton);
 		}
+
+		// Add bulk settings button
+		const bulkButton = document.createElement('button');
+		bulkButton.type = 'button';
+		bulkButton.className = 'tab-bulk-button';
+		bulkButton.id = 'bulk-settings-btn';
+		bulkButton.innerHTML = '//';
+		bulkButton.title = tr.bulk_settings || 'Bulk Settings';
+		bulkButton.ariaLabel = tr.bulk_settings || 'Bulk Settings';
+		tabsContainer.appendChild(bulkButton);
 	}
 
 	function renderPanels() {
@@ -156,8 +171,23 @@ function initializeDashboard(freshvibesView) {
 
 		// Set background color input value
 		const bgColorInput = link.querySelector('.tab-bg-color-input');
-		if (bgColorInput && tab.bg_color) {
-			bgColorInput.value = tab.bg_color;
+		if (bgColorInput) {
+			if (tab.bg_color) {
+				bgColorInput.value = tab.bg_color;
+			} else {
+				// Set default color from computed styles
+				const tempTab = document.createElement('div');
+				tempTab.className = 'freshvibes-tab';
+				document.body.appendChild(tempTab);
+				const defaultBg = window.getComputedStyle(tempTab).backgroundColor;
+				document.body.removeChild(tempTab);
+
+				const rgb = defaultBg.match(/\d+/g);
+				if (rgb) {
+					const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+					bgColorInput.value = hex;
+				}
+			}
 		}
 
 		// Show unread count
@@ -383,8 +413,23 @@ function initializeDashboard(freshvibesView) {
 
 			// Just set the value of the existing color input - don't create new elements
 			const headerColorInput = editor.querySelector('.feed-header-color-input');
-			if (headerColorInput && feed.currentHeaderColor) {
-				headerColorInput.value = feed.currentHeaderColor;
+			if (headerColorInput) {
+				if (feed.currentHeaderColor) {
+					headerColorInput.value = feed.currentHeaderColor;
+				} else {
+					// Set default color from computed styles
+					const tempHeader = document.createElement('div');
+					tempHeader.className = 'freshvibes-container-header';
+					document.body.appendChild(tempHeader);
+					const defaultBg = window.getComputedStyle(tempHeader).backgroundColor;
+					document.body.removeChild(tempHeader);
+
+					const rgb = defaultBg.match(/\d+/g);
+					if (rgb) {
+						const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+						headerColorInput.value = hex;
+					}
+				}
 			}
 
 			const maxHeightSelect = editor.querySelector('.feed-maxheight-select');
@@ -1659,6 +1704,162 @@ function initializeDashboard(freshvibesView) {
 				}
 			}).catch(console.error);
 		});
+
+		// Bulk settings modal
+		const bulkSettingsBtn = document.getElementById('bulk-settings-btn');
+		const bulkSettingsModal = document.getElementById('bulk-settings-modal');
+
+		if (bulkSettingsBtn && bulkSettingsModal) {
+			bulkSettingsBtn.addEventListener('click', () => {
+				bulkSettingsModal.classList.add('active');
+				document.body.classList.add('modal-open');
+			});
+
+			bulkSettingsModal.addEventListener('click', e => {
+				if (e.target === bulkSettingsModal || e.target.closest('.fv-modal-close')) {
+					bulkSettingsModal.classList.remove('active');
+					document.body.classList.remove('modal-open');
+				}
+			});
+
+			const feedColorInput = document.getElementById('bulk-feed-header-color');
+			if (feedColorInput) {
+				const tempHeader = document.createElement('div');
+				tempHeader.className = 'freshvibes-container-header';
+				document.body.appendChild(tempHeader);
+				const defaultColor = window.getComputedStyle(tempHeader).backgroundColor;
+				document.body.removeChild(tempHeader);
+
+				const rgb = defaultColor.match(/\d+/g);
+				if (rgb) {
+					const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+					feedColorInput.value = hex;
+				}
+			}
+
+			const tabColorInput = document.getElementById('bulk-tab-bg-color');
+			if (tabColorInput) {
+				const tempTab = document.createElement('div');
+				tempTab.className = 'freshvibes-tab';
+				document.body.appendChild(tempTab);
+				const defaultColor = window.getComputedStyle(tempTab).backgroundColor;
+				document.body.removeChild(tempTab);
+
+				const rgb = defaultColor.match(/\d+/g);
+				if (rgb) {
+					const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+					tabColorInput.value = hex;
+				}
+			}
+
+			// Apply bulk feed settings
+			document.getElementById('apply-bulk-feed-settings')?.addEventListener('click', () => {
+				const settings = {
+					limit: document.getElementById('bulk-feed-limit').value,
+					font_size: document.getElementById('bulk-feed-fontsize').value,
+					display_mode: document.getElementById('bulk-feed-display').value,
+					header_color: document.getElementById('bulk-feed-header-color').value,
+					max_height: document.getElementById('bulk-feed-maxheight').value
+				};
+
+				if (confirm(tr.confirm_bulk_apply_feeds)) {
+					api(bulkApplyFeedsUrl, settings)
+						.then(() => {
+							alert(tr.bulk_apply_success_feeds);
+							location.reload();
+						})
+						.catch(err => {
+							console.error('Error applying bulk feed settings:', err);
+							alert('Error applying settings. Please try again.');
+						});
+				}
+			});
+
+			// Apply bulk tab settings
+			document.getElementById('apply-bulk-tab-settings')?.addEventListener('click', () => {
+				const settings = {
+					num_columns: document.getElementById('bulk-tab-columns').value,
+					bg_color: document.getElementById('bulk-tab-bg-color').value
+				};
+
+				if (confirm(tr.confirm_bulk_apply_tabs)) {
+					api(bulkApplyTabsUrl, settings)
+						.then(() => {
+							alert(tr.bulk_apply_success_tabs);
+							location.reload();
+						})
+						.catch(err => {
+							console.error('Error applying bulk tab settings:', err);
+							alert('Error applying settings. Please try again.');
+						});
+				}
+			});
+
+			// Reset all feed settings
+			document.getElementById('reset-all-feed-settings')?.addEventListener('click', () => {
+				if (confirm(tr.confirm_reset_all_feeds)) {
+					api(resetFeedsUrl, {})
+						.then(() => {
+							alert(tr.bulk_reset_success_feeds);
+							location.reload();
+						})
+						.catch(err => {
+							console.error('Error resetting feed settings:', err);
+							alert('Error resetting settings. Please try again.');
+						});
+				}
+			});
+
+			// Reset all tab settings
+			document.getElementById('reset-all-tab-settings')?.addEventListener('click', () => {
+				if (confirm(tr.confirm_reset_all_tabs)) {
+					api(resetTabsUrl, {})
+						.then(() => {
+							alert(tr.bulk_reset_success_tabs);
+							location.reload();
+						})
+						.catch(err => {
+							console.error('Error resetting tab settings:', err);
+							alert('Error resetting settings. Please try again.');
+						});
+				}
+			});
+
+			// Update color reset to use computed styles
+			bulkSettingsModal.querySelectorAll('.color-reset').forEach(btn => {
+				btn.addEventListener('click', e => {
+					const targetId = e.target.dataset.target;
+					const colorInput = document.getElementById(targetId);
+					if (colorInput) {
+						// Get default color from computed styles
+						let defaultColor;
+						if (targetId.includes('feed')) {
+							// Create temporary element to get default feed header color
+							const tempHeader = document.createElement('div');
+							tempHeader.className = 'freshvibes-container-header';
+							document.body.appendChild(tempHeader);
+							defaultColor = window.getComputedStyle(tempHeader).backgroundColor;
+							document.body.removeChild(tempHeader);
+						} else {
+							// Create temporary element to get default tab color
+							const tempTab = document.createElement('div');
+							tempTab.className = 'freshvibes-tab';
+							document.body.appendChild(tempTab);
+							defaultColor = window.getComputedStyle(tempTab).backgroundColor;
+							document.body.removeChild(tempTab);
+						}
+
+						// Convert to hex
+						const rgb = defaultColor.match(/\d+/g);
+						if (rgb) {
+							const hex = '#' + rgb.map(x => parseInt(x).toString(16).padStart(2, '0')).join('');
+							colorInput.value = hex;
+						}
+					}
+				});
+			});
+		}
+
 	}
 
 	// --- INITIALIZATION ---

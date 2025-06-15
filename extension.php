@@ -44,6 +44,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const ALLOWED_DISPLAY_MODES = ['tiny', 'compact', 'detailed'];
 	public const DEFAULT_DISPLAY_MODE = 'tiny';
 
+	public const BULK_SETTINGS_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_bulk_settings';
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
 	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50, 'unlimited'];
