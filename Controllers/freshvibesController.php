@@ -156,13 +156,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) .
 				$feedId;
 			if ($userConf->hasParam($limitKey)) {
-				$limit = $userConf->attributeInt($limitKey);
+				$limit = $userConf->param($limitKey);
 			} else {
 				$limit = FreshVibesViewExtension::DEFAULT_ARTICLES_PER_FEED;
 			}
-			if (!in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true)) {
+
+			$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
+			if (!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true)) {
 				$limit = FreshVibesViewExtension::DEFAULT_ARTICLES_PER_FEED;
 			}
+			$queryLimit = ($limit === 'unlimited') ? null : (int)$limit;
 
 			if ($userConf->hasParam($fontSizeKey)) {
 				$fontSize = $userConf->attributeString($fontSizeKey);
@@ -207,7 +210,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					state: $stateAll,
 					sort: $sort,
 					order: $order,
-					limit: $limit
+					limit: $queryLimit
 				);
 				$entries = [];
 

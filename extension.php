@@ -33,7 +33,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const CATEGORY_MAX_HEIGHT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_category_feed_max_height';
 	public const MAX_HEIGHT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_feed_max_height';
 	public const ALLOWED_MAX_HEIGHTS_CONFIG_KEY = ['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'];
-	public const DEFAULT_MAX_HEIGHT_CONFIG_KEY = '400';
+	public const DEFAULT_MAX_HEIGHT_CONFIG_KEY = 'fit';
 
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;

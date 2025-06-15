@@ -348,8 +348,10 @@ function initializeDashboard(freshvibesView) {
 		if (contentDiv) {
 			contentDiv.innerHTML = '';
 			// Apply max-height
-			if (feed.currentMaxHeight && feed.currentMaxHeight !== 'unlimited') {
+			if (feed.currentMaxHeight && !['unlimited', 'fit'].includes(feed.currentMaxHeight)) {
 				contentDiv.style.maxHeight = feed.currentMaxHeight + 'px';
+			} else {
+				contentDiv.style.maxHeight = '';
 			}
 			if (feed.entries && Array.isArray(feed.entries) && feed.entries.length > 0 && !feed.entries.error) {
 				const ul = document.createElement('ul');
@@ -422,8 +424,9 @@ function initializeDashboard(freshvibesView) {
 		if (editor) {
 			const limitSelect = editor.querySelector('.feed-limit-select');
 			if (limitSelect) {
-				[5, 10, 15, 20, 25, 30, 40, 50].forEach(val => {
-					const opt = new Option(val, val, val === feed.currentLimit, val === feed.currentLimit);
+				[5, 10, 15, 20, 25, 30, 40, 50, 'unlimited'].forEach(val => {
+					const label = val === 'unlimited' ? (tr.unlimited || 'Unlimited') : val;
+					const opt = new Option(label, val, String(val) === String(feed.currentLimit), String(val) === String(feed.currentLimit));
 					limitSelect.add(opt);
 				});
 			}
@@ -447,8 +450,18 @@ function initializeDashboard(freshvibesView) {
 
 			const maxHeightSelect = editor.querySelector('.feed-maxheight-select');
 			if (maxHeightSelect) {
-				['300', '400', '500', '600', '700', '800', 'unlimited'].forEach(val => {
-					const label = val === 'unlimited' ? 'Unlimited' : val + 'px';
+				['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'].forEach(val => {
+					let label;
+					switch (val) {
+						case 'unlimited':
+							label = tr.unlimited || 'Unlimited';
+							break;
+						case 'fit':
+							label = tr.fit_to_content || 'Fit to content';
+							break;
+						default:
+							label = val + 'px';
+					}
 					const opt = new Option(label, val, val === feed.currentMaxHeight, val === feed.currentMaxHeight);
 					maxHeightSelect.add(opt);
 				});
@@ -1313,6 +1326,52 @@ function initializeDashboard(freshvibesView) {
 			// For 'external' mode, we do nothing. The browser will follow the link's href
 			// and `target="_blank"` will correctly open it in a new tab.
 			if (clickMode === 'external') {
+				const entryItem = entryLink.closest('.entry-item');
+				const feedId = entryItem.dataset.feedId;
+				const entryId = entryItem.dataset.entryId;
+				const feedData = state.feeds[feedId];
+				const entry = feedData?.entries?.find(e => String(e.id) === entryId);
+
+				if (!entry || entry.isRead || !markReadUrl) {
+					return; // Do nothing if entry is not found, already read, or URL is missing
+				}
+
+				// Mark as read via API
+				fetch(markReadUrl, {
+					method: 'POST',
+					credentials: 'same-origin',
+					headers: {
+						'Content-Type': 'application/x-www-form-urlencoded',
+						'X-Requested-With': 'XMLHttpRequest'
+					},
+					body: new URLSearchParams({
+						'id': entryId,
+						'is_read': 1,
+						'ajax': 1,
+						'_csrf': csrfToken
+					})
+				}).then(res => {
+					if (!res.ok) return;
+
+					entry.isRead = true;
+					entryItem.classList.add('read');
+
+					// Update unread counters
+					if (feedData && feedData.nbUnread > 0) {
+						feedData.nbUnread--;
+						const badge = document.querySelector(
+							`.freshvibes-container[data-feed-id="${feedData.id}"] .feed-unread-badge`
+						);
+						if (badge) {
+							if (feedData.nbUnread > 0) {
+								badge.textContent = feedData.nbUnread;
+							} else {
+								badge.remove();
+							}
+						}
+						updateTabBadge(feedData.id);
+					}
+				}).catch(console.error);
 				return;
 			}
 
@@ -1563,7 +1622,7 @@ function initializeDashboard(freshvibesView) {
 				// Apply max-height to the scrollable content area
 				const contentDiv = container.querySelector('.freshvibes-container-content');
 				if (contentDiv) {
-					contentDiv.style.maxHeight = maxHeight === 'unlimited' ? '' : `${maxHeight}px`;
+					contentDiv.style.maxHeight = ['unlimited', 'fit'].includes(maxHeight) ? '' : `${maxHeight}px`;
 				}
 				// Note: Live preview for header color is handled by a separate 'input' event listener.
 
@@ -1593,7 +1652,7 @@ function initializeDashboard(freshvibesView) {
 						const oldLimit = feed.currentLimit;
 
 						// Update state object with the new values
-						feed.currentLimit = parseInt(limit, 10);
+						feed.currentLimit = isNaN(parseInt(limit, 10)) ? limit : parseInt(limit, 10);
 						feed.currentFontSize = fontSize;
 						feed.currentMaxHeight = maxHeight;
 
@@ -1603,7 +1662,7 @@ function initializeDashboard(freshvibesView) {
 						}
 
 						// Reload only if the article limit changes
-						if (oldLimit !== parseInt(limit, 10)) {
+						if (String(oldLimit) !== String(limit)) {
 							location.reload();
 						}
 					}
@@ -1626,6 +1685,67 @@ function initializeDashboard(freshvibesView) {
 					ed.classList.remove('active');
 				});
 			}
+		});
+
+		// Handle middle-click on entries to mark as read
+		freshvibesView.addEventListener('auxclick', e => {
+			if (e.button !== 1) { // We only care about the middle mouse button
+				return;
+			}
+
+			const entryLink = e.target.closest('.entry-link');
+			if (!entryLink) {
+				return;
+			}
+
+			// Do NOT prevent default. This allows the link to open in a new tab.
+
+			const entryItem = entryLink.closest('.entry-item');
+			const feedId = entryItem.dataset.feedId;
+			const entryId = entryItem.dataset.entryId;
+			const feedData = state.feeds[feedId];
+			const entry = feedData?.entries?.find(e => String(e.id) === entryId);
+
+			if (!entry || entry.isRead || !markReadUrl) {
+				return; // Do nothing if entry is not found, already read, or URL is missing
+			}
+
+			// Mark as read via API
+			fetch(markReadUrl, {
+				method: 'POST',
+				credentials: 'same-origin',
+				headers: {
+					'Content-Type': 'application/x-www-form-urlencoded',
+					'X-Requested-With': 'XMLHttpRequest'
+				},
+				body: new URLSearchParams({
+					'id': entryId,
+					'is_read': 1,
+					'ajax': 1,
+					'_csrf': csrfToken
+				})
+			}).then(res => {
+				if (!res.ok) return;
+
+				entry.isRead = true;
+				entryItem.classList.add('read');
+
+				// Update unread counters
+				if (feedData && feedData.nbUnread > 0) {
+					feedData.nbUnread--;
+					const badge = document.querySelector(
+						`.freshvibes-container[data-feed-id="${feedData.id}"] .feed-unread-badge`
+					);
+					if (badge) {
+						if (feedData.nbUnread > 0) {
+							badge.textContent = feedData.nbUnread;
+						} else {
+							badge.remove();
+						}
+					}
+					updateTabBadge(feedData.id);
+				}
+			}).catch(console.error);
 		});
 	}
 

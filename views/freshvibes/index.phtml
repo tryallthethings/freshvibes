@@ -32,7 +32,6 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	data-xextension-freshvibesview-mode="<?php echo htmlspecialchars($this->viewMode ?? 'custom', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-confirm-tab-delete="<?php echo $this->confirmTabDelete ? '1' : '0'; ?>"
 	data-xextension-freshvibesview-entry-click-mode="<?php echo htmlspecialchars($this->entryClickMode ?? 'modal', ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-entry-url="<?php echo htmlspecialchars($this->entryUrl ?? '', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-sort="<?php echo htmlspecialchars(FreshRSS_Context::$sort ?? 'date', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-order="<?php echo htmlspecialchars(FreshRSS_Context::$order ?? 'DESC', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
@@ -85,6 +84,8 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		'tab_bg_color' => _t('ext.FreshVibesView.tab_bg_color', 'Tab background'),
 		'icon_read' => _i('unread'),
 		'icon_unread' => _i('read'),
+		'unlimited' => _t('ext.FreshVibesView.unlimited', 'Unlimited'),
+		'fit_to_content' => _t('ext.FreshVibesView.fit_to_content', 'Fit to content'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
 </script>
 

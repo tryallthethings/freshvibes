@@ -49,5 +49,12 @@ return array(
 		'settings_hide_subscription_control_help' => 'Blendet die Abonnement- und Feed-hinzufügen-Schaltflächen in der Kopfzeile aus',
 		'mark_read' => 'Als gelesen markieren',
 		'mark_unread' => 'Als ungelesen markieren',
+		'settings_entry_click_mode_label' => 'Klick-Verhalten für Einträge',
+		'settings_entry_click_mode_help' => 'Wählen Sie, was passiert, wenn Sie auf einen Eintrag klicken',
+		'entry_click_mode_modal' => 'In Modal öffnen',
+		'entry_click_mode_external' => 'Originalartikel öffnen',
+		'max_height_label' => 'Maximale Höhe:',
+		'unlimited' => 'Unbegrenzt',
+		'fit_to_content' => 'An Inhalt anpassen',
 	),
 );

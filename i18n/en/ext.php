@@ -54,5 +54,7 @@ return array(
 		'entry_click_mode_modal' => 'Open in modal',
 		'entry_click_mode_external' => 'Open original article',
 		'max_height_label' => 'Max height:',
+		'unlimited' => 'Unlimited',
+		'fit_to_content' => 'Fit to content',
 	),
 );
