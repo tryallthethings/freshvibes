@@ -668,7 +668,7 @@ function initializeDashboard(freshvibesView) {
 		let entryHTML = '';
 		if (feed.currentDisplayMode === 'tiny') {
 			entryHTML = `
-				<a class="entry-link" href="${entry.link || '#'}" target="_blank" rel="noopener noreferrer" data-entry-id="${entry.id}" data-feed-id="${feed.id}">
+				<a class="entry-link" href="${entry.link}" target="_blank" rel="noopener noreferrer" data-entry-id="${entry.id}" data-feed-id="${feed.id}">
 					<div class="entry-main">
 						<span class="entry-title">${entry.title || '(No title)'}</span>
 						${snippetToUse ? `<span class="entry-snippet">${snippetToUse}</span>` : ''}
@@ -680,7 +680,7 @@ function initializeDashboard(freshvibesView) {
 			entryHTML = `
 				<div class="entry-wrapper">
 					<div class="entry-header">
-						<a class="entry-link" href="${entry.link || '#'}" target="_blank" rel="noopener noreferrer" data-entry-id="${entry.id}" data-feed-id="${feed.id}">
+						<a class="entry-link" href="${entry.link}" target="_blank" rel="noopener noreferrer" data-entry-id="${entry.id}" data-feed-id="${feed.id}">
 							<span class="entry-title">${entry.title || '(No title)'}</span>
 						</a>
 						<span class="entry-date" title="${entry.dateFull}">${displayDate}</span>
@@ -1148,7 +1148,7 @@ function initializeDashboard(freshvibesView) {
 				const container = badge.closest('.freshvibes-container');
 				const feedId = container.dataset.feedId;
 				const feedData = state.feeds[feedId];
-				const shouldConfirm = confirmMarkRead === '1';
+				const shouldConfirm = confirmMarkRead !== '0';
 
 				const performMarkRead = () => {
 					api(markFeedReadUrl, { feed_id: feedId }).then(data => {

@@ -561,8 +561,25 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					$fontPrefix = $mode === 'categories' ?
 						FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
 						FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
-					$userConf->_attribute($bgPrefix . $tabId, $bgColor);
-					$userConf->_attribute($fontPrefix . $tabId, $fontColor);
+					if ($bgColor === null) {
+						if (method_exists($userConf, 'removeAttribute')) {
+							$userConf->removeAttribute($bgPrefix . $tabId);
+						} else {
+							unset($userConf->{$bgPrefix . $tabId});
+						}
+					} else {
+						$userConf->_attribute($bgPrefix . $tabId, $bgColor);
+					}
+
+					if ($fontColor === null) {
+						if (method_exists($userConf, 'removeAttribute')) {
+							$userConf->removeAttribute($fontPrefix . $tabId);
+						} else {
+							unset($userConf->{$fontPrefix . $tabId});
+						}
+					} else {
+						$userConf->_attribute($fontPrefix . $tabId, $fontColor);
+					}
 					$userConf->save();
 
 					echo json_encode(['status' => 'success', 'font_color' => $fontColor]);
@@ -1216,11 +1233,20 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
 					FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
 
-				$userConf->_attribute($limitPrefix . $feedId, null);
-				$userConf->_attribute($fontPrefix . $feedId, null);
-				$userConf->_attribute($headerPrefix . $feedId, null);
-				$userConf->_attribute($maxHeightPrefix . $feedId, null);
-				$userConf->_attribute($displayModePrefix . $feedId, null);
+				$keys = [
+					$limitPrefix . $feedId,
+					$fontPrefix . $feedId,
+					$headerPrefix . $feedId,
+					$maxHeightPrefix . $feedId,
+					$displayModePrefix . $feedId,
+				];
+				foreach ($keys as $key) {
+					if (method_exists($userConf, 'removeAttribute')) {
+						$userConf->removeAttribute($key);
+					} else {
+						unset($userConf->$key);
+					}
+				}
 			}
 
 			$userConf->save();

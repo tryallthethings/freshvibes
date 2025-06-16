@@ -32,7 +32,6 @@ return array(
 		'settings_save_button' => 'Save Settings',
 		'tabicon' => 'Icon / Emoji',
 		'open_link' => 'Open original',
-		'mark_unread' => 'Mark as unread',
 		'tags_label' => 'Tags:',
 		'by_author' => 'By: ',
 		'mark_all_read' => 'Mark all as read',
@@ -46,7 +45,7 @@ return array(
 		'settings_confirm_tab_delete_help' => 'Show confirmation dialog when deleting tabs',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Hides the left sidebar when using Fresh Vibes View',
-		'settings_hide_subscription_control' => 'Hide subscription controls',
+		'settings_hide_subscription_control_label' => 'Hide subscription controls',
 		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header. 
 			This only works when the sidebar is hidden.',
 		'mark_read' => 'Mark as read',

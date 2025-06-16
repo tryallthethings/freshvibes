@@ -3,7 +3,7 @@
 declare(strict_types=1);
 
 $hideSidebar = FreshRSS_Context::userConf()->param(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY, false);
-$hideSubsciptionControls = FreshRSS_Context::userConf()->param(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, false);
+$hideSubscriptionControls = FreshRSS_Context::userConf()->param(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, false);
 
 if (!Minz_Request::paramBoolean('ajax')) {
 	if (!$hideSidebar) {
@@ -47,7 +47,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
 
 		<nav class="freshvibes-tabs" aria-label="<?php echo _t('ext.FreshVibesView.aria_dashboard_tabs', 'Dashboard tabs'); ?>"></nav>
 		<div class="header-actions">
-			<?php if (!$hideSubsciptionControls && $hideSidebar && FreshRSS_Auth::hasAccess()): ?>
+			<?php if (!$hideSubscriptionControls && $hideSidebar && FreshRSS_Auth::hasAccess()): ?>
 				<div class="moved-subscription-buttons">
 					<div class="subscription-icon">+</div>
 					<div class="subscription-buttons">
