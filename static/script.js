@@ -1028,7 +1028,7 @@ function initializeDashboard(freshvibesView) {
 						state.layout.push(data.new_tab);
 						updateSlugURL(state, data.new_tab);
 						render();
-
+						activateTab(data.new_tab.id, false);
 					}
 				}).catch(console.error);
 				return;
