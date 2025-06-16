@@ -41,14 +41,14 @@ return array(
 		'header_color' => 'Header color',
 		'confirm_mark_tab_read' => 'Mark all entries in this tab as read?',
 		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled. 
-		It has been reset to the "Normal" view.',
-
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Confirm tab deletion',
 		'settings_confirm_tab_delete_help' => 'Show confirmation dialog when deleting tabs',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Hides the left sidebar when using Fresh Vibes View',
 		'settings_hide_subscription_control' => 'Hide subscription controls',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header. 
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Mark as read',
 		'mark_unread' => 'Mark as unread',
 		'settings_entry_click_mode_label' => 'Entry click behavior',
@@ -98,5 +98,7 @@ return array(
 		'close' => 'Close',
 		'apply' => 'Apply',
 		'reset' => 'Reset',
+		'settings_confirm_mark_read_label' => 'Confirm marking entries as read',
+		'settings_confirm_mark_read_help' => 'Show confirmation dialog when marking feeds or tabs as read',
 	),
 );

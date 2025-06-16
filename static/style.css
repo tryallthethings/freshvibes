@@ -17,7 +17,6 @@
 	display: flex;
 	align-items: flex-end;
 	justify-content: space-between;
-	gap: 20px;
 	border-bottom: 1px solid var(--border-color);
 	margin-bottom: 15px;
 	flex-wrap: wrap;
@@ -1497,6 +1496,78 @@ body.modal-open {
 	border-color: #c9302c;
 }
 
+.header-actions {
+	display: flex;
+	align-items: center;
+	gap: 8px;
+}
+
+.moved-subscription-buttons {
+	position: relative;
+	display: flex;
+	align-items: center;
+	padding: 4px 12px;
+	border: 1px solid var(--border-color);
+	border-radius: var(--border-radius);
+	background-image: linear-gradient(to bottom, var(--contrast-background-color), var(--contrast-background-color-gradient));
+	color: var(--font-color-light);
+	border: 1px solid var(--contrast-border-color);
+	color: white;
+	cursor: pointer;
+	transition: all 0.2s ease;
+	margin-left: 8px;
+	flex: 0 1 auto;
+	height: 34px;
+	box-sizing: border-box;
+}
+
+.moved-subscription-buttons:hover {
+	opacity: 0.9;
+}
+
+.subscription-icon {
+	font-size: 1.5em;
+	font-weight: bold;
+	line-height: 1;
+	display: block;
+}
+
+.subscription-buttons {
+	display: none;
+	gap: 4px;
+}
+
+.moved-subscription-buttons:hover .subscription-icon {
+	display: none;
+}
+
+.moved-subscription-buttons:hover .subscription-buttons {
+	display: flex;
+}
+
+.subscription-buttons .btn {
+	padding: 2px 8px;
+	/* Reduce padding to fit in 34px height */
+	font-size: 0.9em;
+	white-space: nowrap;
+	background-color: rgba(255, 255, 255, 0.2);
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	color: white;
+	text-decoration: none;
+	border-radius: var(--border-radius);
+	line-height: 1.2;
+	height: 26px;
+	/* Fixed height to fit within container */
+	box-sizing: border-box;
+	display: flex;
+	align-items: center;
+}
+
+.subscription-buttons .btn:hover {
+	background-color: rgba(255, 255, 255, 0.3);
+	border-color: rgba(255, 255, 255, 0.5);
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
 	.entry-action-btn {
@@ -1790,4 +1861,30 @@ body.modal-open {
 		width: 100%;
 	}
 
+	.moved-subscription-buttons .subscription-icon {
+		display: none;
+	}
+
+	.moved-subscription-buttons .subscription-buttons {
+		display: flex;
+		margin-left: 0;
+	}
+
+	.moved-subscription-buttons {
+		margin: 2px 0;
+		flex: 1 1 auto;
+		justify-content: center;
+	}
+
+	.header-actions {
+		flex-direction: column;
+		align-items: stretch;
+		width: 100%;
+		gap: 4px;
+	}
+
+	.moved-subscription-buttons {
+		width: 100%;
+		justify-content: center;
+	}
 }

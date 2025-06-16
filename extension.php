@@ -43,8 +43,9 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_display_mode_feedid_';
 	public const ALLOWED_DISPLAY_MODES = ['tiny', 'compact', 'detailed'];
 	public const DEFAULT_DISPLAY_MODE = 'tiny';
-
 	public const BULK_SETTINGS_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_bulk_settings';
+	public const CONFIRM_MARK_READ_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_confirm_mark_read';
+
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
 	public const ALLOWED_LIMIT_VALUES = [5, 10, 15, 20, 25, 30, 40, 50, 'unlimited'];
@@ -137,6 +138,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::CONFIRM_TAB_DELETE_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_tab_delete') ? 1 : 0);
 			$userConf->_attribute(self::ENTRY_CLICK_MODE_CONFIG_KEY, Minz_Request::paramStringNull('freshvibes_entry_click_mode') ?? 'modal');
 			$userConf->_attribute(self::DATE_MODE_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_mode') ?: 'absolute');
+			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read') ? 1 : 0);
 
 			$userConf->save();
 		}
@@ -172,6 +174,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 			case self::HIDE_SIDEBAR_CONFIG_KEY:
 			case self::REFRESH_ENABLED_CONFIG_KEY:
 			case self::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY:
+			case self::CONFIRM_MARK_READ_CONFIG_KEY:
 				return (bool)$userConf->attributeInt($key);
 			case self::REFRESH_INTERVAL_CONFIG_KEY:
 				return $userConf->attributeInt($key) ?? $default;

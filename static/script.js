@@ -26,7 +26,9 @@ function initializeDashboard(freshvibesView) {
 		xextensionFreshvibesviewDateFormat: dateFormat = '',
 		xextensionFreshvibesviewMarkFeedReadUrl: markFeedReadUrl = '',
 		xextensionFreshvibesviewMarkTabReadUrl: markTabReadUrl = '',
-		xextensionFreshvibesviewMode: viewMode = ''
+		xextensionFreshvibesviewMode: viewMode = '',
+		xextensionFreshvibesviewConfirmMarkRead: confirmMarkRead = '',
+
 	} = freshvibesView.dataset;
 	const isCategoryMode = viewMode === 'categories';
 
@@ -74,6 +76,10 @@ function initializeDashboard(freshvibesView) {
 	}
 
 	function renderTabs() {
+		// Store reference to subscription buttons before clearing
+		const subscriptionButtons = document.querySelector('.moved-subscription-buttons');
+		const parentElement = subscriptionButtons?.parentElement;
+
 		tabsContainer.innerHTML = '';
 		state.layout.forEach(tab => {
 			const link = createTabLink(tab);
@@ -118,6 +124,11 @@ function initializeDashboard(freshvibesView) {
 		bulkButton.title = tr.bulk_settings || 'Bulk Settings';
 		bulkButton.ariaLabel = tr.bulk_settings || 'Bulk Settings';
 		tabsContainer.appendChild(bulkButton);
+
+		// Re-append subscription buttons if they exist
+		if (subscriptionButtons) {
+			tabsContainer.appendChild(subscriptionButtons);
+		}
 	}
 
 	function renderPanels() {
@@ -1137,8 +1148,9 @@ function initializeDashboard(freshvibesView) {
 				const container = badge.closest('.freshvibes-container');
 				const feedId = container.dataset.feedId;
 				const feedData = state.feeds[feedId];
+				const shouldConfirm = confirmMarkRead === '1';
 
-				if (confirm(tr.confirm_mark_all_read || `Mark all ${feedData.nbUnread} entries in "${feedData.name}" as read?`)) {
+				const performMarkRead = () => {
 					api(markFeedReadUrl, { feed_id: feedId }).then(data => {
 						if (data.status === 'success') {
 							badge.remove();
@@ -1148,6 +1160,14 @@ function initializeDashboard(freshvibesView) {
 							updateTabBadge(feedId);
 						}
 					}).catch(console.error);
+				};
+
+				if (shouldConfirm) {
+					if (confirm(tr.confirm_mark_all_read || `Mark all ${feedData.nbUnread} entries in "${feedData.name}" as read?`)) {
+						performMarkRead();
+					}
+				} else {
+					performMarkRead();
 				}
 				e.stopPropagation();
 				return;
@@ -1166,15 +1186,15 @@ function initializeDashboard(freshvibesView) {
 				const tabEl = badge.closest('.freshvibes-tab');
 				const tabId = tabEl.dataset.tabId;
 				const tabData = state.layout.find(t => t.id === tabId);
+				const shouldConfirm = confirmMarkRead === '1';
 
 				if (tabData && tabData.unread_count > 0) {
-					if (confirm(tr.confirm_mark_tab_read || `Mark all entries in "${tabData.name}" as read?`)) {
+					const performMarkRead = () => {
 						api(markTabReadUrl, { tab_id: tabId }).then(data => {
 							if (data.status === 'success') {
 								badge.textContent = '0';
 								badge.style.display = 'none';
 								tabData.unread_count = 0;
-								// Update all feeds in this tab
 								if (state.activeTabId === tabId) {
 									document.querySelectorAll('.freshvibes-container').forEach(container => {
 										const unreadBadge = container.querySelector('.feed-unread-badge');
@@ -1184,6 +1204,14 @@ function initializeDashboard(freshvibesView) {
 								}
 							}
 						}).catch(console.error);
+					};
+
+					if (shouldConfirm) {
+						if (confirm(tr.confirm_mark_tab_read || `Mark all entries in "${tabData.name}" as read?`)) {
+							performMarkRead();
+						}
+					} else {
+						performMarkRead();
 					}
 				}
 				e.stopPropagation();

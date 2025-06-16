@@ -299,6 +299,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		@$this->view->confirmTabDelete = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY, 1);
 		@$this->view->entryClickMode = $userConf->param(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal');
 		@$this->view->dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
+		@$this->view->confirmMarkRead = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY, 1);
 
 		@$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;
