@@ -2,25 +2,21 @@
 
 declare(strict_types=1);
 
-class FreshExtension_freshvibes_Controller extends Minz_ActionController
-{
+class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
-	private function noCacheHeaders()
-	{
+	private function noCacheHeaders() {
 		header('Cache-Control: no-cache, no-store, must-revalidate');
 		header('Pragma: no-cache');
 		header('Expires: 0');
 	}
 
-	private function getMode(): string
-	{
+	private function getMode(): string {
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $userConf->param(FreshVibesViewExtension::MODE_CONFIG_KEY, 'custom');
 		return $mode === 'categories' ? 'categories' : 'custom';
 	}
 
-	private function getLayout(): array
-	{
+	private function getLayout(): array {
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
 		$layoutKey = $mode === 'categories'
@@ -30,14 +26,44 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			? $userConf->param($layoutKey)
 			: null;
 
-		if ($layout === null) {
-			$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
-			$feedDAO = new FreshRSS_FeedDAO();
+		if ($mode === 'categories') {
+			// Always reorder categories according to their position
+			$categories = FreshRSS_Context::categories();
+			$existingLayout = $layout ?: [];
+			$layout = [];
 
-			if ($mode === 'categories') {
-				$categories = FreshRSS_Context::categories();
-				$layout = [];
-				foreach ($categories as $cat) {
+			// Build a map of existing tab data by category ID
+			$existingTabsMap = [];
+			foreach ($existingLayout as $tab) {
+				$existingTabsMap[$tab['id']] = $tab;
+			}
+
+			// Sort categories by position
+			$sortedCategories = [];
+			foreach ($categories as $cat) {
+				$position = $cat->attributeInt('position');
+				$sortedCategories[] = [
+					'category' => $cat,
+					'position' => $position !== null ? $position : PHP_INT_MAX
+				];
+			}
+			usort($sortedCategories, function ($a, $b) {
+				return $a['position'] <=> $b['position'];
+			});
+
+			// Build layout in sorted order
+			foreach ($sortedCategories as $catData) {
+				$cat = $catData['category'];
+				$tabId = 'cat-' . $cat->id();
+
+				if (isset($existingTabsMap[$tabId])) {
+					// Use existing tab but ensure name is updated
+					$existingTab = $existingTabsMap[$tabId];
+					$existingTab['name'] = html_entity_decode($cat->name(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+					$layout[] = $existingTab;
+				} else {
+					// Create new tab for this category
+					$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
 					$columns = $this->buildEmptyColumns($numCols);
 					$feeds = $cat->feeds();
 					$i = 0;
@@ -47,40 +73,48 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 						$i++;
 					}
 					$layout[] = [
-						'id' => 'cat-' . $cat->id(),
-						'name' => $cat->name(),
+						'id' => $tabId,
+						'name' => html_entity_decode($cat->name(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 						'icon' => '',
 						'icon_color' => '',
 						'num_columns' => $numCols,
 						'columns' => $columns,
 					];
 				}
-			} else {
-				$columns = $this->buildEmptyColumns($numCols);
-				$feeds = $feedDAO->listFeeds();
-				$i = 0;
-				foreach ($feeds as $feed) {
-					$colKey = 'col' . (($i % $numCols) + 1);
-					$columns[$colKey][] = $feed->id();
-					$i++;
-				}
-				$layout = [[
-					'id' => 'tab-' . microtime(true),
-					'name' => _t('ext.FreshVibesView.default_tab_name', 'Main'),
-					'icon' => '',
-					'icon_color' => '',
-					'num_columns' => $numCols,
-					'columns' => $columns,
-				]];
 			}
+
+			$this->saveLayout($layout);
+			return $layout;
+		}
+
+		// Rest of the method for custom mode...
+		if ($layout === null) {
+			$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
+			$feedDAO = new FreshRSS_FeedDAO();
+
+			$columns = $this->buildEmptyColumns($numCols);
+			$feeds = $feedDAO->listFeeds();
+			$i = 0;
+			foreach ($feeds as $feed) {
+				$colKey = 'col' . (($i % $numCols) + 1);
+				$columns[$colKey][] = $feed->id();
+				$i++;
+			}
+			$layout = [[
+				'id' => 'tab-' . microtime(true),
+				'name' => _t('ext.FreshVibesView.default_tab_name', 'Main'),
+				'icon' => '',
+				'icon_color' => '',
+				'num_columns' => $numCols,
+				'columns' => $columns,
+			]];
 
 			$this->saveLayout($layout);
 		}
 		return is_array($layout) ? $layout : [];
 	}
 
-	private function saveLayout(array $layout): void
-	{
+	private function saveLayout(array $layout): void {
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
 		$layoutKey = $mode === 'categories'
@@ -90,8 +124,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$userConf->save();
 	}
 
-	public function indexAction()
-	{
+	public function indexAction() {
 		$this->noCacheHeaders();
 
 		$factory = new FreshRSS_Factory();
@@ -111,19 +144,29 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$stateAll = defined('FreshRSS_Entry::STATE_ALL') ? FreshRSS_Entry::STATE_ALL : 0;
 		$feedsData = [];
 		$dateFormat = $userConf->param(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i');
+		$dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
 
 		foreach ($feeds as $feed) {
 			$feedId = $feed->id();
-			$limitKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX : FreshVibesViewExtension::LIMIT_CONFIG_PREFIX) . $feedId;
-			$fontSizeKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX : FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) . $feedId;
+			$limitKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+				FreshVibesViewExtension::LIMIT_CONFIG_PREFIX) .
+				$feedId;
+			$fontSizeKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) .
+				$feedId;
 			if ($userConf->hasParam($limitKey)) {
-				$limit = $userConf->attributeInt($limitKey);
+				$limit = $userConf->param($limitKey);
 			} else {
 				$limit = FreshVibesViewExtension::DEFAULT_ARTICLES_PER_FEED;
 			}
-			if (!in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true)) {
+
+			$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
+			if (!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true)) {
 				$limit = FreshVibesViewExtension::DEFAULT_ARTICLES_PER_FEED;
 			}
+			$queryLimit = ($limit === 'unlimited') ? null : (int)$limit;
 
 			if ($userConf->hasParam($fontSizeKey)) {
 				$fontSize = $userConf->attributeString($fontSizeKey);
@@ -134,21 +177,60 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				$fontSize = FreshVibesViewExtension::DEFAULT_FONT_SIZE;
 			}
 
-			$headerColorKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX) . $feedId;
+			$maxHeightKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+				FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY) .
+				$feedId;
+			if ($userConf->hasParam($maxHeightKey)) {
+				$maxHeight = $userConf->attributeString($maxHeightKey);
+			} else {
+				$maxHeight = FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY;
+			}
+			if (!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY)) {
+				$maxHeight = FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY;
+			}
+
+			$headerColorKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX) .
+				$feedId;
 			if ($userConf->hasParam($headerColorKey)) {
 				$headerColor = $userConf->attributeString($headerColorKey);
 			} else {
 				$headerColor = '';
 			}
 
+			$displayModeKey = ($mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX) .
+				$feedId;
+			if ($userConf->hasParam($displayModeKey)) {
+				$displayMode = $userConf->attributeString($displayModeKey);
+			} else {
+				$displayMode = FreshVibesViewExtension::DEFAULT_DISPLAY_MODE;
+			}
+			if (!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)) {
+				$displayMode = FreshVibesViewExtension::DEFAULT_DISPLAY_MODE;
+			}
+
 			try {
+				// Get sorting from FreshRSS context
+				$sort = FreshRSS_Context::$sort ?? 'date';
+				$order = FreshRSS_Context::$order ?? 'DESC';
+
 				$entryGenerator = $entryDAO->listWhere(
 					type: 'f',
 					id: $feedId,
 					state: $stateAll,
-					sort: 'date',
-					order: 'DESC',
-					limit: $limit
+					filters: null,
+					id_min: '0',
+					id_max: '0',
+					sort: $sort,
+					order: $order,
+					continuation_id: '0',
+					continuation_value: 0,
+					limit: $queryLimit ?? 0,
+					offset: 0
 				);
 				$entries = [];
 
@@ -157,13 +239,15 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 						$entries[] = [
 							'id' => $entry->id(),
 							'link' => $entry->link(),
-							'title' => $entry->title(),
+							'title' => html_entity_decode($entry->title(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 							'dateShort' => date($dateFormat, $entry->date(true)),
+							'dateRelative' => $this->getRelativeDate($entry->date(true)),
 							'dateFull' => (string) $entry->date(true),
-							'snippet' => $this->generateSnippet($entry),
-							'excerpt' => $this->generateSnippet($entry, 100),
+							'snippet' => $this->generateSnippet($entry, 15, 1), // tiny view
+							'compactSnippet' => $this->generateSnippet($entry, 30, 1), // compact view
+							'detailedSnippet' => $this->generateSnippet($entry, 100, 3), // detailed view with 3 sentences
 							'isRead' => $entry->isRead(),
-							'author' => $entry->author(),
+							'author' => html_entity_decode($entry->author(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 							'tags' => $entry->tags(),
 							'feedId' => $feedId,
 						];
@@ -176,7 +260,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 
 			$feedsData[$feedId] = [
 				'id' => $feedId,
-				'name' => $feed->name(),
+				'name' => html_entity_decode($feed->name(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 				'favicon' => $feed->favicon(),
 				'website' => $feed->website(),
 				'entries' => $entries,
@@ -184,10 +268,14 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 				'currentFontSize' => $fontSize,
 				'nbUnread' => $feed->nbNotRead(),
 				'currentHeaderColor' => $headerColor,
+				'currentMaxHeight' => $maxHeight,
+				'currentDisplayMode' => $displayMode,
 			];
 		}
 
 		$controllerParam = strtolower(FreshVibesViewExtension::CONTROLLER_NAME_BASE);
+		@$this->view->currentSort = FreshRSS_Context::$sort;
+		@$this->view->currentOrder = FreshRSS_Context::$order;
 		@$this->view->feedsData = $feedsData;
 		@$this->view->getLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'getlayout'], 'json', false);
 		@$this->view->saveLayoutUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savelayout'], 'json', false);
@@ -208,7 +296,10 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		@$this->view->html_url = Minz_Url::display(['c' => $controllerParam, 'a' => 'index']);
 		@$this->view->feedUrl = Minz_Url::display([], 'html', false) . '?get=f_';
 		@$this->view->categories = FreshRSS_Context::categories();
-
+		@$this->view->confirmTabDelete = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY, 1);
+		@$this->view->entryClickMode = $userConf->param(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY, 'modal');
+		@$this->view->dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
+		@$this->view->confirmMarkRead = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY, 1);
 
 		@$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;
@@ -221,8 +312,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		$this->view->_path(FreshVibesViewExtension::CONTROLLER_NAME_BASE . '/index.phtml');
 	}
 
-	public function getLayoutAction()
-	{
+	public function getLayoutAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 		try {
@@ -251,8 +341,15 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			$feedDAO = new FreshRSS_FeedDAO();
 
 			foreach ($layout as &$tab) {
-				$bgColorKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX) . $tab['id'];
-				$fontColorKey = ($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX) . $tab['id'];
+				$tab['name'] = html_entity_decode($tab['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
+				$bgColorKey = ($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX) .
+					$tab['id'];
+				$fontColorKey = ($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX) .
+					$tab['id'];
 
 				$tab['bg_color'] = $userConf->hasParam($bgColorKey)
 					? $userConf->param($bgColorKey)
@@ -285,8 +382,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function saveLayoutAction()
-	{
+	public function saveLayoutAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['layout']) || !isset($_POST['tab_id'])) {
@@ -324,8 +420,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function updateTabAction()
-	{
+	public function updateTabAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['operation'])) {
@@ -460,13 +555,58 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 					}
 
 					$userConf = FreshRSS_Context::userConf();
-					$bgPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
-					$fontPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
-					$userConf->_attribute($bgPrefix . $tabId, $bgColor);
-					$userConf->_attribute($fontPrefix . $tabId, $fontColor);
+					$bgPrefix = $mode === 'categories' ?
+						FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+						FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
+					$fontPrefix = $mode === 'categories' ?
+						FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+						FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
+					if ($bgColor === null) {
+						if (method_exists($userConf, 'removeAttribute')) {
+							$userConf->removeAttribute($bgPrefix . $tabId);
+						} else {
+							unset($userConf->{$bgPrefix . $tabId});
+						}
+					} else {
+						$userConf->_attribute($bgPrefix . $tabId, $bgColor);
+					}
+
+					if ($fontColor === null) {
+						if (method_exists($userConf, 'removeAttribute')) {
+							$userConf->removeAttribute($fontPrefix . $tabId);
+						} else {
+							unset($userConf->{$fontPrefix . $tabId});
+						}
+					} else {
+						$userConf->_attribute($fontPrefix . $tabId, $fontColor);
+					}
 					$userConf->save();
 
 					echo json_encode(['status' => 'success', 'font_color' => $fontColor]);
+					break;
+				case 'reorder':
+					if ($mode === 'categories') {
+						http_response_code(403);
+						echo json_encode(['status' => 'error', 'message' => 'Operation not allowed.']);
+						exit;
+					}
+					$tabIds = explode(',', Minz_Request::paramString('tab_ids'));
+					if (!empty($tabIds)) {
+						$newLayout = [];
+						foreach ($tabIds as $tabId) {
+							foreach ($layout as $tab) {
+								if ($tab['id'] === $tabId) {
+									$newLayout[] = $tab;
+									break;
+								}
+							}
+						}
+						$this->saveLayout($newLayout);
+						echo json_encode(['status' => 'success']);
+					} else {
+						http_response_code(400);
+						echo json_encode(['status' => 'error', 'message' => 'Invalid tab order.']);
+					}
 					break;
 				default:
 					http_response_code(400);
@@ -480,8 +620,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	private function buildEmptyColumns(int $count): array
-	{
+	private function buildEmptyColumns(int $count): array {
 		$columns = [];
 		for ($i = 1; $i <= $count; $i++) {
 			$columns['col' . $i] = [];
@@ -489,15 +628,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return $columns;
 	}
 
-	public function setActiveTabAction()
-	{
+	public function setActiveTabAction() {
 		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['tab_id'])) {
 			http_response_code(400);
 			exit;
 		}
 		try {
 			$mode = $this->getMode();
-			$key = $mode === 'categories' ? FreshVibesViewExtension::ACTIVE_TAB_CATEGORY_CONFIG_KEY : FreshVibesViewExtension::ACTIVE_TAB_CONFIG_KEY;
+			$key = $mode === 'categories' ?
+				FreshVibesViewExtension::ACTIVE_TAB_CATEGORY_CONFIG_KEY :
+				FreshVibesViewExtension::ACTIVE_TAB_CONFIG_KEY;
 			FreshRSS_Context::userConf()->_attribute($key, $_POST['tab_id']);
 			FreshRSS_Context::userConf()->save();
 			echo json_encode(['status' => 'success']);
@@ -507,29 +647,55 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	public function saveFeedSettingsAction()
-	{
-		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['feed_id']) || !isset($_POST['limit']) || !isset($_POST['font_size'])) {
+	public function saveFeedSettingsAction() {
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['feed_id'])) {
 			http_response_code(400);
 			exit;
 		}
 		$feedId = Minz_Request::paramInt('feed_id');
-		$limit = Minz_Request::paramInt('limit');
+		$limit = Minz_Request::paramString('limit');
 		$fontSize = Minz_Request::paramString('font_size');
 		$headerColor = Minz_Request::paramStringNull('header_color');
+		$maxHeight = Minz_Request::paramString('max_height');
+		$displayMode = Minz_Request::paramString('display_mode');
 
-		if ($feedId <= 0 || !in_array($limit, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) || !in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES)) {
+		$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
+
+		if (
+			$feedId <= 0 ||
+			!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
+			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES) ||
+			!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY) ||
+			!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)
+		) {
 			http_response_code(400);
 			exit;
 		}
 		try {
 			$userConf = FreshRSS_Context::userConf();
 			$mode = $this->getMode();
-			$limitPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX : FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
-			$fontPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX : FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
-			$headerPrefix = $mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX : FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
-			$userConf->_attribute($limitPrefix . $feedId, $limit);
+			$limitPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+				FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
+			$fontPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
+			$headerPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
+			$maxHeightPrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+				FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
+
+			$displayModePrefix = $mode === 'categories' ?
+				FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+				FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
+
+			$userConf->_attribute($limitPrefix . $feedId, $limitForValidation);
 			$userConf->_attribute($fontPrefix . $feedId, $fontSize);
+			$userConf->_attribute($maxHeightPrefix . $feedId, $maxHeight);
+			$userConf->_attribute($displayModePrefix . $feedId, $displayMode);
+
 			if ($headerColor !== null) {
 				$userConf->_attribute($headerPrefix . $feedId, $headerColor);
 			}
@@ -537,13 +703,13 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			echo json_encode(['status' => 'success']);
 		} catch (Exception $e) {
 			http_response_code(500);
+			error_log('FreshVibesView saveFeedSettingsAction error: ' . $e->getMessage());
 			echo json_encode(['status' => 'error', 'message' => 'Server error']);
 		}
 		exit;
 	}
 
-	public function moveFeedAction()
-	{
+	public function moveFeedAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
@@ -608,9 +774,11 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15): string
-	{
+	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15, int $sentenceLimit = 1): string {
 		$content = $entry->content() ?? '';
+
+		// Decode HTML entities first
+		$content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
 		// For modal excerpts, preserve some HTML
 		if ($wordLimit > 50) {
@@ -701,12 +869,23 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		if (empty($plainText)) {
 			return '';
 		}
+
+		// For detailed view with sentence limit
+		if ($sentenceLimit > 1) {
+			// Split by sentence endings
+			$sentences = preg_split('/(?<=[.!?])\s+/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
+			if (count($sentences) <= $sentenceLimit) {
+				return $plainText;
+			}
+			return implode(' ', array_slice($sentences, 0, $sentenceLimit)) . '…';
+		}
+
+		// Original word-based limiting
 		$words = preg_split('/[\s,]+/', $plainText, $wordLimit + 1);
 		return count($words) > $wordLimit ? implode(' ', array_slice($words, 0, $wordLimit)) . '…' : implode(' ', $words);
 	}
 
-	private function truncateNode(DOMNode $node, int &$currentLength, int $targetLength): bool
-	{
+	private function truncateNode(DOMNode $node, int &$currentLength, int $targetLength): bool {
 		$nodesToRemove = [];
 
 		foreach ($node->childNodes as $child) {
@@ -742,8 +921,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return $node->hasChildNodes() || $node->nodeType === XML_TEXT_NODE;
 	}
 
-	public function markFeedReadAction()
-	{
+	public function markFeedReadAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
@@ -778,8 +956,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		exit;
 	}
 
-	private function getContrastColor(string $hexColor): string
-	{
+	private function getContrastColor(string $hexColor): string {
 		$hexColor = ltrim($hexColor, '#');
 		$r = hexdec(substr($hexColor, 0, 2));
 		$g = hexdec(substr($hexColor, 2, 2));
@@ -791,8 +968,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 		return $luminance > 0.5 ? '#000000' : '#ffffff';
 	}
 
-	public function markTabReadAction()
-	{
+	public function markTabReadAction() {
 		$this->noCacheHeaders();
 		header('Content-Type: application/json');
 
@@ -806,7 +982,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 
 		try {
 			$layout = $this->getLayout();
-			$entryDAO = FreshRSS_Factory::createEntryDao();
+			$entryDAO = FreshRSS_Factory::createEntryDAO();
 			$idMax = uTimeString();
 			$totalAffected = 0;
 
@@ -828,6 +1004,300 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController
 			}
 
 			echo json_encode(['status' => 'success', 'affected' => $totalAffected]);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	private function getRelativeDate(int $timestamp): string {
+		$diff = time() - $timestamp;
+
+		if ($diff < 60) {
+			return _t('ext.FreshVibesView.date_relative_now');
+		}
+
+		$minutes = round($diff / 60);
+		if ($minutes < 60) {
+			if ($minutes == 1) {
+				return _t('ext.FreshVibesView.date_relative_minute_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_minutes_ago'), $minutes);
+		}
+
+		$hours = round($diff / 3600);
+		if ($hours < 24) {
+			if ($hours == 1) {
+				return _t('ext.FreshVibesView.date_relative_hour_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_hours_ago'), $hours);
+		}
+
+		$days = round($diff / 86400);
+		if ($days < 7) {
+			if ($days == 1) {
+				return _t('ext.FreshVibesView.date_relative_day_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_days_ago'), $days);
+		}
+
+		$weeks = round($diff / 604800);
+		if ($weeks < 4.345) { // Average weeks in a month
+			if ($weeks == 1) {
+				return _t('ext.FreshVibesView.date_relative_week_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_weeks_ago'), $weeks);
+		}
+
+		$months = round($diff / 2600640); // Avg seconds in a month
+		if ($months < 12) {
+			if ($months == 1) {
+				return _t('ext.FreshVibesView.date_relative_month_ago');
+			}
+			return sprintf(_t('ext.FreshVibesView.date_relative_months_ago'), $months);
+		}
+
+		$years = round($diff / 31207680); // Avg seconds in a year
+		if ($years == 1) {
+			return _t('ext.FreshVibesView.date_relative_year_ago');
+		}
+		return sprintf(_t('ext.FreshVibesView.date_relative_years_ago'), $years);
+	}
+
+	public function bulkApplyFeedSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+			exit;
+		}
+
+		$limit = Minz_Request::paramString('limit');
+		$fontSize = Minz_Request::paramString('font_size');
+		$headerColor = Minz_Request::paramStringNull('header_color');
+		$maxHeight = Minz_Request::paramString('max_height');
+		$displayMode = Minz_Request::paramString('display_mode');
+
+		$limitForValidation = is_numeric($limit) ? (int)$limit : $limit;
+
+		if (
+			!in_array($limitForValidation, FreshVibesViewExtension::ALLOWED_LIMIT_VALUES, true) ||
+			!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES) ||
+			!in_array($maxHeight, FreshVibesViewExtension::ALLOWED_MAX_HEIGHTS_CONFIG_KEY) ||
+			!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)
+		) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid settings']);
+			exit;
+		}
+
+		try {
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+			$feedDAO = new FreshRSS_FeedDAO();
+			$feeds = $feedDAO->listFeeds();
+
+			foreach ($feeds as $feed) {
+				$feedId = $feed->id();
+
+				$limitPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+					FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
+				$headerPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
+				$maxHeightPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+					FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
+				$displayModePrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
+
+				$userConf->_attribute($limitPrefix . $feedId, $limitForValidation);
+				$userConf->_attribute($fontPrefix . $feedId, $fontSize);
+				$userConf->_attribute($maxHeightPrefix . $feedId, $maxHeight);
+				$userConf->_attribute($displayModePrefix . $feedId, $displayMode);
+
+				if ($headerColor !== null) {
+					$userConf->_attribute($headerPrefix . $feedId, $headerColor);
+				}
+			}
+
+			$userConf->save();
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	public function bulkApplyTabSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid request']);
+			exit;
+		}
+
+		$numColumns = Minz_Request::paramInt('num_columns', FreshVibesViewExtension::DEFAULT_TAB_COLUMNS);
+		$bgColor = Minz_Request::paramString('bg_color');
+		$fontColor = Minz_Request::paramString('font_color');
+
+		if ($numColumns < 1 || $numColumns > 6) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => 'Invalid number of columns']);
+			exit;
+		}
+
+		try {
+			$layout = $this->getLayout();
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+
+			foreach ($layout as &$tab) {
+				$tab['num_columns'] = $numColumns;
+				$allFeeds = array_merge(...array_values($tab['columns']));
+				$newColumns = $this->buildEmptyColumns($numColumns);
+				if (!empty($allFeeds)) {
+					foreach ($allFeeds as $i => $feedId) {
+						$newColumns['col' . (($i % $numColumns) + 1)][] = $feedId;
+					}
+				}
+				$tab['columns'] = $newColumns;
+
+				$bgPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
+
+				if ($bgColor) {
+					$userConf->_attribute($bgPrefix . $tab['id'], $bgColor);
+					$actualFontColor = $fontColor ?: $this->getContrastColor($bgColor);
+					$userConf->_attribute($fontPrefix . $tab['id'], $actualFontColor);
+				}
+			}
+
+			$this->saveLayout($layout);
+			$userConf->save();
+
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	public function resetAllFeedSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			exit;
+		}
+
+		try {
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+			$feedDAO = new FreshRSS_FeedDAO();
+			$feeds = $feedDAO->listFeeds();
+
+			foreach ($feeds as $feed) {
+				$feedId = $feed->id();
+
+				$limitPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+					FreshVibesViewExtension::LIMIT_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX;
+				$headerPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_HEADER_COLOR_CONFIG_PREFIX;
+				$maxHeightPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+					FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY;
+				$displayModePrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX;
+
+				$keys = [
+					$limitPrefix . $feedId,
+					$fontPrefix . $feedId,
+					$headerPrefix . $feedId,
+					$maxHeightPrefix . $feedId,
+					$displayModePrefix . $feedId,
+				];
+				foreach ($keys as $key) {
+					if (method_exists($userConf, 'removeAttribute')) {
+						$userConf->removeAttribute($key);
+					} else {
+						unset($userConf->$key);
+					}
+				}
+			}
+
+			$userConf->save();
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+		}
+		exit;
+	}
+
+	public function resetAllTabSettingsAction() {
+		$this->noCacheHeaders();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
+			http_response_code(400);
+			exit;
+		}
+
+		try {
+			$layout = $this->getLayout();
+			$userConf = FreshRSS_Context::userConf();
+			$mode = $this->getMode();
+
+			foreach ($layout as &$tab) {
+				$tab['num_columns'] = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
+				$allFeeds = array_merge(...array_values($tab['columns']));
+				$newColumns = $this->buildEmptyColumns(FreshVibesViewExtension::DEFAULT_TAB_COLUMNS);
+				if (!empty($allFeeds)) {
+					foreach ($allFeeds as $i => $feedId) {
+						$newColumns['col' . (($i % FreshVibesViewExtension::DEFAULT_TAB_COLUMNS) + 1)][] = $feedId;
+					}
+				}
+				$tab['columns'] = $newColumns;
+
+				$bgPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_BG_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_BG_COLOR_CONFIG_PREFIX;
+				$fontPrefix = $mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_TAB_FONT_COLOR_CONFIG_PREFIX :
+					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX;
+
+				$userConf->_attribute($bgPrefix . $tab['id'], null);
+				$userConf->_attribute($fontPrefix . $tab['id'], null);
+			}
+
+			$this->saveLayout($layout);
+			$userConf->save();
+
+			echo json_encode(['status' => 'success']);
 		} catch (Exception $e) {
 			http_response_code(500);
 			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
