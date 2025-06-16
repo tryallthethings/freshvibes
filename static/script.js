@@ -737,7 +737,7 @@ function initializeDashboard(freshvibesView) {
 
 		// find the slug for this tab
 		const tab = state.layout.find(t => t.id === tabId);
-		if (tab) {
+		if (tab?.slug) {
 			const url = new URL(window.location);
 			url.searchParams.set('tab', tab.slug);
 			window.history.replaceState(null, '', url);
@@ -897,6 +897,13 @@ function initializeDashboard(freshvibesView) {
 		return tabs;
 	}
 
+	function updateSlugURL(state, tab) {
+		state.layout = assignUniqueSlugs(state.layout);
+		const url = new URL(window.location);
+		url.searchParams.set('tab', tab.slug);
+		window.history.replaceState(null, '', url);
+	}
+
 	// --- EVENT LISTENERS ---
 	function setupEventListeners() {
 		freshvibesView.addEventListener('click', e => {
@@ -943,7 +950,7 @@ function initializeDashboard(freshvibesView) {
 						api(tabActionUrl, { operation: 'delete', tab_id: tabId })
 							.then(data => {
 								if (data.status === 'success') {
-									state.layout = data.new_layout;
+									state.layout = assignUniqueSlugs(data.new_layout);
 									state.allPlacedFeedIds = new Set(
 										data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String)
 									);
@@ -1019,6 +1026,7 @@ function initializeDashboard(freshvibesView) {
 				api(tabActionUrl, { operation: 'add' }).then(data => {
 					if (data.status === 'success') {
 						state.layout.push(data.new_tab);
+						updateSlugURL(state, data.new_tab);
 						render();
 
 					}
@@ -1060,7 +1068,7 @@ function initializeDashboard(freshvibesView) {
 
 				api(tabActionUrl, { operation: 'set_columns', tab_id: tabId, value: numCols }).then(data => {
 					if (data.status === 'success') {
-						state.layout = data.new_layout;
+						state.layout = assignUniqueSlugs(data.new_layout);
 						state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
 						const tabData = state.layout.find(t => t.id === tabId);
 						renderTabContent(tabData);
@@ -1095,7 +1103,7 @@ function initializeDashboard(freshvibesView) {
 					.then(data => {
 						if (data.status === 'success' && data.new_layout) {
 							// Update the entire layout with the server response
-							state.layout = data.new_layout;
+							state.layout = assignUniqueSlugs(data.new_layout);
 							state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t =>
 								Object.values(t.columns || {}).flat()
 							).map(String));
@@ -1539,7 +1547,7 @@ function initializeDashboard(freshvibesView) {
 						if (data.status === 'success') {
 							const tabInState = state.layout.find(t => t.id === tabId);
 							if (tabInState) tabInState.name = newName;
-
+							updateSlugURL(state, tabInState);
 							// Update all move-to dropdown buttons with the new tab name
 							document.querySelectorAll(`.feed-move-to-list button[data-target-tab-id="${tabId}"]`).forEach(button => {
 								button.textContent = newName;
