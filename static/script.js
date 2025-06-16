@@ -734,6 +734,15 @@ function initializeDashboard(freshvibesView) {
 				}
 			}
 		});
+
+		// find the slug for this tab
+		const tab = state.layout.find(t => t.id === tabId);
+		if (tab) {
+			const url = new URL(window.location);
+			url.searchParams.set('tab', tab.slug);
+			window.history.replaceState(null, '', url);
+		}
+
 		if (persist) {
 			api(setActiveTabUrl, { tab_id: tabId }).catch(console.error);
 		}
@@ -859,6 +868,33 @@ function initializeDashboard(freshvibesView) {
 				tabBadge.classList.remove('has-count');
 			}
 		}
+	}
+
+	// a basic slugifier: strips accents, lower-cases, replaces runs of non-alphanumerics with '-'
+	function slugify(name) {
+		return name
+			.normalize('NFKD')               // separate accents from letters
+			.replace(/[\u0300-\u036f]/g, '') // remove the accents
+			.toLowerCase()
+			.replace(/[^a-z0-9]+/g, '-')     // non-alphanum → hyphen
+			.replace(/^-+|-+$/g, '');        // trim leading/trailing hyphens
+	}
+
+	// ensure slugs are unique (append “-2”, “-3” if necessary)
+	function assignUniqueSlugs(tabs) {
+		const seen = new Map();
+		tabs.forEach(tab => {
+			let base = slugify(tab.name) || 'tab';
+			let slug = base;
+			let i = 1;
+			while (seen.has(slug)) {
+				i += 1;
+				slug = `${base}-${i}`;
+			}
+			seen.set(slug, true);
+			tab.slug = slug;
+		});
+		return tabs;
 	}
 
 	// --- EVENT LISTENERS ---
@@ -1914,10 +1950,19 @@ function initializeDashboard(freshvibesView) {
 			// Clean up the temporary script tag
 			document.getElementById('feeds-data-script').remove();
 
+			state.layout = assignUniqueSlugs(state.layout);
+
+			// check URL for “?tab=some-slug”
+			const params = new URLSearchParams(window.location.search);
+			const slug = params.get('tab');
+			if (slug) {
+				const match = state.layout.find(t => t.slug === slug);
+				if (match) state.activeTabId = match.id;
+			}
+
 			// Render the fully-initialized dashboard with the correct state
 			render();
 			setupEventListeners();
-
 			setupAutoRefresh();
 		})
 		.catch(error => {
