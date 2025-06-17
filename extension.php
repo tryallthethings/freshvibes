@@ -158,8 +158,8 @@ class FreshVibesViewExtension extends Minz_Extension {
 	}
 
 	public function autoload(string $class_name): void {
-		if (str_starts_with($class_name, 'tryallthethings\\freshvibes\\')) {
-			$class_name = substr($class_name, strlen('tryallthethings\\freshvibes\\'));
+		if (str_starts_with($class_name, 'tryallthethings\\FreshVibes\\')) {
+			$class_name = substr($class_name, strlen('tryallthethings\\FreshVibes\\'));
 			$base_path = $this->getPath() . '/';
 			include($base_path . str_replace('\\', '/', $class_name) . '.php');
 		}

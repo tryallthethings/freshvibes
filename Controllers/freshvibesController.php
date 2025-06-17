@@ -318,9 +318,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			$activeTabKey = $mode === 'categories'
 				? FreshVibesViewExtension::ACTIVE_TAB_CATEGORY_CONFIG_KEY
 				: FreshVibesViewExtension::ACTIVE_TAB_CONFIG_KEY;
-			$activeTabId = $userConf->attributeBool($activeTabKey);
+			$activeTabId = $userConf->attributeString($activeTabKey);
 			$activeTabExists = false;
-			if ($activeTabId) {
+			if ($activeTabId != '') {
 				foreach ($layout as $tab) {
 					if ($tab['id'] === $activeTabId) {
 						$activeTabExists = true;
