@@ -72,9 +72,9 @@ class FreshVibesViewExtension extends Minz_Extension {
 		$this->registerHook('nav_reading_modes', [self::class, 'addReadingMode']);
 		$this->registerHook('view_modes', [self::class, 'addViewMode']);
 
-		Minz_View::appendStyle($this->getFileUrl('style.css', 'css'));
-		Minz_View::appendScript($this->getFileUrl('Sortable.min.js', 'js'), false, true, false);
-		Minz_View::appendScript($this->getFileUrl('script.js', 'js'), false, true, false);
+		Minz_View::appendStyle($this->getFileUrl('style.css'));
+		Minz_View::appendScript($this->getFileUrl('Sortable.min.js'), false, true, false);
+		Minz_View::appendScript($this->getFileUrl('script.js'), false, true, false);
 	}
 
 	/** Hook callback to register the view as a reading mode. */
@@ -128,17 +128,17 @@ class FreshVibesViewExtension extends Minz_Extension {
 		if (Minz_Request::isPost()) {
 			$userConf = FreshRSS_Context::userConf();
 
-			$userConf->_attribute(self::REFRESH_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_refresh_enabled') ? 1 : 0);
-			$userConf->_attribute(self::REFRESH_INTERVAL_CONFIG_KEY, Minz_Request::paramInt('freshvibes_refresh_interval', 15));
+			$userConf->_attribute(self::REFRESH_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_refresh_enabled'));
+			$userConf->_attribute(self::REFRESH_INTERVAL_CONFIG_KEY, Minz_Request::paramInt('freshvibes_refresh_interval') ?: 15);
 			$userConf->_attribute(self::DATE_FORMAT_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_format') ?: 'Y-m-d H:i');
 			$mode = Minz_Request::paramStringNull('freshvibes_view_mode') ?? 'custom';
 			$userConf->_attribute(self::MODE_CONFIG_KEY, $mode === 'categories' ? 'categories' : 'custom');
-			$userConf->_attribute(self::HIDE_SIDEBAR_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_hide_sidebar') ? 1 : 0);
-			$userConf->_attribute(self::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_hide_subscription_control') ? 1 : 0);
-			$userConf->_attribute(self::CONFIRM_TAB_DELETE_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_tab_delete') ? 1 : 0);
+			$userConf->_attribute(self::HIDE_SIDEBAR_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_hide_sidebar'));
+			$userConf->_attribute(self::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_hide_subscription_control'));
+			$userConf->_attribute(self::CONFIRM_TAB_DELETE_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_tab_delete'));
 			$userConf->_attribute(self::ENTRY_CLICK_MODE_CONFIG_KEY, Minz_Request::paramStringNull('freshvibes_entry_click_mode') ?? 'modal');
 			$userConf->_attribute(self::DATE_MODE_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_mode') ?: 'absolute');
-			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read') ? 1 : 0);
+			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read'));
 
 			$userConf->save();
 		}
@@ -157,34 +157,11 @@ class FreshVibesViewExtension extends Minz_Extension {
 		return true;
 	}
 
-	/**
-	 * A helper to get a specific setting's value for this extension.
-	 * @param string $key The setting key.
-	 * @param mixed $default The default value to return if not set.
-	 * @return mixed The setting value.
-	 */
-	public function getSetting(string $key, $default = null) {
-		$userConf = FreshRSS_Context::userConf();
-		if (!$userConf->hasParam($key)) {
-			return $default;
-		}
-
-		switch ($key) {
-			case self::CONFIRM_TAB_DELETE_CONFIG_KEY:
-			case self::HIDE_SIDEBAR_CONFIG_KEY:
-			case self::REFRESH_ENABLED_CONFIG_KEY:
-			case self::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY:
-			case self::CONFIRM_MARK_READ_CONFIG_KEY:
-				return (bool)$userConf->attributeInt($key);
-			case self::REFRESH_INTERVAL_CONFIG_KEY:
-				return $userConf->attributeInt($key) ?? $default;
-			case self::DATE_FORMAT_CONFIG_KEY:
-			case self::ENTRY_CLICK_MODE_CONFIG_KEY:
-			case self::MODE_CONFIG_KEY:
-			case self::DATE_MODE_CONFIG_KEY:
-				return $userConf->attributeString($key) ?? $default;
-			default:
-				return $default;
+	public function autoload(string $class_name): void {
+		if (str_starts_with($class_name, 'tryallthethings\\freshvibes\\')) {
+			$class_name = substr($class_name, strlen('tryallthethings\\freshvibes\\'));
+			$base_path = $this->getPath() . '/';
+			include($base_path . str_replace('\\', '/', $class_name) . '.php');
 		}
 	}
 }

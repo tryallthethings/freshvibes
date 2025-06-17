@@ -1,9 +1,10 @@
 <?php
 
 declare(strict_types=1);
+/** @var tryallthethings\FreshVibes\Models\View $this */
 
-$hideSidebar = FreshRSS_Context::userConf()->param(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY, false);
-$hideSubscriptionControls = FreshRSS_Context::userConf()->param(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY, false);
+$hideSidebar = FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY) ?? false;
+$hideSubscriptionControls = FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY) ?? false;
 
 if (!Minz_Request::paramBoolean('ajax')) {
 	if (!$hideSidebar) {
