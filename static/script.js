@@ -28,12 +28,14 @@ function initializeDashboard(freshvibesView) {
 		xextensionFreshvibesviewMarkTabReadUrl: markTabReadUrl = '',
 		xextensionFreshvibesviewMode: viewMode = '',
 		xextensionFreshvibesviewConfirmMarkRead: confirmMarkRead = '',
+		xextensionFreshvibesviewRefreshFeedsUrl: refreshFeedsUrl = '',
+		xextensionFreshvibesviewFeedSettingsUrl: feedSettingsUrl = '',
+		xextensionFreshvibesviewCategorySettingsUrl: categorySettingsUrl = '',
 
 	} = freshvibesView.dataset;
 	const isCategoryMode = viewMode === 'categories';
 
 	// Handle potentially undefined values gracefully
-	const dashboardUrl = freshvibesView.dataset.xextensionFreshvibesviewDashboardUrl;
 	const refreshEnabled = freshvibesView.dataset.xextensionFreshvibesviewRefreshEnabled === 'true' || freshvibesView.dataset.xextensionFreshvibesviewRefreshEnabled === '1';
 
 	const trEl = document.getElementById('freshvibes-i18n');
@@ -209,6 +211,22 @@ function initializeDashboard(freshvibesView) {
 			unreadCount.title = tr.confirm_mark_tab_read || 'Mark all entries in this tab as read?';
 		}
 
+		// Add link to native FreshRSS category settings when in category mode
+		if (isCategoryMode && categorySettingsUrl && tab.id.startsWith('cat-')) {
+			const categoryId = tab.id.substring(4);
+			const settingsLink = document.createElement('a');
+			settingsLink.href = categorySettingsUrl + categoryId;
+			settingsLink.className = 'fv-native-settings-link';
+			settingsLink.title = tr.edit_category_settings || 'Edit category in FreshRSS';
+			settingsLink.target = '_blank';
+			settingsLink.innerHTML = '⋮';
+
+			const settingsContainer = link.querySelector('.tab-settings');
+			if (settingsContainer) {
+				settingsContainer.prepend(settingsLink);
+			}
+		}
+
 		return link;
 	}
 
@@ -219,25 +237,62 @@ function initializeDashboard(freshvibesView) {
 	}
 
 	function setupAutoRefresh() {
-		if (!refreshEnabled) {
-			return;
-		}
+		// Your existing debug code
+		var d = new Date();
+		console.log('Setting up auto-refresh with interval:', refreshInterval);
+		console.log('Refresh URL:', refreshFeedsUrl);
 
+		// Read settings
+		const refreshEnabled = freshvibesView.dataset.xextensionFreshvibesviewRefreshEnabled === '1';
 		const intervalMinutes = parseInt(refreshInterval, 10) || 15;
 		const refreshMs = intervalMinutes * 60 * 1000;
 
-		if (refreshMs <= 0) {
+		// Validate settings
+		if (!refreshEnabled || !refreshFeedsUrl || refreshMs <= 0) {
+			console.log('Auto-refresh is disabled or URL/interval is not set correctly.');
 			return;
 		}
 
-		setInterval(() => {
-			const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active') ||
+		console.log('time:', d.toLocaleTimeString(), ' - Auto-refresh starting with interval:', refreshInterval, 'minute(s)');
+
+		const refreshLoop = () => {
+			const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active') ||
 				(document.activeElement && ['INPUT', 'TEXTAREA', 'BUTTON', 'A'].includes(document.activeElement.tagName));
 
-			if (!isInteracting && dashboardUrl) {
-				window.location.href = dashboardUrl;
+			// If the user is busy, we will skip this refresh and try again after the next interval.
+			if (isInteracting) {
+				setTimeout(refreshLoop, refreshMs);
+				return;
 			}
-		}, refreshMs);
+
+			// If not interacting, perform the API call.
+			api(refreshFeedsUrl, {})
+				.then(newFeedsData => {
+					if (newFeedsData) {
+						state.feeds = newFeedsData;
+						// Your debug log to confirm success
+						console.log('Feeds refreshed:', Object.keys(state.feeds).length, 'feeds loaded.');
+						renderTabs();
+						const activeTab = state.layout.find(t => t.id === state.activeTabId);
+						if (activeTab) {
+							renderTabContent(activeTab);
+						}
+					}
+				})
+				.catch(error => {
+					console.error('Error during AJAX refresh:', error);
+				})
+				.finally(() => {
+					// This is the key: We schedule the next refresh only AFTER the current one is completely finished.
+					// This makes the loop resilient to the DOM update issues that are breaking setInterval.
+					const nextTime = new Date(Date.now() + refreshMs);
+					console.log('Next refresh scheduled for:', nextTime.toLocaleTimeString());
+					setTimeout(refreshLoop, refreshMs);
+				});
+		};
+
+		// Start the first refresh cycle.
+		setTimeout(refreshLoop, refreshMs);
 	}
 
 	function renderTabContent(tab) {
@@ -310,6 +365,9 @@ function initializeDashboard(freshvibesView) {
 
 	function createFeedContainer(feed, sourceTabId) {
 		const container = templates.feedContainer.content.cloneNode(true).firstElementChild;
+		const handle = document.createElement('div');
+		handle.className = 'fv-resize-handle';
+		container.appendChild(handle);
 
 		// Ensure we have valid feed data
 		if (!feed || !feed.id) {
@@ -366,6 +424,21 @@ function initializeDashboard(freshvibesView) {
 				unreadBadge.title = tr.mark_all_read || 'Mark all as read';
 				headerElement.insertBefore(unreadBadge, headerElement.querySelector('.feed-settings'));
 			}
+
+			// Add link to native FreshRSS feed settings
+			if (feedSettingsUrl) {
+				const settingsLink = document.createElement('a');
+				settingsLink.href = feedSettingsUrl + feed.id;
+				settingsLink.className = 'fv-native-settings-link';
+				settingsLink.title = tr.edit_feed_settings || 'Edit feed in FreshRSS';
+				settingsLink.target = '_blank'; // Open in a new tab
+				settingsLink.innerHTML = '⋮';
+
+				const settingsButton = headerElement.querySelector('.feed-settings');
+				if (settingsButton) {
+					settingsButton.before(settingsLink);
+				}
+			}
 		}
 
 		const contentDiv = container.querySelector('.freshvibes-container-content');
@@ -373,9 +446,9 @@ function initializeDashboard(freshvibesView) {
 			contentDiv.innerHTML = '';
 			// Apply max-height
 			if (feed.currentMaxHeight && !['unlimited', 'fit'].includes(feed.currentMaxHeight)) {
-				contentDiv.style.maxHeight = feed.currentMaxHeight + 'px';
+				contentDiv.style.height = feed.currentMaxHeight + 'px';
 			} else {
-				contentDiv.style.maxHeight = '';
+				contentDiv.style.height = '';
 			}
 			if (feed.entries && Array.isArray(feed.entries) && feed.entries.length > 0 && !feed.entries.error) {
 				const ul = document.createElement('ul');
@@ -445,21 +518,39 @@ function initializeDashboard(freshvibesView) {
 
 			const maxHeightSelect = editor.querySelector('.feed-maxheight-select');
 			if (maxHeightSelect) {
+				const parentRow = maxHeightSelect.parentElement;
+				const label = parentRow.querySelector('label');
+				parentRow.innerHTML = ''; // Clear the row
+				if (label) parentRow.appendChild(label); // Re-add the label
+
+				const wrapper = document.createElement('div');
+				wrapper.className = 'height-picker-wrapper';
+
+				const input = document.createElement('input');
+				input.type = 'text';
+				input.className = 'feed-maxheight-input';
+				input.value = feed.currentMaxHeight;
+				input.placeholder = feed.currentMaxHeight;
+
+
+				const picker = document.createElement('div');
+				picker.className = 'fv-height-picker';
+
+				// Correctly includes all original values and uses the correct label text
 				['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'].forEach(val => {
-					let label;
-					switch (val) {
-						case 'unlimited':
-							label = tr.unlimited || 'Unlimited';
-							break;
-						case 'fit':
-							label = tr.fit_to_content || 'Fit to content';
-							break;
-						default:
-							label = val + 'px';
-					}
-					const opt = new Option(label, val, val === feed.currentMaxHeight, val === feed.currentMaxHeight);
-					maxHeightSelect.add(opt);
+					const btn = document.createElement('button');
+					btn.type = 'button';
+					btn.dataset.value = val;
+					let text = val;
+					if (val === 'unlimited') text = tr.unlimited || 'Unlimited';
+					if (val === 'fit') text = tr.fit_to_content || 'Fit to content';
+					if (!isNaN(parseInt(val))) text += 'px';
+					btn.textContent = text;
+					picker.appendChild(btn);
 				});
+
+				wrapper.append(input, picker);
+				parentRow.appendChild(wrapper);
 			}
 
 			// Add move-to options if there are other tabs
@@ -488,6 +579,7 @@ function initializeDashboard(freshvibesView) {
 				}
 			}
 		}
+		makeResizable(container);
 		return container;
 	}
 
@@ -760,7 +852,7 @@ function initializeDashboard(freshvibesView) {
 				animation: 0,
 				handle: '.freshvibes-container-header',
 				delay: 300, // Add delay
-				delayOnTouchOnly: true, // Only on touch devices				
+				delayOnTouchOnly: true, // Only on touch devices	
 				onEnd: evt => {
 					const sourcePanel = evt.from.closest('.freshvibes-panel');
 					const targetPanel = evt.to.closest('.freshvibes-panel');
@@ -904,8 +996,64 @@ function initializeDashboard(freshvibesView) {
 		window.history.replaceState(null, '', url);
 	}
 
+	function makeResizable(container) {
+		const handle = container.querySelector('.fv-resize-handle');
+		const content = container.querySelector('.freshvibes-container-content');
+		const editorInput = container.querySelector('.feed-maxheight-input');
+
+		handle.addEventListener('mousedown', function (e) {
+			e.preventDefault();
+			const startY = e.clientY;
+			const startHeight = content.offsetHeight;
+
+			function doDrag(e) {
+				const newHeight = startHeight + e.clientY - startY;
+				if (newHeight > 50) { // Set a minimum height
+					content.style.height = newHeight + 'px';
+				}
+			}
+
+			function stopDrag() {
+				document.removeEventListener('mousemove', doDrag);
+				document.removeEventListener('mouseup', stopDrag);
+
+				if (!editorInput) return;
+
+				const finalHeight = content.offsetHeight;
+				editorInput.value = finalHeight;
+
+				// --- Direct Save Logic ---
+				// This saves the resized value directly to ensure it always works.
+				const feedId = container.dataset.feedId;
+				const editor = container.querySelector('.feed-settings-editor');
+				if (!feedId || !editor) return;
+
+				api(saveFeedSettingsUrl, {
+					feed_id: feedId,
+					limit: editor.querySelector('.feed-limit-select').value,
+					font_size: editor.querySelector('.feed-fontsize-select').value,
+					header_color: editor.querySelector('.feed-header-color-input').value,
+					max_height: String(finalHeight),
+					display_mode: editor.querySelector('.feed-display-mode-select').value,
+				}).then(data => {
+					if (data.status === 'success') {
+						const feed = state.feeds[feedId];
+						if (feed) {
+							feed.currentMaxHeight = String(finalHeight);
+						}
+					}
+				}).catch(error => console.error('Error saving feed settings:', error));
+				// --- End of Direct Save Logic ---
+			}
+
+			document.addEventListener('mousemove', doDrag);
+			document.addEventListener('mouseup', stopDrag);
+		});
+	}
+
 	// --- EVENT LISTENERS ---
 	function setupEventListeners() {
+
 		freshvibesView.addEventListener('click', e => {
 
 			if (e.target.closest('.tab-settings-menu')) {
@@ -1131,7 +1279,7 @@ function initializeDashboard(freshvibesView) {
 				const fontSize = editor.querySelector('.feed-fontsize-select').value;
 				const headerColorInput = editor.querySelector('.feed-header-color-input');
 				const headerColor = headerColorInput ? headerColorInput.value : '';
-				const maxHeight = editor.querySelector('.feed-maxheight-select').value;
+				const maxHeight = editor.querySelector('.feed-maxheight-input').value;
 				const displayModeSelect = editor.querySelector('.feed-display-mode-select');
 				const displayMode = displayModeSelect ? displayModeSelect.value : 'tiny';
 
@@ -1149,9 +1297,9 @@ function initializeDashboard(freshvibesView) {
 				const contentDiv = container.querySelector('.freshvibes-container-content');
 				if (contentDiv) {
 					if (maxHeight === 'unlimited' || maxHeight === 'fit') {
-						contentDiv.style.maxHeight = '';
+						contentDiv.style.height = '';
 					} else {
-						contentDiv.style.maxHeight = maxHeight + 'px';
+						contentDiv.style.height = maxHeight + 'px';
 					}
 				}
 
@@ -1332,6 +1480,46 @@ function initializeDashboard(freshvibesView) {
 				return;
 			}
 		});
+
+		let activeHeightPicker = null;
+		document.addEventListener('click', e => {
+			const heightInput = e.target.closest('.feed-maxheight-input');
+			const pickerButton = e.target.closest('.fv-height-picker button');
+
+			// If we clicked a picker button to select a value
+			if (pickerButton) {
+				e.stopPropagation();
+				const picker = pickerButton.closest('.fv-height-picker');
+				const input = picker.previousElementSibling;
+				if (input) {
+					input.value = pickerButton.dataset.value;
+					input.dispatchEvent(new Event('change', { bubbles: true }));
+				}
+				picker.classList.remove('active');
+				activeHeightPicker = null;
+				return;
+			}
+
+			// If we clicked an input to open its picker
+			if (heightInput) {
+				e.stopPropagation();
+				const picker = heightInput.nextElementSibling;
+				// Close any other active picker before opening a new one
+				if (activeHeightPicker && activeHeightPicker !== picker) {
+					activeHeightPicker.classList.remove('active');
+				}
+				picker.classList.toggle('active');
+				activeHeightPicker = picker.classList.contains('active') ? picker : null;
+				return;
+			}
+
+			// If we clicked anywhere else, close the active picker
+			if (activeHeightPicker) {
+				activeHeightPicker.classList.remove('active');
+				activeHeightPicker = null;
+			}
+		});
+
 
 		freshvibesView.addEventListener('click', e => {
 			const actionBtn = e.target.closest('.entry-action-btn');
@@ -1654,13 +1842,13 @@ function initializeDashboard(freshvibesView) {
 			const feedSettingsEditor = e.target.closest('.feed-settings-editor');
 			if (!feedSettingsEditor) return;
 
-			if (e.target.matches('.feed-limit-select, .feed-fontsize-select, .feed-maxheight-select, .feed-header-color-input, .feed-display-mode-select')) {
+			if (e.target.matches('.feed-limit-select, .feed-fontsize-select, .feed-maxheight-input, .feed-header-color-input, .feed-display-mode-select')) {
 				const container = feedSettingsEditor.closest('.freshvibes-container');
 				const feedId = container.dataset.feedId;
 
 				// --- Live Preview Logic ---
 				const fontSize = feedSettingsEditor.querySelector('.feed-fontsize-select').value;
-				const maxHeight = feedSettingsEditor.querySelector('.feed-maxheight-select').value;
+				const maxHeight = feedSettingsEditor.querySelector('.feed-maxheight-input').value;
 				const displayMode = feedSettingsEditor.querySelector('.feed-display-mode-select').value;
 
 				// Apply font size class
@@ -1677,7 +1865,11 @@ function initializeDashboard(freshvibesView) {
 				// Apply max-height
 				const contentDiv = container.querySelector('.freshvibes-container-content');
 				if (contentDiv) {
-					contentDiv.style.maxHeight = ['unlimited', 'fit'].includes(maxHeight) ? '' : `${maxHeight}px`;
+					if (!['unlimited', 'fit'].includes(maxHeight)) {
+						contentDiv.style.height = `${maxHeight}px`;
+					} else {
+						contentDiv.style.height = '';
+					}
 				}
 
 				// --- Auto-save ---
@@ -1793,6 +1985,28 @@ function initializeDashboard(freshvibesView) {
 					document.body.classList.remove('modal-open');
 				}
 			});
+
+			// Replace the bulk max height select with an input + datalist
+			const bulkMaxHeightSelect = document.getElementById('bulk-feed-maxheight');
+			if (bulkMaxHeightSelect) {
+				const input = document.createElement('input');
+				input.type = 'text';
+				input.className = 'setting-input'; // For styling consistency
+				input.id = 'bulk-feed-maxheight'; // Keep the original ID
+				input.setAttribute('list', 'bulk-maxheight-options');
+
+				const dataList = document.createElement('datalist');
+				dataList.id = 'bulk-maxheight-options';
+				['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'].forEach(val => {
+					const option = document.createElement('option');
+					option.value = val;
+					dataList.appendChild(option);
+				});
+
+				bulkMaxHeightSelect.replaceWith(input);
+				input.after(dataList);
+			}
+
 
 			const feedColorInput = document.getElementById('bulk-feed-header-color');
 			if (feedColorInput) {

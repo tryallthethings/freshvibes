@@ -40,7 +40,10 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	data-xextension-freshvibesview-reset-feeds-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllFeedSettings'], 'json', false) ?>"
 	data-xextension-freshvibesview-reset-tabs-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllTabSettings'], 'json', false) ?>"
 	data-xextension-freshvibesview-confirm-mark-read="<?php echo $this->confirmMarkRead ? '1' : '0'; ?>"
-
+	data-xextension-freshvibesview-refresh-feeds-url="<?php echo htmlspecialchars($this->refreshFeedsUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-refresh-enabled="<?php echo $this->refreshEnabled ? '1' : '0'; ?>"
+	data-xextension-freshvibesview-feed-settings-url="<?php echo htmlspecialchars($this->feedSettingsUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-category-settings-url="<?php echo htmlspecialchars($this->categorySettingsUrl, ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-csrf-token="<?php echo htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 	<header class="freshvibes-header">
@@ -221,6 +224,8 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		'bulk_reset_success_feeds' => _t('ext.FreshVibesView.bulk_reset_success_feeds', 'All feeds reset to defaults successfully'),
 		'bulk_reset_success_tabs' => _t('ext.FreshVibesView.bulk_reset_success_tabs', 'All tabs reset to defaults successfully'),
 		'bulk_settings' => _t('ext.FreshVibesView.bulk_settings', 'Bulk Settings'),
+		'edit_feed_settings' => _t('ext.FreshVibesView.edit_feed_settings', 'Edit Feed Settings'),
+		'edit_category_settings' => _t('ext.FreshVibesView.edit_category_settings', 'Edit category in FreshRSS'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT); ?>
 </script>
 
