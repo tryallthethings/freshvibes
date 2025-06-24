@@ -16,37 +16,13 @@
     ],
     "require": {
         "php": ">=8.1",
-        "ext-ctype": "*",
-        "ext-curl": "*",
         "ext-dom": "*",
-        "ext-fileinfo": "*",
-        "ext-gmp": "*",
-        "ext-intl": "*",
         "ext-json": "*",
         "ext-libxml": "*",
-        "ext-mbstring": "*",
-        "ext-openssl": "*",
-        "ext-pcre": "*",
-        "ext-pdo": "*",
-        "ext-pdo_sqlite": "*",
-        "ext-session": "*",
-        "ext-simplexml": "*",
-        "ext-xml": "*",
-        "ext-xmlreader": "*",
-        "ext-zend-opcache": "*",
-        "ext-zip": "*",
-        "ext-zlib": "*"
-    },
-    "suggest": {
-        "ext-iconv": "*",
-        "ext-pdo_mysql": "*",
-        "ext-pdo_pgsql": "*"
+        "ext-pcre": "*"
     },
     "require-dev": {
         "php": ">=8.1",
-        "ext-phar": "*",
-        "ext-tokenizer": "*",
-        "ext-xmlwriter": "*",
         "phpstan/phpstan": "^2",
         "phpstan/phpstan-strict-rules": "^2",
         "squizlabs/php_codesniffer": "^3"
@@ -57,7 +33,6 @@
         "phpcs": "phpcs . -s",
         "phpcbf": "phpcbf . -p -s",
         "phpstan": "phpstan analyse .",
-        "phpstan-third-party": "phpstan analyse -c phpstan-third-party.neon .",
         "test": [
             "@php-lint",
             "@phtml-lint",
