@@ -20,6 +20,7 @@ function initializeDashboard(freshvibesView) {
 		xextensionFreshvibesviewMoveFeedUrl: moveFeedUrl = '',
 		xextensionFreshvibesviewRefreshInterval: refreshInterval = '',
 		xextensionFreshvibesviewMarkReadUrl: markReadUrl = '',
+		xextensionFreshvibesviewBookmarkUrl: bookmarkUrl = '',
 		xextensionFreshvibesviewFeedUrl: feedUrl = '',
 		xextensionFreshvibesviewSearchAuthorUrl: searchAuthorUrl = '',
 		xextensionFreshvibesviewSearchTagUrl: searchTagUrl = '',
@@ -211,21 +212,30 @@ function initializeDashboard(freshvibesView) {
 			unreadCount.title = tr.confirm_mark_tab_read || 'Mark all entries in this tab as read?';
 		}
 
-		// Add link to native FreshRSS category settings when in category mode
-		if (isCategoryMode && categorySettingsUrl && tab.id.startsWith('cat-')) {
+		// Add link to native FreshRSS category settings inside the menu
+		const settingsMenu = link.querySelector('.tab-settings-menu');
+		if (isCategoryMode && categorySettingsUrl && tab.id.startsWith('cat-') && settingsMenu) {
 			const categoryId = tab.id.substring(4);
 			const settingsLink = document.createElement('a');
 			settingsLink.href = categorySettingsUrl + categoryId;
 			settingsLink.className = 'fv-native-settings-link';
-			settingsLink.title = tr.edit_category_settings || 'Edit category in FreshRSS';
+			settingsLink.textContent = tr.edit_category_settings || 'Edit category in FreshRSS';
 			settingsLink.target = '_blank';
-			settingsLink.innerHTML = '⋮';
+			settingsLink.rel = 'noopener noreferrer';
 
-			const settingsContainer = link.querySelector('.tab-settings');
-			if (settingsContainer) {
-				settingsContainer.prepend(settingsLink);
+			const linkContainer = document.createElement('div');
+			linkContainer.className = 'fv-native-link-section';
+			linkContainer.appendChild(settingsLink);
+
+			// Append before the delete button for consistent placement
+			const deleteButton = settingsMenu.querySelector('.tab-action-delete');
+			if (deleteButton) {
+				settingsMenu.insertBefore(linkContainer, deleteButton);
+			} else {
+				settingsMenu.appendChild(linkContainer);
 			}
 		}
+
 
 		return link;
 	}
@@ -424,21 +434,6 @@ function initializeDashboard(freshvibesView) {
 				unreadBadge.title = tr.mark_all_read || 'Mark all as read';
 				headerElement.insertBefore(unreadBadge, headerElement.querySelector('.feed-settings'));
 			}
-
-			// Add link to native FreshRSS feed settings
-			if (feedSettingsUrl) {
-				const settingsLink = document.createElement('a');
-				settingsLink.href = feedSettingsUrl + feed.id;
-				settingsLink.className = 'fv-native-settings-link';
-				settingsLink.title = tr.edit_feed_settings || 'Edit feed in FreshRSS';
-				settingsLink.target = '_blank'; // Open in a new tab
-				settingsLink.innerHTML = '⋮';
-
-				const settingsButton = headerElement.querySelector('.feed-settings');
-				if (settingsButton) {
-					settingsButton.before(settingsLink);
-				}
-			}
 		}
 
 		const contentDiv = container.querySelector('.freshvibes-container-content');
@@ -552,6 +547,35 @@ function initializeDashboard(freshvibesView) {
 				wrapper.append(input, picker);
 				parentRow.appendChild(wrapper);
 			}
+
+			// Add link to native FreshRSS feed settings
+			if (feedSettingsUrl) {
+				const settingsLink = document.createElement('a');
+				settingsLink.href = feedSettingsUrl + feed.id;
+				settingsLink.className = 'fv-native-settings-link';
+				settingsLink.textContent = tr.edit_feed_settings || 'Edit feed in FreshRSS';
+				settingsLink.target = '_blank';
+				settingsLink.rel = 'noopener noreferrer';
+
+				const linkContainer = document.createElement('div');
+				linkContainer.className = 'fv-native-link-section'; // A new container for styling
+				linkContainer.appendChild(settingsLink);
+
+				const moveToSection = editor.querySelector('.feed-move-to');
+				if (moveToSection) {
+					// Insert before the 'move to' section
+					editor.insertBefore(linkContainer, moveToSection);
+				} else {
+					// If no 'move to' section, append before the save/cancel buttons
+					const buttonsRow = editor.querySelector('.setting-row-buttons');
+					if (buttonsRow) {
+						editor.insertBefore(linkContainer, buttonsRow);
+					} else {
+						editor.appendChild(linkContainer);
+					}
+				}
+			}
+
 
 			// Add move-to options if there are other tabs
 			if (!isCategoryMode) {
@@ -788,10 +812,15 @@ function initializeDashboard(freshvibesView) {
 		const actionsTemplate = document.getElementById('template-entry-actions');
 		if (actionsTemplate) {
 			const actions = actionsTemplate.content.cloneNode(true);
-			const btn = actions.querySelector('.entry-action-btn');
+			const btn = actions.querySelector('.entry-action-btn[data-action="toggle"]');
 			if (btn) {
 				btn.classList.toggle('is-read', entry.isRead);
 				btn.title = entry.isRead ? (tr.mark_unread || 'Mark as unread') : (tr.mark_read || 'Mark as read');
+			}
+			const favBtn = actions.querySelector('.entry-fav-btn');
+			if (favBtn) {
+				favBtn.classList.toggle('is-favorite', entry.isFavorite);
+				favBtn.title = tr.mark_favorite || 'Toggle favourite';
 			}
 			li.appendChild(actions);
 		}
@@ -1520,6 +1549,46 @@ function initializeDashboard(freshvibesView) {
 			}
 		});
 
+		let activeBulkHeightPicker = null;
+		document.addEventListener('click', e => {
+			const bulkHeightInput = e.target.closest('#bulk-feed-maxheight');
+			const bulkPickerButton = e.target.closest('.fv-height-picker button[data-value]');
+
+			// If we clicked a button inside the bulk picker to select a value
+			if (bulkPickerButton && bulkPickerButton.closest('.height-picker-wrapper')?.querySelector('#bulk-feed-maxheight')) {
+				e.stopPropagation();
+				const picker = bulkPickerButton.closest('.fv-height-picker');
+				const wrapper = picker.closest('.height-picker-wrapper');
+				const input = wrapper?.querySelector('#bulk-feed-maxheight');
+				if (input) {
+					input.value = bulkPickerButton.dataset.value;
+				}
+				picker.classList.remove('active');
+				activeBulkHeightPicker = null;
+				return;
+			}
+
+			// If we clicked the bulk input to open its picker
+			if (bulkHeightInput) {
+				e.stopPropagation();
+				const picker = bulkHeightInput.nextElementSibling;
+				if (picker && picker.classList.contains('fv-height-picker')) {
+					// Close any other active picker before opening a new one
+					if (activeBulkHeightPicker && activeBulkHeightPicker !== picker) {
+						activeBulkHeightPicker.classList.remove('active');
+					}
+					picker.classList.toggle('active');
+					activeBulkHeightPicker = picker.classList.contains('active') ? picker : null;
+				}
+				return;
+			}
+
+			// If we clicked anywhere else, close the active bulk picker
+			if (activeBulkHeightPicker) {
+				activeBulkHeightPicker.classList.remove('active');
+				activeBulkHeightPicker = null;
+			}
+		});
 
 		freshvibesView.addEventListener('click', e => {
 			const actionBtn = e.target.closest('.entry-action-btn');
@@ -1532,8 +1601,21 @@ function initializeDashboard(freshvibesView) {
 				const entryId = entryItem.dataset.entryId;
 				const feedData = state.feeds[feedId];
 				const entry = feedData?.entries?.find(e => String(e.id) === entryId);
+				if (!entry) return;
 
-				if (!entry || !markReadUrl) return;
+				if (actionBtn.dataset.action === 'favorite') {
+					if (!bookmarkUrl) return;
+					const newFav = !entry.isFavorite;
+					api(bookmarkUrl, { id: entryId, is_favorite: newFav ? 1 : 0, ajax: 1 })
+						.then(() => {
+							entry.isFavorite = newFav;
+							actionBtn.classList.toggle('is-favorite', newFav);
+							actionBtn.title = tr.mark_favorite || 'Toggle favourite';
+						}).catch(console.error);
+					return;
+				}
+
+				if (!markReadUrl) return;
 
 				const isCurrentlyRead = entry.isRead;
 				const newReadState = !isCurrentlyRead;
@@ -1985,28 +2067,6 @@ function initializeDashboard(freshvibesView) {
 					document.body.classList.remove('modal-open');
 				}
 			});
-
-			// Replace the bulk max height select with an input + datalist
-			const bulkMaxHeightSelect = document.getElementById('bulk-feed-maxheight');
-			if (bulkMaxHeightSelect) {
-				const input = document.createElement('input');
-				input.type = 'text';
-				input.className = 'setting-input'; // For styling consistency
-				input.id = 'bulk-feed-maxheight'; // Keep the original ID
-				input.setAttribute('list', 'bulk-maxheight-options');
-
-				const dataList = document.createElement('datalist');
-				dataList.id = 'bulk-maxheight-options';
-				['300', '400', '500', '600', '700', '800', 'unlimited', 'fit'].forEach(val => {
-					const option = document.createElement('option');
-					option.value = val;
-					dataList.appendChild(option);
-				});
-
-				bulkMaxHeightSelect.replaceWith(input);
-				input.after(dataList);
-			}
-
 
 			const feedColorInput = document.getElementById('bulk-feed-header-color');
 			if (feedColorInput) {

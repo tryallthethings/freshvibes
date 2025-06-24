@@ -50,6 +50,7 @@ return array(
 			Nur relevant, wenn die Seitenleiste ausgeblendet ist.',
 		'mark_read' => 'Als gelesen markieren',
 		'mark_unread' => 'Als ungelesen markieren',
+		'mark_favorite' => 'Als Favorit auswählen/entfernen',
 		'settings_entry_click_mode_label' => 'Klick-Verhalten für Einträge',
 		'settings_entry_click_mode_help' => 'Wählen Sie, was passiert, wenn Sie auf einen Eintrag klicken',
 		'entry_click_mode_modal' => 'In Modal öffnen',

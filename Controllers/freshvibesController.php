@@ -26,6 +26,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			? $userConf->param($layoutKey)
 			: null;
 
+		// Get the new feed position setting
+		$newFeedPosition = $userConf->param(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom');
+
 		if ($mode === 'categories') {
 			// Always reorder categories according to their position
 			$categories = FreshRSS_Context::categories();
@@ -60,18 +63,80 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					// Use existing tab but ensure name is updated
 					$existingTab = $existingTabsMap[$tabId];
 					$existingTab['name'] = html_entity_decode($cat->name(), ENT_QUOTES | ENT_HTML5, 'UTF-8');
+
+					// Ensure feeds are in the correct category tab
+					$columns = $existingTab['columns'];
+
+					// Ensure all columns are arrays
+					foreach ($columns as $colKey => &$colFeeds) {
+						if (!is_array($colFeeds)) {
+							$colFeeds = [];
+						}
+					}
+					unset($colFeeds);
+
+					$feeds = $cat->feeds();
+					$feedIds = [];
+					foreach ($feeds as $feed) {
+						$feedIds[] = $feed->id();
+					}
+
+					// Remove feeds that don't belong to this category
+					foreach ($columns as $colKey => &$colFeeds) {
+						$colFeeds = array_values(array_intersect($colFeeds, $feedIds));
+					}
+					unset($colFeeds);
+
+					// Add any missing feeds from this category
+					$existingFeedIds = [];
+					foreach ($columns as $colFeeds) {
+						if (is_array($colFeeds)) {
+							$existingFeedIds = array_merge($existingFeedIds, $colFeeds);
+						}
+					}
+					$missingFeeds = array_diff($feedIds, $existingFeedIds);
+
+					if (!empty($missingFeeds)) {
+						if ($newFeedPosition === 'top') {
+							// Add new feeds at the top of the first column
+							$columns['col1'] = array_merge(array_values($missingFeeds), $columns['col1']);
+						} else {
+							// Add at the bottom (existing behavior)
+							$numCols = $existingTab['num_columns'];
+							$i = count($existingFeedIds);
+							foreach ($missingFeeds as $feedId) {
+								$colKey = 'col' . (($i % $numCols) + 1);
+								$columns[$colKey][] = $feedId;
+								$i++;
+							}
+						}
+					}
+
+					$existingTab['columns'] = $columns;
 					$layout[] = $existingTab;
 				} else {
 					// Create new tab for this category
 					$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
 					$columns = $this->buildEmptyColumns($numCols);
 					$feeds = $cat->feeds();
-					$i = 0;
-					foreach ($feeds as $feed) {
-						$colKey = 'col' . (($i % $numCols) + 1);
-						$columns[$colKey][] = $feed->id();
-						$i++;
+
+					if ($newFeedPosition === 'top') {
+						// Add all feeds to the first column when creating new tab
+						$feedIds = [];
+						foreach ($feeds as $feed) {
+							$feedIds[] = $feed->id();
+						}
+						$columns['col1'] = $feedIds;
+					} else {
+						// Distribute feeds across columns (existing behavior)
+						$i = 0;
+						foreach ($feeds as $feed) {
+							$colKey = 'col' . (($i % $numCols) + 1);
+							$columns[$colKey][] = $feed->id();
+							$i++;
+						}
 					}
+
 					$layout[] = [
 						'id' => $tabId,
 						'name' => html_entity_decode($cat->name(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
@@ -94,12 +159,24 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 			$columns = $this->buildEmptyColumns($numCols);
 			$feeds = $feedDAO->listFeeds();
-			$i = 0;
-			foreach ($feeds as $feed) {
-				$colKey = 'col' . (($i % $numCols) + 1);
-				$columns[$colKey][] = $feed->id();
-				$i++;
+
+			if ($newFeedPosition === 'top') {
+				// Add all feeds to the first column
+				$feedIds = [];
+				foreach ($feeds as $feed) {
+					$feedIds[] = $feed->id();
+				}
+				$columns['col1'] = $feedIds;
+			} else {
+				// Distribute feeds across columns (existing behavior)
+				$i = 0;
+				foreach ($feeds as $feed) {
+					$colKey = 'col' . (($i % $numCols) + 1);
+					$columns[$colKey][] = $feed->id();
+					$i++;
+				}
 			}
+
 			$layout = [[
 				'id' => 'tab-' . microtime(true),
 				'name' => _t('ext.FreshVibesView.default_tab_name', 'Main'),
@@ -111,6 +188,18 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 			$this->saveLayout($layout);
 		}
+
+		// Ensure all layout columns are arrays before returning
+		foreach ($layout as &$tab) {
+			if (isset($tab['columns']) && is_array($tab['columns'])) {
+				foreach ($tab['columns'] as &$column) {
+					if (!is_array($column)) {
+						$column = [];
+					}
+				}
+			}
+		}
+
 		return is_array($layout) ? $layout : [];
 	}
 
@@ -141,7 +230,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$feeds = $feedDAO->listFeeds();
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
-		$stateAll = defined('FreshRSS_Entry::STATE_ALL') ? FreshRSS_Entry::STATE_ALL : 0;
+		$currentState = FreshRSS_Context::$state;
 		$feedsData = [];
 		$dateFormat = $userConf->param(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i');
 		$dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
@@ -221,7 +310,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				$entryGenerator = $entryDAO->listWhere(
 					type: 'f',
 					id: $feedId,
-					state: $stateAll,
+					state: $currentState,
 					filters: null,
 					id_min: '0',
 					id_max: '0',
@@ -247,6 +336,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 							'compactSnippet' => $this->generateSnippet($entry, 30, 1), // compact view
 							'detailedSnippet' => $this->generateSnippet($entry, 100, 3), // detailed view with 3 sentences
 							'isRead' => $entry->isRead(),
+							'isFavorite' => $entry->isFavorite(),
 							'author' => html_entity_decode($entry->author(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 							'tags' => $entry->tags(),
 							'feedId' => $feedId,
@@ -286,6 +376,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		@$this->view->markFeedReadUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'markfeedread'], 'json', false);
 		@$this->view->markTabReadUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'marktabread'], 'json', false);
 		@$this->view->markReadUrl = Minz_Url::display(['c' => 'entry', 'a' => 'read'], 'json', false);
+		@$this->view->bookmarkUrl = Minz_Url::display(['c' => 'entry', 'a' => 'bookmark'], 'json', false);
 		@$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		@$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 
@@ -293,7 +384,6 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		@$this->view->rss_title = _t('ext.FreshVibesView.title');
 		@$this->view->refreshEnabled = (bool)$userConf->param(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, 0);
 		@$this->view->refreshInterval = (int)$userConf->param(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY, 15);
-		@$this->view->html_url = Minz_Url::display(['c' => $controllerParam, 'a' => 'index']);
 		@$this->view->feedUrl = Minz_Url::display([], 'html', false) . '?get=f_';
 		@$this->view->categories = FreshRSS_Context::categories();
 		@$this->view->confirmTabDelete = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY, 1);
@@ -301,6 +391,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		@$this->view->dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
 		@$this->view->confirmMarkRead = (bool)$userConf->param(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY, 1);
 		@$this->view->refreshFeedsUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'refreshfeeds'], 'json', false);
+		@$this->view->feedSettingsUrl = Minz_Url::display() . '?c=subscription&a=feed&id=';
+		@$this->view->categorySettingsUrl = Minz_Url::display() . '?c=category&a=update&id=';
 
 		@$tags = FreshRSS_Context::labels(true);
 		@$this->view->tags = $tags;
@@ -322,7 +414,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$entryDAO = $factory->createEntryDAO();
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
-		$stateAll = defined('FreshRSS_Entry::STATE_ALL') ? FreshRSS_Entry::STATE_ALL : 0;
+		$currentState = FreshRSS_Context::$state;
 		$feedsData = [];
 		$dateFormat = $userConf->param(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY, 'Y-m-d H:i');
 		$dateMode = $userConf->param(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY, 'absolute');
@@ -342,7 +434,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			$maxHeight = $userConf->attributeString(FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY . $feedId, FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY);
 			$displayMode = $userConf->attributeString(FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX . $feedId, FreshVibesViewExtension::DEFAULT_DISPLAY_MODE);
 
-			$entryGenerator = $entryDAO->listWhere('f', $feedId, $stateAll, null, '0', '0', (FreshRSS_Context::$sort ?? 'date'), (FreshRSS_Context::$order ?? 'DESC'), '0', 0, $queryLimit ?? 0, 0);
+			$entryGenerator = $entryDAO->listWhere('f', $feedId, $currentState, null, '0', '0', (FreshRSS_Context::$sort ?? 'date'), (FreshRSS_Context::$order ?? 'DESC'), '0', 0, $queryLimit ?? 0, 0);
 			$entries = [];
 			foreach ($entryGenerator as $entry) {
 				if ($entry instanceof FreshRSS_Entry) {
@@ -357,6 +449,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 						'compactSnippet' => $this->generateSnippet($entry, 30, 1),
 						'detailedSnippet' => $this->generateSnippet($entry, 100, 3),
 						'isRead' => $entry->isRead(),
+						'isFavorite' => $entry->isFavorite(),
 						'author' => html_entity_decode($entry->author(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 						'tags' => $entry->tags(),
 						'feedId' => $feedId,

@@ -29,6 +29,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	data-xextension-freshvibesview-search-tag-url="<?php echo htmlspecialchars($this->searchTagUrl, ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-mark-feed-read-url="<?php echo htmlspecialchars($this->markFeedReadUrl, ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-mark-tab-read-url="<?php echo htmlspecialchars($this->markTabReadUrl, ENT_QUOTES); ?>"
+	data-xextension-freshvibesview-bookmark-url="<?php echo htmlspecialchars($this->bookmarkUrl, ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-mode="<?php echo htmlspecialchars($this->viewMode ?? 'custom', ENT_QUOTES); ?>"
 	data-xextension-freshvibesview-confirm-tab-delete="<?php echo $this->confirmTabDelete ? '1' : '0'; ?>"
 	data-xextension-freshvibesview-entry-click-mode="<?php echo htmlspecialchars($this->entryClickMode ?? 'modal', ENT_QUOTES); ?>"
@@ -72,6 +73,10 @@ if (!Minz_Request::paramBoolean('ajax')) {
 			<button type="button" class="entry-action-btn" data-action="toggle">
 				<span class="action-icon action-icon-read"><?= _i('read') ?></span>
 				<span class="action-icon action-icon-unread"><?= _i('unread') ?></span>
+			</button>
+			<button type="button" class="entry-action-btn entry-fav-btn" data-action="favorite" title="<?= _t('ext.FreshVibesView.mark_favorite', _t('conf.shortcut.mark_favorite')) ?>">
+				<span class="action-icon action-icon-star"><?= _i('starred') ?></span>
+				<span class="action-icon action-icon-unstar"><?= _i('non-starred') ?></span>
 			</button>
 		</div>
 	</template>
@@ -129,16 +134,19 @@ if (!Minz_Request::paramBoolean('ajax')) {
 							</div>
 							<div class="setting-row">
 								<label><?= _t('ext.FreshVibesView.max_height_label', 'Max height:') ?></label>
-								<select id="bulk-feed-maxheight">
-									<option value="300">300px</option>
-									<option value="400">400px</option>
-									<option value="500">500px</option>
-									<option value="600">600px</option>
-									<option value="700">700px</option>
-									<option value="800">800px</option>
-									<option value="unlimited"><?= _t('ext.FreshVibesView.unlimited', 'Unlimited') ?></option>
-									<option value="fit" selected><?= _t('ext.FreshVibesView.fit_to_content', 'Fit to content') ?></option>
-								</select>
+								<div class="height-picker-wrapper">
+									<input type="text" id="bulk-feed-maxheight" value="fit" placeholder="<?= _t('ext.FreshVibesView.fit_to_content', 'Fit to content') ?>" />
+									<div class="fv-height-picker">
+										<button type="button" data-value="300">300px</button>
+										<button type="button" data-value="400">400px</button>
+										<button type="button" data-value="500">500px</button>
+										<button type="button" data-value="600">600px</button>
+										<button type="button" data-value="700">700px</button>
+										<button type="button" data-value="800">800px</button>
+										<button type="button" data-value="unlimited"><?= _t('ext.FreshVibesView.unlimited', 'Unlimited') ?></button>
+										<button type="button" data-value="fit"><?= _t('ext.FreshVibesView.fit_to_content', 'Fit to content') ?></button>
+									</div>
+								</div>
 							</div>
 							<div class="bulk-actions">
 								<button type="button" class="btn btn-primary" id="apply-bulk-feed-settings">
@@ -203,6 +211,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		'confirm_mark_all_read' => _t('ext.FreshVibesView.confirm_mark_all_read', 'Mark all entries as read?'),
 		'confirm_mark_tab_read' => _t('ext.FreshVibesView.confirm_mark_tab_read', 'Mark all entries in this tab as read?'),
 		'mark_all_read' => _t('ext.FreshVibesView.mark_all_read', 'Mark all as read'),
+		'mark_favorite' => _t('ext.FreshVibesView.mark_favorite', _t('conf.shortcut.mark_favorite')),
 		'header_color' => _t('ext.FreshVibesView.header_color', 'Header color'),
 		'tab_bg_color' => _t('ext.FreshVibesView.tab_bg_color', 'Tab background'),
 		'icon_read' => _i('unread'),

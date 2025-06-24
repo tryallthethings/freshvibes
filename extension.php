@@ -45,6 +45,9 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const DEFAULT_DISPLAY_MODE = 'tiny';
 	public const BULK_SETTINGS_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_bulk_settings';
 	public const CONFIRM_MARK_READ_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_confirm_mark_read';
+	public const NEW_FEED_POSITION_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_new_feed_position';
+	public const NEW_FEED_POSITIONS = ['bottom', 'top'];
+	public const DEFAULT_NEW_FEED_POSITION = 'bottom';
 
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
@@ -139,6 +142,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::ENTRY_CLICK_MODE_CONFIG_KEY, Minz_Request::paramStringNull('freshvibes_entry_click_mode') ?? 'modal');
 			$userConf->_attribute(self::DATE_MODE_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_mode') ?: 'absolute');
 			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read') ? 1 : 0);
+			$userConf->_attribute(self::NEW_FEED_POSITION_CONFIG_KEY, Minz_Request::paramString('freshvibes_new_feed_position') ?: 'bottom');
 
 			$userConf->save();
 		}
@@ -182,6 +186,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 			case self::ENTRY_CLICK_MODE_CONFIG_KEY:
 			case self::MODE_CONFIG_KEY:
 			case self::DATE_MODE_CONFIG_KEY:
+			case self::NEW_FEED_POSITION_CONFIG_KEY:
 				return $userConf->attributeString($key) ?? $default;
 			default:
 				return $default;
