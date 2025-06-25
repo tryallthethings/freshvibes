@@ -402,7 +402,8 @@ input[type="color"] {
 	display: flex;
 	flex-direction: column;
 	gap: 15px;
-	min-height: 100px;
+	min-height: calc(100vh - 250px);
+	/* Adjust this value based on your header height */
 }
 
 /* ========================================
@@ -575,6 +576,16 @@ input[type="color"] {
 	flex-shrink: 0;
 	white-space: nowrap;
 	font-size: 0.95em;
+}
+
+.feed-maxheight-input {
+	width: 100%;
+	padding: 4px 8px;
+	border: 1px solid var(--freshvibes-border-color);
+	border-radius: var(--freshvibes-border-radius);
+	background-color: var(--freshvibes-background-primary);
+	color: var(--freshvibes-text-primary);
+	font-size: inherit;
 }
 
 .setting-row select {
@@ -1553,11 +1564,6 @@ input[type="color"] {
 	color: var(--link-color);
 	background-color: var(--background-color-grey);
 	text-decoration: underline;
-}
-
-/* Font size overrides */
-.fontsize-small .freshvibes-container-content {
-	font-size: 0.8em;
 }
 
 /*
