@@ -12,44 +12,57 @@ if (!Minz_Request::paramBoolean('ajax')) {
 	}
 	$this->partial('nav_menu');
 }
+
+// Prepare URLs array without htmlspecialchars on individual values
+$urlsArray = [
+	"getLayout" => $this->getLayoutUrl,
+	"saveLayout" => $this->saveLayoutUrl,
+	"saveFeedSettings" => $this->saveFeedSettingsUrl,
+	"tabAction" => $this->tabActionUrl,
+	"setActiveTab" => $this->setActiveTabUrl,
+	"moveFeed" => $this->moveFeedUrl,
+	"markRead" => $this->markReadUrl,
+	"feed" => $this->feedUrl,
+	"searchAuthor" => $this->searchAuthorUrl,
+	"searchTag" => $this->searchTagUrl,
+	"markFeedRead" => $this->markFeedReadUrl,
+	"markTabRead" => $this->markTabReadUrl,
+	"bookmark" => $this->bookmarkUrl,
+	"bulkApplyFeeds" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyFeedSettings'], 'json', false),
+	"bulkApplyTabs" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyTabSettings'], 'json', false),
+	"resetFeeds" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllFeedSettings'], 'json', false),
+	"resetTabs" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllTabSettings'], 'json', false),
+	"refreshFeeds" => $this->refreshFeedsUrl,
+	"feedSettings" => $this->feedSettingsUrl,
+	"categorySettings" => $this->categorySettingsUrl
+];
+
+// Prepare settings array
+$settingsArray = [
+	"refreshInterval" => (string)($this->refreshInterval ?? 15),
+	"dateFormat" => (string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'),
+	"mode" => $this->viewMode ?? 'custom',
+	"confirmTabDelete" => $this->confirmTabDelete ? '1' : '0',
+	"entryClickMode" => $this->entryClickMode ?? 'modal',
+	"sort" => $this->currentSort ?? 'date',
+	"order" => $this->currentOrder ?? 'DESC',
+	"dateMode" => $this->dateMode ?? 'absolute',
+	"confirmMarkRead" => $this->confirmMarkRead ? '1' : '0',
+	"refreshEnabled" => $this->refreshEnabled ? '1' : '0'
+];
+
+// JSON encode then htmlspecialchars the entire JSON string
+$urlsJson = htmlspecialchars(json_encode($urlsArray, JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_TAG | JSON_HEX_QUOT), ENT_QUOTES);
+$settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSON_HEX_AMP | JSON_HEX_TAG | JSON_HEX_QUOT), ENT_QUOTES);
 ?>
 
 <section class="freshvibes-view"
 	role="main"
-	data-xextension-freshvibesview-get-layout-url="<?= htmlspecialchars($this->getLayoutUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-save-layout-url="<?= htmlspecialchars($this->saveLayoutUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-save-feed-settings-url="<?= htmlspecialchars($this->saveFeedSettingsUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-tab-action-url="<?= htmlspecialchars($this->tabActionUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-set-active-tab-url="<?= htmlspecialchars($this->setActiveTabUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-refresh-interval="<?= htmlspecialchars((string)($this->refreshInterval ?? 15), ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-date-format="<?= htmlspecialchars((string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'), ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-move-feed-url="<?= htmlspecialchars($this->moveFeedUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-mark-read-url="<?= htmlspecialchars($this->markReadUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-feed-url="<?= htmlspecialchars($this->feedUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-search-author-url="<?= htmlspecialchars($this->searchAuthorUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-search-tag-url="<?= htmlspecialchars($this->searchTagUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-mark-feed-read-url="<?= htmlspecialchars($this->markFeedReadUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-mark-tab-read-url="<?= htmlspecialchars($this->markTabReadUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-bookmark-url="<?= htmlspecialchars($this->bookmarkUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-mode="<?= htmlspecialchars($this->viewMode ?? 'custom', ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-confirm-tab-delete="<?= $this->confirmTabDelete ? '1' : '0'; ?>"
-	data-xextension-freshvibesview-entry-click-mode="<?= htmlspecialchars($this->entryClickMode ?? 'modal', ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-sort="<?= htmlspecialchars(FreshRSS_Context::$sort ?? 'date', ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-order="<?= htmlspecialchars(FreshRSS_Context::$order ?? 'DESC', ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-date-mode="<?= htmlspecialchars($this->dateMode ?? 'absolute', ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-bulk-apply-feeds-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyFeedSettings'], 'json', false) ?>"
-	data-xextension-freshvibesview-bulk-apply-tabs-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyTabSettings'], 'json', false) ?>"
-	data-xextension-freshvibesview-reset-feeds-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllFeedSettings'], 'json', false) ?>"
-	data-xextension-freshvibesview-reset-tabs-url="<?= Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllTabSettings'], 'json', false) ?>"
-	data-xextension-freshvibesview-confirm-mark-read="<?= $this->confirmMarkRead ? '1' : '0'; ?>"
-	data-xextension-freshvibesview-refresh-feeds-url="<?= htmlspecialchars($this->refreshFeedsUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-refresh-enabled="<?= $this->refreshEnabled ? '1' : '0'; ?>"
-	data-xextension-freshvibesview-feed-settings-url="<?= htmlspecialchars($this->feedSettingsUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-category-settings-url="<?= htmlspecialchars($this->categorySettingsUrl, ENT_QUOTES); ?>"
-	data-xextension-freshvibesview-csrf-token="<?= htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
+	data-freshvibes-urls='<?= $urlsJson ?>'
+	data-freshvibes-settings='<?= $settingsJson ?>'
+	data-freshvibes-csrf-token="<?= htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 	<header class="freshvibes-header">
-
 		<nav class="freshvibes-tabs" aria-label="<?= _t('ext.FreshVibesView.aria_dashboard_tabs', 'Dashboard tabs'); ?>"></nav>
 		<div class="header-actions">
 			<?php if (!$hideSubscriptionControls && $hideSidebar && FreshRSS_Auth::hasAccess()): ?>
@@ -243,6 +256,7 @@ if (!Minz_Request::paramBoolean('ajax')) {
 		'font_size_xlarge' => _t('ext.FreshVibesView.font_size_xlarge', 'Extra Large'),
 		'error_applying_settings' => _t('ext.FreshVibesView.error_applying_settings', 'Error applying settings. Please try again.'),
 		'error_resetting_settings' => _t('ext.FreshVibesView.error_resetting_settings', 'Error resetting settings. Please try again.'),
+		'icon_starred' => _i('starred'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
 </script>
 

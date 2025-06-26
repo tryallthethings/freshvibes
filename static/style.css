@@ -703,6 +703,7 @@ input[type="color"] {
 .entry-title {
 	font-weight: bold;
 	color: inherit;
+	vertical-align: middle;
 }
 
 .entry-title:hover {
@@ -713,6 +714,7 @@ input[type="color"] {
 .entry-snippet {
 	font-size: 0.95em;
 	color: var(--freshvibes-text-secondary);
+	vertical-align: middle;
 }
 
 .entry-snippet:before {
@@ -733,7 +735,7 @@ input[type="color"] {
 .entry-link {
 	display: flex;
 	justify-content: space-between;
-	align-items: flex-start;
+	align-items: center;
 	gap: 10px;
 	text-decoration: none;
 	color: inherit;
@@ -902,6 +904,22 @@ input[type="color"] {
 
 .entry-fav-btn.is-favorite .action-icon-unstar {
 	display: none;
+}
+
+.entry-favorite-indicator {
+	display: inline-block;
+	vertical-align: middle;
+	overflow: hidden;
+	max-width: 0;
+	transition: max-width 0.1s ease-in-out;
+	white-space: nowrap;
+	line-height: 1;
+	padding-bottom: 1px;
+}
+
+.entry-favorite-indicator.is-favorite {
+	max-width: 2em;
+	margin-right: 0.10em;
 }
 
 /* Read/Unread states */
