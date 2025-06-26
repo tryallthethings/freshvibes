@@ -181,10 +181,10 @@ declare(strict_types=1);
 		</label>
 		<div class="group-controls">
 			<select name="freshvibes_new_feed_position" id="freshvibes_new_feed_position">
-				<option value="bottom" <?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom') === 'bottom' ? 'selected' : '' ?>>
+				<option value="bottom" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom') === 'bottom' ? 'selected' : '' ?>>
 					<?= _t('ext.FreshVibesView.new_feed_position_bottom', 'Bottom (distributed across columns)') ?>
 				</option>
-				<option value="top" <?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom') === 'top' ? 'selected' : '' ?>>
+				<option value="top" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom') === 'top' ? 'selected' : '' ?>>
 					<?= _t('ext.FreshVibesView.new_feed_position_top', 'Top of first column') ?>
 				</option>
 			</select>

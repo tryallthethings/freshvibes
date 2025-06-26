@@ -928,11 +928,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 			if ($headerColor !== null) {
 				if ($headerColor === '') {
-					if (method_exists($userConf, 'removeAttribute')) {
-						$userConf->removeAttribute($headerPrefix . $feedId);
-					} else {
-						unset($userConf->{$headerPrefix . $feedId});
-					}
+					$userConf->_attribute($headerPrefix . $feedId, null);
 				} else {
 					$userConf->_attribute($headerPrefix . $feedId, $headerColor);
 				}
@@ -1263,11 +1259,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 				if ($headerColor !== null) {
 					if ($headerColor === '') {
-						if (method_exists($userConf, 'removeAttribute')) {
-							$userConf->removeAttribute($headerPrefix . $feedId);
-						} else {
-							unset($userConf->{$headerPrefix . $feedId});
-						}
+						$userConf->_attribute($headerPrefix . $feedId, null);
 					} else {
 						$userConf->_attribute($headerPrefix . $feedId, $headerColor);
 					}

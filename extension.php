@@ -66,6 +66,10 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const CATEGORY_FEED_HEADER_COLOR_CONFIG_PREFIX = self::CONTROLLER_NAME_BASE . '_category_feed_headercolor_';
 	// --- End Constants ---
 
+	public function getId(): string {
+		return self::EXT_ID;
+	}
+
 	public function init(): void {
 		$this->registerTranslates();
 		$this->registerController(self::CONTROLLER_NAME_BASE);
@@ -166,9 +170,5 @@ class FreshVibesViewExtension extends Minz_Extension {
 
 			$userConf->save();
 		}
-	}
-
-	public function getId(): string {
-		return self::EXT_ID;
 	}
 }

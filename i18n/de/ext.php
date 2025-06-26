@@ -99,7 +99,7 @@ return array(
 		'apply' => 'Anwenden',
 		'reset' => 'Zurücksetzen',
 		'settings_confirm_mark_read_label' => 'Bestätigung, um als gelesen zu markieren',
-		'settings_confirm_mark_read_help' => 'Bestätigungsdialog beim "als gelesen markieren" von Tabs / Feeds anzeigen',
+		'settings_confirm_mark_read_help' => 'Zeigt einen Bestätigungsdialog beim "Als gelesen markieren" von Tabs oder Feeds an.',
 		'fv_invalid_height' => 'Ungültiger Wert. Bitte eine Zahl, "unlimited" oder "fit" verwenden.',
 		'edit_feed_settings' => 'Feed in FreshRSS bearbeiten',
 		'edit_category_settings' => 'Kategorie in FreshRSS bearbeiten',

@@ -1383,7 +1383,7 @@ input[type="color"] {
 }
 
 .freshvibes-container-header.has-custom-color .feed-settings-button {
-	color: var(--header-font-color, black);
+	color: var(--header-font-color, var(--freshvibes-text-primary));
 }
 
 /* ========================================
@@ -1511,12 +1511,6 @@ input[type="color"] {
 	text-transform: uppercase;
 }
 
-/**
- * ========================================
- * MISSING STYLES FOR SETTINGS AND CONTROLS
- * ========================================
- */
-
 /*
  * Styles for the handle that allows resizing the height of a feed container.
  * This was missing entirely from the new stylesheet.
@@ -1564,14 +1558,6 @@ input[type="color"] {
 	color: var(--link-color);
 	background-color: var(--background-color-grey);
 	text-decoration: underline;
-}
-
-/*
- * Ensures the settings button icon color inherits correctly on custom-colored headers.
- * While a similar rule existed, this specific one for the button was missing.
- */
-.freshvibes-container-header.has-custom-color .feed-settings-button {
-	color: var(--header-font-color, var(--freshvibes-text-primary));
 }
 
 /*

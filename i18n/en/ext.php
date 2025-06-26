@@ -50,7 +50,7 @@ return array(
 			This only works when the sidebar is hidden.',
 		'mark_read' => 'Mark as read',
 		'mark_unread' => 'Mark as unread',
-		'mark_favorite' => 'Toggle favourite',
+		'mark_favorite' => 'Toggle favorite',
 		'settings_entry_click_mode_label' => 'Entry click behavior',
 		'settings_entry_click_mode_help' => 'Choose what happens when you click on an entry',
 		'entry_click_mode_modal' => 'Open in modal',
