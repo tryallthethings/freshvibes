@@ -617,19 +617,20 @@ input[type="color"] {
 .feed-move-to-list li button {
 	width: 100%;
 	text-align: left;
-	background: none;
-	border: none;
-	padding: 6px 4px;
+	background: var(--freshvibes-button-bg);
+	border: 1px solid var(--freshvibes-border-color);
+	padding: 6px 12px;
 	cursor: pointer;
 	border-radius: var(--freshvibes-border-radius);
 	font-size: 0.95em;
-	background-color: var(--freshvibes-accent-primary);
-	color: var(--freshvibes-text-secondary);
-	border-color: var(--freshvibes-accent-primary);
+	color: var(--freshvibes-text-primary);
+	transition: all var(--freshvibes-transition-duration) ease;
 }
 
 .feed-move-to-list li button:hover {
-	background-color: var(--freshvibes-background-secondary);
+	background-color: var(--freshvibes-button-hover);
+	border-color: var(--freshvibes-accent-primary);
+	color: var(--freshvibes-text-primary);
 }
 
 /* ========================================

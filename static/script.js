@@ -225,7 +225,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		const refreshMs = intervalMinutes * 60 * 1000;
 
 		// Validate settings
-		if (!refreshEnabled || !refreshFeedsUrl || refreshMs <= 0) {
+		if (!refreshEnabled || !urls.refreshFeeds || refreshMs <= 0) {
 			return;
 		}
 
@@ -1224,7 +1224,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				const targetTabId = moveButton.dataset.targetTabId;
 
 				if (!urls.moveFeed) {
-					console.error('FreshVibesView: urls.feed is not defined in the dataset. Cannot move feed.');
+					console.error('FreshVibesView: urls.moveFeed is not defined in the dataset. Cannot move feed.');
 					return;
 				}
 
@@ -1252,70 +1252,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}).catch(error => {
 						console.error('Error moving feed:', error);
 					});
-				return;
-			}
-
-			if (e.target.closest('.feed-settings-save')) {
-				const editor = e.target.closest('.feed-settings-editor');
-				const container = editor.closest('.freshvibes-container');
-				const feedId = container.dataset.feedId;
-				const limit = editor.querySelector('.feed-limit-select').value;
-				const fontSize = editor.querySelector('.feed-fontsize-select').value;
-				const headerColorInput = editor.querySelector('.feed-header-color-input');
-				const headerColor = headerColorInput ? headerColorInput.value : '';
-				const maxHeight = editor.querySelector('.feed-maxheight-input').value;
-				const displayModeSelect = editor.querySelector('.feed-display-mode-select');
-				const displayMode = displayModeSelect ? displayModeSelect.value : 'tiny';
-
-				// Apply font size immediately
-				container.className = 'freshvibes-container';
-				container.classList.toggle('fontsize-xsmall', fontSize === 'xsmall');
-				container.classList.toggle('fontsize-small', fontSize === 'small');
-				container.classList.toggle('fontsize-large', fontSize === 'large');
-				container.classList.toggle('fontsize-xlarge', fontSize === 'xlarge');
-
-				// Apply display mode immediately
-				container.classList.toggle('display-compact', displayMode === 'compact');
-				container.classList.toggle('display-detailed', displayMode === 'detailed');
-
-				const contentDiv = container.querySelector('.freshvibes-container-content');
-				if (contentDiv) {
-					if (maxHeight === 'unlimited' || maxHeight === 'fit') {
-						contentDiv.style.height = '';
-					} else {
-						contentDiv.style.height = maxHeight + 'px';
-					}
-				}
-
-				api(urls.saveFeedSettings, {
-					feed_id: feedId,
-					limit,
-					font_size: fontSize,
-					header_color: headerColor,
-					max_height: maxHeight,
-					display_mode: displayMode
-				}).then(data => {
-					if (data.status === 'success') {
-						editor.classList.remove('active');
-						const oldLimit = state.feeds[feedId].currentLimit;
-						const oldDisplayMode = state.feeds[feedId].currentDisplayMode;
-						state.feeds[feedId].currentLimit = parseInt(limit, 10) || limit;
-						state.feeds[feedId].currentFontSize = fontSize;
-						state.feeds[feedId].currentHeaderColor = headerColor;
-						state.feeds[feedId].currentMaxHeight = maxHeight;
-						state.feeds[feedId].currentDisplayMode = displayMode;
-
-						// Reload if limit or display mode changes (since content changes)
-						if (String(oldLimit) !== String(limit) || oldDisplayMode !== displayMode) {
-							location.reload();
-						}
-					}
-				}).catch(console.error);
-				return;
-			}
-
-			if (e.target.closest('.feed-settings-cancel')) {
-				e.target.closest('.feed-settings-editor').classList.remove('active');
 				return;
 			}
 
@@ -1628,7 +1564,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				return;
 			}
 
-			const clickMode = freshvibesView.dataset.xextensionFreshvibesviewEntryClickMode || 'modal';
+			const clickMode = settings.entryClickMode || 'modal';
 
 			// For 'external' mode, we do nothing. The browser will follow the link's href
 			// and `target="_blank"` will correctly open it in a new tab.
@@ -1880,7 +1816,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		});
 
 		// Handle feed settings changes
-		// Handle feed settings changes
 		freshvibesView.addEventListener('change', e => {
 			const feedSettingsEditor = e.target.closest('.feed-settings-editor');
 			if (!feedSettingsEditor) return;
@@ -1915,39 +1850,54 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}
 				}
 
-				// --- Auto-save ---
-				const limit = feedSettingsEditor.querySelector('.feed-limit-select').value;
-				const headerColor = feedSettingsEditor.querySelector('.feed-header-color-input').value;
+				// Only handle header color if it's the color input that changed
+				if (e.target.classList.contains('feed-header-color-input')) {
+					const headerColor = e.target.value;
+					const header = container.querySelector('.freshvibes-container-header');
 
-				// Save settings
-				api(urls.saveFeedSettings, {
-					feed_id: feedId,
-					limit: limit,
-					font_size: fontSize,
-					header_color: headerColor,
-					max_height: maxHeight,
-					display_mode: displayMode
-				}).then(data => {
-					if (data.status === 'success') {
-						const feed = state.feeds[feedId];
-						const oldLimit = feed.currentLimit;
-						const oldDisplayMode = feed.currentDisplayMode;
-
-						// Update state
-						feed.currentLimit = isNaN(parseInt(limit, 10)) ? limit : parseInt(limit, 10);
-						feed.currentFontSize = fontSize;
-						feed.currentHeaderColor = headerColor;
-						feed.currentMaxHeight = maxHeight;
-						feed.currentDisplayMode = displayMode;
-
-						// Reload if limit or display mode changes
-						if (String(oldLimit) !== String(limit) || oldDisplayMode !== displayMode) {
-							location.reload();
+					api(urls.saveFeedSettings, {
+						feed_id: feedId,
+						limit: feedSettingsEditor.querySelector('.feed-limit-select').value,
+						font_size: fontSize,
+						header_color: headerColor,
+						max_height: maxHeight,
+						display_mode: displayMode
+					}).then(data => {
+						if (data.status === 'success') {
+							state.feeds[feedId].currentHeaderColor = headerColor;
 						}
-					}
-				}).catch(error => {
-					console.error('Error saving feed settings:', error);
-				});
+					}).catch(error => {
+						console.error('Error saving feed settings:', error);
+					});
+				} else {
+					// For other changes, save without header color
+					api(urls.saveFeedSettings, {
+						feed_id: feedId,
+						limit: feedSettingsEditor.querySelector('.feed-limit-select').value,
+						font_size: fontSize,
+						max_height: maxHeight,
+						display_mode: displayMode
+					}).then(data => {
+						if (data.status === 'success') {
+							const feed = state.feeds[feedId];
+							const oldLimit = feed.currentLimit;
+							const oldDisplayMode = feed.currentDisplayMode;
+
+							// Update state
+							feed.currentLimit = isNaN(parseInt(feedSettingsEditor.querySelector('.feed-limit-select').value, 10)) ? feedSettingsEditor.querySelector('.feed-limit-select').value : parseInt(feedSettingsEditor.querySelector('.feed-limit-select').value, 10);
+							feed.currentFontSize = fontSize;
+							feed.currentMaxHeight = maxHeight;
+							feed.currentDisplayMode = displayMode;
+
+							// Reload if limit or display mode changes
+							if (String(oldLimit) !== String(feed.currentLimit) || oldDisplayMode !== displayMode) {
+								location.reload();
+							}
+						}
+					}).catch(error => {
+						console.error('Error saving feed settings:', error);
+					});
+				}
 			}
 		});
 
