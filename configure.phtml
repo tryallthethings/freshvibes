@@ -33,7 +33,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_refresh_enabled"
 				id="freshvibes_refresh_enabled"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY, false) ? 'checked="checked"' : '' ?> />
+				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY) ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_refresh_enabled_help') ?>
 			</p>
@@ -117,7 +117,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_confirm_mark_read"
 				id="freshvibes_confirm_mark_read"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY, true) ? 'checked="checked"' : '' ?> />
+				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY ?? true) ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_confirm_mark_read_help') ?>
 			</p>
@@ -181,10 +181,10 @@ declare(strict_types=1);
 		</label>
 		<div class="group-controls">
 			<select name="freshvibes_new_feed_position" id="freshvibes_new_feed_position">
-				<option value="bottom" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom') === 'bottom' ? 'selected' : '' ?>>
+				<option value="bottom" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY) === 'bottom' ? 'selected' : '' ?>>
 					<?= _t('ext.FreshVibesView.new_feed_position_bottom', 'Bottom (distributed across columns)') ?>
 				</option>
-				<option value="top" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom') === 'top' ? 'selected' : '' ?>>
+				<option value="top" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY) === 'top' ? 'selected' : '' ?>>
 					<?= _t('ext.FreshVibesView.new_feed_position_top', 'Top of first column') ?>
 				</option>
 			</select>

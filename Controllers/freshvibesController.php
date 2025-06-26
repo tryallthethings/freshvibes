@@ -27,8 +27,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->initializeDefaultSettings();
 
 		$factory = new FreshRSS_Factory();
-		$feedDAO = $factory->createFeedDAO();
-		$entryDAO = $factory->createEntryDAO();
+		$feedDAO = $factory->createFeedDao();
+		$entryDAO = $factory->createEntryDao();
 
 		try {
 			FreshRSS_Context::updateUsingRequest(true);
@@ -225,7 +225,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		}
 
 		$factory = new FreshRSS_Factory();
-		$feedDAO = $factory->createFeedDAO();
+		$feedDAO = $factory->createFeedDao();
 		$feeds = $feedDAO->listFeeds();
 		$mode = $this->getMode();
 
@@ -260,7 +260,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$layout = $userConf->hasParam($layoutKey) ? $userConf->attributeArray($layoutKey) : null;
 
 		// Get the new feed position setting
-		$newFeedPosition = $userConf->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY, 'bottom');
+		$newFeedPosition = $userConf->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY) ?? 'bottom';
 
 		if ($mode === 'categories') {
 			// Always reorder categories according to their position
@@ -388,7 +388,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		if ($layout === null) {
 			$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
 			$factory = new FreshRSS_Factory();
-			$feedDAO = $factory->createFeedDAO();
+			$feedDAO = $factory->createFeedDao();
 
 			$columns = $this->buildEmptyColumns($numCols);
 			$feeds = $feedDAO->listFeeds();
@@ -504,7 +504,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			} else {
 				$fontSize = FreshVibesViewExtension::DEFAULT_FONT_SIZE;
 			}
-			if (!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES)) {
+			if (!in_array($fontSize, FreshVibesViewExtension::ALLOWED_FONT_SIZES, true)) {
 				$fontSize = FreshVibesViewExtension::DEFAULT_FONT_SIZE;
 			}
 
@@ -531,7 +531,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			} else {
 				$displayMode = FreshVibesViewExtension::DEFAULT_DISPLAY_MODE;
 			}
-			if (!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES)) {
+			if (!in_array($displayMode, FreshVibesViewExtension::ALLOWED_DISPLAY_MODES, true)) {
 				$displayMode = FreshVibesViewExtension::DEFAULT_DISPLAY_MODE;
 			}
 
@@ -1019,7 +1019,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 						$filtered_column = [];
 						foreach ($column as $id) {
-							if ((string)$id !== (string)$feedId) {  // Cast both to string for comparison
+							if ($id !== $feedId) {
 								$filtered_column[] = $id;
 							}
 						}
@@ -1057,7 +1057,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 	}
 
 	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15, int $sentenceLimit = 1): string {
-		$content = $entry->content() ?? '';
+		$content = ($entry->content() ?? '');
 
 		// Decode HTML entities first
 		$content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -1163,7 +1163,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 		try {
 			$layout = $this->getLayout();
-			$entryDAO = FreshRSS_Factory::createEntryDAO();
+			$entryDAO = FreshRSS_Factory::createEntryDao();
 			$idMax = uTimeString();
 			$totalAffected = 0;
 
