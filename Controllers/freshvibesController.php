@@ -26,9 +26,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->noCacheHeaders();
 		$this->initializeDefaultSettings();
 
-		$factory = new FreshRSS_Factory();
-		$feedDAO = $factory->createFeedDao();
-		$entryDAO = $factory->createEntryDao();
+		$feedDAO = FreshRSS_Factory::createFeedDao();
+		$entryDAO = FreshRSS_Factory::createEntryDao();
 
 		try {
 			FreshRSS_Context::updateUsingRequest(true);
@@ -451,9 +450,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->validatePostRequest();
 		header('Content-Type: application/json');
 
-		$factory = new FreshRSS_Factory();
-		$feedDAO = $factory::createFeedDao();
-		$entryDAO = $factory::createEntryDao();
+		$feedDAO = FreshRSS_Factory::createFeedDao();
+		$entryDAO = FreshRSS_Factory::createEntryDao();
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $this->getMode();
 		$currentState = FreshRSS_Context::$state;
@@ -1119,20 +1117,15 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			exit;
 		}
 
-		try {
-			$entryDAO = FreshRSS_Factory::createEntryDao();
-			$idMax = uTimeString(); // Current timestamp
-			$affected = $entryDAO->markReadFeed($feedId, $idMax);
+		$entryDAO = FreshRSS_Factory::createEntryDao();
+		$idMax = uTimeString(); // Current timestamp
+		$affected = $entryDAO->markReadFeed($feedId, $idMax);
 
-			if ($affected !== false) {
-				echo json_encode(['status' => 'success', 'affected' => $affected]);
-			} else {
-				http_response_code(500);
-				echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_mark_feed_read')]);
-			}
-		} catch (Exception $e) {
+		if ($affected !== false) {
+			echo json_encode(['status' => 'success', 'affected' => $affected]);
+		} else {
 			http_response_code(500);
-			echo json_encode(['status' => 'error', 'message' => $e->getMessage()]);
+			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_mark_feed_read')]);
 		}
 		exit;
 	}
@@ -1490,7 +1483,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 	private function getMode(): string {
 		$userConf = FreshRSS_Context::userConf();
-		$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
+		$key = FreshVibesViewExtension::MODE_CONFIG_KEY;
+		$mode = $userConf->hasParam($key) ? $userConf->attributeString($key) : 'custom';
 		return $mode === 'categories' ? 'categories' : 'custom';
 	}
 
