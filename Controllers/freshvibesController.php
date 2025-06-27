@@ -385,7 +385,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 		if ($layout === null) {
 			$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
-			$feedDAO = FreshRSS_Factory::createFeedDAO();
+			$feedDAO = FreshRSS_Factory::createFeedDao();
 
 			$columns = $this->buildEmptyColumns($numCols);
 			$feeds = $feedDAO->listFeeds();
@@ -666,28 +666,24 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$layoutData = json_decode($_POST['layout'], true);
 		$tabId = Minz_Request::paramString('tab_id');
 		if (json_last_error() === JSON_ERROR_NONE && is_array($layoutData)) {
-			try {
-				// Sanitize incoming data to prevent corruption
-				foreach ($layoutData as $colId => &$feedIds) {
-					// If a column's data is not an array, force it to be an empty one.
-					if (!is_array($feedIds)) {
-						$feedIds = [];
-					}
+			// Sanitize incoming data to prevent corruption
+			foreach ($layoutData as $colId => &$feedIds) {
+				// If a column's data is not an array, force it to be an empty one.
+				if (!is_array($feedIds)) {
+					$feedIds = [];
 				}
-				unset($feedIds);
-
-				$layout = $this->getLayout();
-				foreach ($layout as $index => $tab) {
-					if ($tab['id'] === $tabId) {
-						$layout[$index]['columns'] = $layoutData;
-						break;
-					}
-				}
-				$this->saveLayout($layout);
-				echo json_encode(['status' => 'success']);
-			} catch (Exception $e) {
-				http_response_code(500);
 			}
+			unset($feedIds);
+
+			$layout = $this->getLayout();
+			foreach ($layout as $index => $tab) {
+				if ($tab['id'] === $tabId) {
+					$layout[$index]['columns'] = $layoutData;
+					break;
+				}
+			}
+			$this->saveLayout($layout);
+			echo json_encode(['status' => 'success']);
 		} else {
 			http_response_code(400);
 		}

@@ -448,7 +448,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			const displayModeSelect = editor.querySelector('.feed-display-mode-select');
 			if (displayModeSelect) {
 				['tiny', 'compact', 'detailed'].forEach(mode => {
-					const label = mode.charAt(0).toUpperCase() + mode.slice(1);
+					const label = tr[`display_mode_${mode}`] || (mode.charAt(0).toUpperCase() + mode.slice(1));
 					const opt = new Option(label, mode, mode === feed.currentDisplayMode, mode === feed.currentDisplayMode);
 					displayModeSelect.add(opt);
 				});

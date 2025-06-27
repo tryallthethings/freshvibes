@@ -758,15 +758,26 @@ input[type="color"] {
 .freshvibes-container.display-compact .entry-item,
 .freshvibes-container.display-detailed .entry-item {
 	display: block;
-	padding: 8px 0;
+	padding: 0px 0;
 }
 
 .freshvibes-container.display-compact .entry-wrapper,
 .freshvibes-container.display-detailed .entry-wrapper {
 	display: flex;
 	flex-direction: column;
-	gap: 4px;
+	gap: 0px;
 	width: 100%;
+}
+
+.freshvibes-container.display-compact .entry-item .entry-link,
+.freshvibes-container.display-detailed .entry-item .entry-link {
+	justify-content: flex-start;
+	gap: 0px;
+}
+
+.freshvibes-container.display-compact .entry-wrapper .entry-title,
+.freshvibes-container.display-detailed .entry-wrapper .entry-title {
+	padding-left: 0;
 }
 
 .freshvibes-container .entry-header {
@@ -774,6 +785,7 @@ input[type="color"] {
 	justify-content: space-between;
 	align-items: baseline;
 	gap: 10px;
+	line-height: 1;
 }
 
 .freshvibes-container .entry-header .entry-link {
