@@ -217,8 +217,17 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		];
 
 		foreach ($defaults as $key => $value) {
-			if (!$userConf->hasParam($key)) {
+			$storedValue = $userConf->param($key);
+
+			// Condition 1: Key is missing or its value is null. Set the default.
+			if (!$userConf->hasParam($key) || $storedValue === null) {
 				$userConf->_attribute($key, $value);
+				$configChanged = true;
+			}
+			// Condition 2: It's a boolean setting, but the stored type is wrong (e.g. int).
+			// Coerce the existing value to a boolean to migrate it.
+			elseif (is_bool($value) && !is_bool($storedValue)) {
+				$userConf->_attribute($key, (bool)$storedValue);
 				$configChanged = true;
 			}
 		}
@@ -237,7 +246,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			];
 
 			foreach ($feedDefaults as $key => $value) {
-				if (!$userConf->hasParam($key)) {
+				if (!$userConf->hasParam($key) || $userConf->param($key) === null) {
 					$userConf->_attribute($key, $value);
 					$configChanged = true;
 				}
