@@ -93,7 +93,6 @@ class FreshVibesViewExtension extends Minz_Extension {
 		}
 	}
 
-
 	public function uninstall() {
 		$userConf = FreshRSS_Context::userConf();
 
