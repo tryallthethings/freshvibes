@@ -1,0 +1,36 @@
+parameters:
+	phpVersion:
+		min: 80100	# PHP 8.1
+		max: 80499	# PHP 8.4
+	level: 5	# TODO: Increase to 10 https://phpstan.org/user-guide/rule-levels
+	fileExtensions:
+		- php
+		- phtml
+	paths:
+		- ../FreshRSS
+		- .
+	excludePaths:
+		analyse:
+			- ../FreshRSS
+		analyseAndScan:
+			- .git/*?
+			- node_modules/*?
+			- vendor/
+	checkBenevolentUnionTypes: true
+	checkMissingOverrideMethodAttribute: true
+	checkTooWideReturnTypesInProtectedAndPublicMethods: true
+	reportAnyTypeWideningInVarTag: true
+	treatPhpDocTypesAsCertain: false
+	strictRules:
+		disallowedEmpty: false
+		disallowedLooseComparison: false
+		disallowedShortTernary: false
+	exceptions:
+		check:
+			missingCheckedExceptionInThrows: false	# TODO: Pass
+			tooWideThrowType: true
+		implicitThrows: false
+		checkedExceptionClasses:
+			- 'Minz_Exception'
+includes:
+	- vendor/phpstan/phpstan-strict-rules/rules.neon
