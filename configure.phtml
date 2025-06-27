@@ -2,6 +2,53 @@
 
 declare(strict_types=1);
 /** @var FreshVibesViewExtension $this */
+
+$userConf = FreshRSS_Context::userConf();
+
+$modeValue = $userConf->hasParam(FreshVibesViewExtension::MODE_CONFIG_KEY)
+	? $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY)
+	: 'custom';
+
+$refreshEnabledValue = $userConf->hasParam(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY)
+	: false;
+
+$refreshIntervalValue = $userConf->hasParam(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY)
+	? $userConf->attributeInt(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY)
+	: 15;
+
+$dateFormatValue = $userConf->hasParam(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY)
+	? $userConf->attributeString(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY)
+	: 'Y-m-d H:i';
+
+$dateModeValue = $userConf->hasParam(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY)
+	? $userConf->attributeString(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY)
+	: 'absolute';
+
+$confirmTabDeleteValue = $userConf->hasParam(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY)
+	: true;
+
+$confirmMarkReadValue = $userConf->hasParam(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY)
+	: true;
+
+$hideSidebarValue = $userConf->hasParam(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY)
+	: false;
+
+$hideSubscriptionControlValue = $userConf->hasParam(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY)
+	: false;
+
+$entryClickModeValue = $userConf->hasParam(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY)
+	? $userConf->attributeString(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY)
+	: 'modal';
+
+$newFeedPositionValue = $userConf->hasParam(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY)
+	? $userConf->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY)
+	: 'bottom';
+
 ?>
 <form
 	action="<?= _url('extension', 'configure', 'e', urlencode($this->getName())) ?>"
@@ -14,8 +61,12 @@ declare(strict_types=1);
 		</label>
 		<div class="group-controls">
 			<select name="freshvibes_view_mode" id="freshvibes_view_mode">
-				<option value="custom" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) === 'custom' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.view_mode_custom') ?></option>
-				<option value="categories" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) === 'categories' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.view_mode_categories') ?></option>
+				<option value="custom" <?= $modeValue === 'custom' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.view_mode_custom') ?>
+				</option>
+				<option value="categories" <?= $modeValue === 'categories' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.view_mode_categories') ?>
+				</option>
 			</select>
 		</div>
 	</div>
@@ -29,7 +80,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_refresh_enabled"
 				id="freshvibes_refresh_enabled"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::REFRESH_ENABLED_CONFIG_KEY) ? 'checked="checked"' : '' ?> />
+				<?= $refreshEnabledValue ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_refresh_enabled_help') ?>
 			</p>
@@ -45,7 +96,7 @@ declare(strict_types=1);
 				type="number"
 				name="freshvibes_refresh_interval"
 				id="freshvibes_refresh_interval"
-				value="<?= FreshRSS_Context::userConf()->attributeInt(FreshVibesViewExtension::REFRESH_INTERVAL_CONFIG_KEY) ?? 15 ?>"
+				value="<?= $refreshIntervalValue ?>"
 				min="1" />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_refresh_interval_help') ?>
@@ -62,7 +113,7 @@ declare(strict_types=1);
 				type="text"
 				name="freshvibes_date_format"
 				id="freshvibes_date_format"
-				value="<?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY) ?? 'Y-m-d H:i' ?>" />
+				value="<?= $dateFormatValue ?>" />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_date_format_help') ?>
 			</p>
@@ -75,8 +126,13 @@ declare(strict_types=1);
 		</label>
 		<div class="group-controls">
 			<select name="freshvibes_date_mode" id="freshvibes_date_mode">
-				<option value="absolute" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY) === 'absolute' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.date_mode_absolute') ?></option>
-				<option value="relative" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY) === 'relative' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.date_mode_relative') ?></option>
+				<option value="absolute" <?= $dateModeValue === 'absolute' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.date_mode_absolute') ?>
+				</option>
+				<option value="relative" <?= $dateModeValue === 'relative' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.date_mode_relative') ?>
+				</option>
+
 			</select>
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_date_mode_help') ?>
@@ -93,7 +149,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_confirm_tab_delete"
 				id="freshvibes_confirm_tab_delete"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::CONFIRM_TAB_DELETE_CONFIG_KEY) ?? true ? 'checked="checked"' : '' ?> />
+				<?= $confirmTabDeleteValue ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_confirm_tab_delete_help') ?>
 			</p>
@@ -109,7 +165,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_confirm_mark_read"
 				id="freshvibes_confirm_mark_read"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::CONFIRM_MARK_READ_CONFIG_KEY) ?? true ? 'checked="checked"' : '' ?> />
+				<?= $confirmMarkReadValue ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_confirm_mark_read_help') ?>
 			</p>
@@ -125,7 +181,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_hide_sidebar"
 				id="freshvibes_hide_sidebar"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY) ?? false ? 'checked="checked"' : '' ?> />
+				<?= $hideSidebarValue ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_hide_sidebar_help') ?>
 			</p>
@@ -141,7 +197,7 @@ declare(strict_types=1);
 				type="checkbox"
 				name="freshvibes_hide_subscription_control"
 				id="freshvibes_hide_subscription_control"
-				<?= FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::HIDE_SUBSCRIPTION_CONTROL_CONFIG_KEY) ?? false ? 'checked="checked"' : '' ?> />
+				<?= $hideSubscriptionControlValue ? 'checked="checked"' : '' ?> />
 			<p class=" help">
 				<?= _t('ext.FreshVibesView.settings_hide_subscription_control_help') ?>
 			</p>
@@ -154,11 +210,34 @@ declare(strict_types=1);
 		</label>
 		<div class="group-controls">
 			<select name="freshvibes_entry_click_mode" id="freshvibes_entry_click_mode">
-				<option value="modal" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY) === 'modal' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_modal') ?></option>
-				<option value="external" <?= FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::ENTRY_CLICK_MODE_CONFIG_KEY) === 'external' ? 'selected' : '' ?>><?= _t('ext.FreshVibesView.entry_click_mode_external') ?></option>
+				<option value="modal" <?= $entryClickModeValue === 'modal' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.entry_click_mode_modal') ?>
+				</option>
+				<option value="external" <?= $entryClickModeValue === 'external' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.entry_click_mode_external') ?>
+				</option>
 			</select>
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_entry_click_mode_help') ?>
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_new_feed_position">
+			<?= _t('ext.FreshVibesView.new_feed_position', 'New feed position') ?>
+		</label>
+		<div class="group-controls">
+			<select name="freshvibes_new_feed_position" id="freshvibes_new_feed_position">
+				<option value="bottom" <?= $newFeedPositionValue === 'bottom' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.new_feed_position_bottom', 'Bottom (distributed across columns)') ?>
+				</option>
+				<option value="top" <?= $newFeedPositionValue === 'top' ? 'selected' : '' ?>>
+					<?= _t('ext.FreshVibesView.new_feed_position_top', 'Top of first column') ?>
+				</option>
+			</select>
+			<p class="help">
+				<?= _t('ext.FreshVibesView.new_feed_position_help', 'Choose where newly added feeds appear in tabs') ?>
 			</p>
 		</div>
 	</div>

@@ -50,4 +50,8 @@ final class View extends \Minz_View {
 	public string $setActiveTabUrl;
 	public string $tabActionUrl;
 	public string $viewMode;
+	public string $bookmarkUrl;
+	public string $refreshFeedsUrl;
+	public string $feedSettingsUrl;
+	public string $categorySettingsUrl;
 }
