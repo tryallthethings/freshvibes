@@ -701,9 +701,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 		$operation = Minz_Request::paramString('operation');
 		$layout = $this->getLayout();
-		$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
+		$mode = FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
 
-		try {
+    try {
 			switch ($operation) {
 				case 'add':
 					if ($mode === 'categories') {
@@ -890,7 +890,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			exit;
 		}
 		try {
-			$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
+			$mode = FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
 			$key = $mode === 'categories' ?
 				FreshVibesViewExtension::ACTIVE_TAB_CATEGORY_CONFIG_KEY :
 				FreshVibesViewExtension::ACTIVE_TAB_CONFIG_KEY;
