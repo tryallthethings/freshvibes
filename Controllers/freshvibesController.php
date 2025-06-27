@@ -223,8 +223,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			}
 		}
 
-		$factory = new FreshRSS_Factory();
-		$feedDAO = $factory->createFeedDao();
+		$feedDAO = FreshRSS_Factory::createFeedDao();
 		$feeds = $feedDAO->listFeeds();
 		$mode = $this->getMode();
 
@@ -386,8 +385,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 		if ($layout === null) {
 			$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
-			$factory = new FreshRSS_Factory();
-			$feedDAO = $factory->createFeedDao();
+			$feedDAO = FreshRSS_Factory::createFeedDAO();
 
 			$columns = $this->buildEmptyColumns($numCols);
 			$feeds = $feedDAO->listFeeds();
@@ -1055,7 +1053,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 	}
 
 	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15, int $sentenceLimit = 1): string {
-		$content = ($entry->content() ?? '');
+		$content = $entry->content();
 
 		// Decode HTML entities first
 		$content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
