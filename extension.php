@@ -93,7 +93,6 @@ class FreshVibesViewExtension extends Minz_Extension {
 		}
 	}
 
-
 	public function uninstall() {
 		$userConf = FreshRSS_Context::userConf();
 
@@ -172,27 +171,6 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::NEW_FEED_POSITION_CONFIG_KEY, Minz_Request::paramString('freshvibes_new_feed_position') ?: 'bottom');
 
 			$userConf->save();
-		}
-	}
-
-	public function uninstall() {
-		$userConf = FreshRSS_Context::userConf();
-
-		// Only change the view_mode if it's currently set to this extension's view
-		if ($userConf->hasParam('view_mode') && $userConf->view_mode === self::CONTROLLER_NAME_BASE) {
-			$userConf->_attribute('view_mode', 'normal');
-			$userConf->save();
-		}
-
-		// The uninstall method must return true on success.
-		return true;
-	}
-
-	public function autoload(string $class_name): void {
-		if (str_starts_with($class_name, 'tryallthethings\\FreshVibes\\')) {
-			$class_name = substr($class_name, strlen('tryallthethings\\FreshVibes\\'));
-			$base_path = $this->getPath() . '/';
-			include($base_path . str_replace('\\', '/', $class_name) . '.php');
 		}
 	}
 }
