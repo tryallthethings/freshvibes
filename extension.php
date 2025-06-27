@@ -77,8 +77,11 @@ class FreshVibesViewExtension extends Minz_Extension {
 		$this->registerHook('nav_reading_modes', [self::class, 'addReadingMode']);
 		$this->registerHook('view_modes', [self::class, 'addViewMode']);
 
+		// @phpstan-ignore-next-line
 		Minz_View::appendStyle($this->getFileUrl('style.css', 'css'));
+		// @phpstan-ignore-next-line
 		Minz_View::appendScript($this->getFileUrl('Sortable.min.js', 'js'), false, true, false);
+		// @phpstan-ignore-next-line
 		Minz_View::appendScript($this->getFileUrl('script.js', 'js'), false, true, false);
 	}
 

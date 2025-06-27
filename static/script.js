@@ -2,10 +2,16 @@ document.addEventListener('DOMContentLoaded', () => {
 	const freshvibesView = document.querySelector('.freshvibes-view');
 	if (freshvibesView) {
 		// Parse grouped data attributes
-		const urls = JSON.parse(freshvibesView.getAttribute('data-freshvibes-urls'));
-		const settings = JSON.parse(freshvibesView.getAttribute('data-freshvibes-settings'));
-		const csrfToken = freshvibesView.getAttribute('data-freshvibes-csrf-token');
-		initializeDashboard(freshvibesView, urls, settings, csrfToken);
+		try {
+			const urls = JSON.parse(freshvibesView.getAttribute('data-freshvibes-urls'));
+			const settings = JSON.parse(freshvibesView.getAttribute('data-freshvibes-settings'));
+			const csrfToken = freshvibesView.getAttribute('data-freshvibes-csrf-token');
+			initializeDashboard(freshvibesView, urls, settings, csrfToken);
+		} catch (error) {
+			console.error('Failed to parse dashboard data attributes:', error);
+			freshvibesView.innerHTML = '<p>Error loading dashboard. Please refresh the page.</p>';
+			return;
+		}
 	}
 });
 
