@@ -122,7 +122,6 @@
 
 .freshvibes-tab:hover {
 	filter: brightness(1.1);
-	transform: translateY(-1px);
 }
 
 .freshvibes-tab.active {
@@ -839,7 +838,6 @@ input[type="color"] {
 	display: flex;
 	gap: 4px;
 	opacity: 0;
-	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	z-index: 10;
 }
 
@@ -941,7 +939,6 @@ input[type="color"] {
 	color: var(--freshvibes-text-primary);
 	text-decoration: none;
 	transition: all 0.3s ease 0s;
-	transform: scale(1.01);
 }
 
 .entry-item.read {
