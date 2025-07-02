@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Fliken bakgrund',
 		'header_color' => 'Sidhuvud färg',
 		'confirm_mark_tab_read' => 'Markera alla poster i denna flik som lästa?',
-		'disable_extension_reset_viewmode' => 'Ditt standardvyläge tillhandahölls av tillägget du just inaktiverat. 
-			<unk> <unk> <unk> Det har återställts till "Normal" vyn.',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Bekräfta borttagning av flik',
 		'settings_confirm_tab_delete_help' => 'Visa bekräftelsedialog vid borttagning av flikar',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Döljer vänster sidofält när du använder Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Dölj prenumerationskontroller',
-		'settings_hide_subscription_control_help' => 'Döljer prenumerationen och lägger till flödesknappar i sidhuvudet. 
-			<unk> <unk> <unk> Detta fungerar bara när sidofältet är dolt.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Markera som läst',
 		'mark_unread' => 'Markera som oläst',
 		'mark_favorite' => 'Växla favorit',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ogiltiga inställningar',
 		'error_applying_settings' => 'Fel vid tillämpning av inställningar. Försök igen.',
 		'error_resetting_settings' => 'Fel vid återställning av inställningar. Försök igen.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
