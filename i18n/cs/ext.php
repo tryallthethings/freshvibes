@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Pozadí záložky',
 		'header_color' => 'Barva záhlaví',
 		'confirm_mark_tab_read' => 'Označit všechny položky v této záložce jako přečtené?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Váš výchozí režim zobrazení byl poskytnut rozšířením, které jste právě zakázali.
+			Byl obnoven do zobrazení "Normální".',
 		'settings_confirm_tab_delete_label' => 'Potvrdit odstranění záložek',
 		'settings_confirm_tab_delete_help' => 'Zobrazit potvrzovací dialog při mazání záložek',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Skryje levý postranní panel při použití Čerstvého zobrazení Vibes',
 		'settings_hide_subscription_control_label' => 'Skrýt ovládací prvky předplatného',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Skryje předplatné a přidejte tlačítka kanálu v záhlaví.
+			To funguje pouze pokud je postranní panel skryt.',
 		'mark_read' => 'Označit jako přečtené',
 		'mark_unread' => 'Označit jako nepřečtené',
 		'mark_favorite' => 'Přepnout oblíbené',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Neplatné nastavení',
 		'error_applying_settings' => 'Chyba při aplikování nastavení. Zkuste to prosím znovu.',
 		'error_resetting_settings' => 'Chyba při obnovování nastavení. Zkuste to prosím znovu.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Pro provedení změn musíte být přihlášeni.',
+		'login' => 'Přihlásit se',
+		'settings_animations_enabled_label' => 'Povolit animace',
+		'settings_animations_enabled_help' => 'Povolit plynulé přechody a přejetí po celém rozhraní',
+		'error_moving_feed' => 'Chyba při přesunu kanálu. Zkuste to prosím znovu.',
 	),
 );
