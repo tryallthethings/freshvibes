@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Fundal filă',
 		'header_color' => 'Culoare antet',
 		'confirm_mark_tab_read' => 'Marchează toate intrările din această filă ca fiind citite?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Modul dvs. de vizualizare implicit a fost furnizat de extensia pe care tocmai ați dezactivat-o.
+			<unk> Acesta a fost resetat la vizualizarea "Normal".',
 		'settings_confirm_tab_delete_label' => 'Confirmă ștergerea filei',
 		'settings_confirm_tab_delete_help' => 'Arată dialog de confirmare la ștergerea filelor',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Ascunde bara laterală stângă când se utilizează Vedere de Viburi Rechite',
 		'settings_hide_subscription_control_label' => 'Ascunde controalele abonamentului',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Ascunde abonamentul şi adaugă butoane feed în antet.
+			<unk> Acest lucru funcţionează doar atunci când sidebarul este ascuns.',
 		'mark_read' => 'Marchează ca citit',
 		'mark_unread' => 'Marchează ca necitit',
 		'mark_favorite' => 'Comută favoritul',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Setări incorecte',
 		'error_applying_settings' => 'Eroare la aplicarea setărilor. Vă rugăm să încercați din nou.',
 		'error_resetting_settings' => 'Eroare la resetarea setărilor. Vă rugăm să încercați din nou.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Trebuie să fii autentificat pentru a face modificări.',
+		'login' => 'Autentificare',
+		'settings_animations_enabled_label' => 'Activează animații',
+		'settings_animations_enabled_help' => 'Activează tranziții ușoare și efecte de plutire de-a lungul interfeței',
+		'error_moving_feed' => 'Eroare mutare flux. Vă rugăm să încercați din nou.',
 	),
 );
