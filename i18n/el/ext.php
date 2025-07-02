@@ -39,14 +39,14 @@ return array(
 		'tab_bg_color' => 'Φόντο καρτέλας',
 		'header_color' => 'Χρώμα κεφαλίδας',
 		'confirm_mark_tab_read' => 'Σημειώστε όλες τις καταχωρήσεις σε αυτήν την καρτέλα ως αναγνωσμένες?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled. 
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
 			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Επιβεβαίωση διαγραφής καρτέλας',
 		'settings_confirm_tab_delete_help' => 'Εμφάνιση διαλόγου επιβεβαίωσης κατά τη διαγραφή καρτελών',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Κρύβει την αριστερή πλαϊνή μπάρα όταν χρησιμοποιείτε Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Απόκρυψη στοιχείων ελέγχου συνδρομής',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header. 
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
 			This only works when the sidebar is hidden.',
 		'mark_read' => 'Σήμανση ως αναγνωσμένο',
 		'mark_unread' => 'Σήμανση ως μη αναγνωσμένο',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Μη έγκυρες ρυθμίσεις',
 		'error_applying_settings' => 'Σφάλμα εφαρμογής ρυθμίσεων. Παρακαλώ δοκιμάστε ξανά.',
 		'error_resetting_settings' => 'Σφάλμα κατά την επαναφορά ρυθμίσεων. Παρακαλώ προσπαθήστε ξανά.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
