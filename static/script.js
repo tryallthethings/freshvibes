@@ -1289,7 +1289,10 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 				api(urls.moveFeed, { feed_id: feedId, source_tab_id: sourceTabId, target_tab_id: targetTabId })
 					.then(data => {
-						if (data.status === 'error') return;
+						if (data.status === 'error') {
+							alert(tr.error_moving_feed || 'Error moving feed. Please try again.');
+							return;
+						}
 						if (data.status === 'success' && data.new_layout) {
 							// Update the entire layout with the server response
 							state.layout = assignUniqueSlugs(data.new_layout);
