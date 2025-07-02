@@ -39,14 +39,14 @@ return array(
 		'tab_bg_color' => 'خلفية التبويب',
 		'header_color' => 'لون الترويسة',
 		'confirm_mark_tab_read' => 'تحديد جميع المدخلات في علامة التبويب هذه كمقروءة؟',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled. 
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
 			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'تأكيد حذف التبويب',
 		'settings_confirm_tab_delete_help' => 'إظهار مربع حوار التأكيد عند حذف علامات التبويب',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'إخفاء الشريط الجانبي الأيسر عند استخدام عرض الشريط الطازج',
 		'settings_hide_subscription_control_label' => 'إخفاء عناصر تحكم الاشتراك',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header. 
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
 			This only works when the sidebar is hidden.',
 		'mark_read' => 'وضع علامة كمقروء',
 		'mark_unread' => 'وضع علامة كغير مقروء',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'إعدادات غير صالحة',
 		'error_applying_settings' => 'خطأ في تطبيق الإعدادات. الرجاء المحاولة مرة أخرى.',
 		'error_resetting_settings' => 'حدث خطأ أثناء إعادة تعيين الإعدادات. الرجاء المحاولة مرة أخرى.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
