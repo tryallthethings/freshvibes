@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Tab-Hintergrund',
 		'header_color' => 'Kopfzeilenfarbe',
 		'confirm_mark_tab_read' => 'Alle Einträge in diesem Tab als gelesen markieren?',
-		'disable_extension_reset_viewmode' => 'Ihre Standard-Ansicht wurde durch die Erweiterung, 
-			die Sie gerade deaktiviert haben, bereitgestellt. Sie wurde auf "Normale Ansicht" zurückgesetzt.',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Tab-Löschung bestätigen',
 		'settings_confirm_tab_delete_help' => 'Bestätigungsdialog beim Löschen von Tabs anzeigen',
 		'settings_hide_sidebar_label' => 'Seitenleiste ausblenden',
 		'settings_hide_sidebar_help' => 'Blendet die linke Seitenleiste bei Verwendung der FreshVibes Ansicht aus',
 		'settings_hide_subscription_control_label' => 'Abonnementverwaltung ausblenden',
-		'settings_hide_subscription_control_help' => 'Blendet die Abonnement- und Feed-hinzufügen-Schaltflächen in der Kopfzeile aus. 
-			Nur relevant, wenn die Seitenleiste ausgeblendet ist.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Als gelesen markieren',
 		'mark_unread' => 'Als ungelesen markieren',
 		'mark_favorite' => 'Als Favorit auswählen/entfernen',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ungültige Einstellungen',
 		'error_applying_settings' => 'Fehler beim Anwenden der Einstellungen. Bitte erneut versuchen.',
 		'error_resetting_settings' => 'Fehler beim Zurücksetzen der Einstellungen. Bitte erneut versuchen.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
