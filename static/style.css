@@ -71,6 +71,129 @@
 	--freshvibes-transition-duration: 0s;
 }
 
+/* Collapse or hide empty containers*/
+/* Collapse content only - shows header but hides the content area */
+.freshvibes-view[data-empty-feeds="collapse_content"] .freshvibes-container:has(.no-entries) .freshvibes-container-content {
+	display: none;
+}
+
+/* Hide completely - hides the entire feed container */
+.freshvibes-view[data-empty-feeds="hide_completely"] .freshvibes-container:has(.no-entries) {
+	display: none;
+}
+
+
+/* Vertical Layout Styles */
+.freshvibes-vertical-container {
+	padding: 0 12px;
+}
+
+.freshvibes-vertical-section {
+	margin-bottom: 30px;
+	border: 1px solid var(--freshvibes-border-color);
+	border-radius: var(--freshvibes-border-radius);
+	overflow: hidden;
+}
+
+.freshvibes-section-header {
+	padding: 12px 20px;
+	background-color: var(--section-bg-color, var(--freshvibes-background-secondary));
+	color: var(--section-font-color, var(--freshvibes-text-primary));
+	border-bottom: 2px solid var(--freshvibes-border-color);
+	display: flex;
+	align-items: center;
+	gap: 10px;
+	font-size: 1.2em;
+	font-weight: bold;
+	position: relative;
+	/* For dropdown positioning */
+}
+
+.section-unread-count.clickable {
+	cursor: pointer;
+	transition: all var(--freshvibes-transition-duration) ease;
+}
+
+.section-unread-count.clickable {
+	cursor: pointer;
+	transition: all var(--freshvibes-transition-duration) ease;
+}
+
+.section-unread-count.clickable:hover {
+	background-color: var(--freshvibes-accent-primary);
+	color: var(--freshvibes-text-light);
+	border-color: var(--freshvibes-accent-primary);
+}
+
+.section-settings {
+	margin-left: auto;
+	position: relative;
+}
+
+.section-settings-button {
+	background: none;
+	border: none;
+	cursor: pointer;
+	padding: 4px 8px;
+	color: var(--section-font-color, var(--freshvibes-text-secondary));
+	font-size: 0.9em;
+	line-height: 1;
+}
+
+.section-settings-button:hover {
+	color: var(--section-font-color, var(--freshvibes-text-primary));
+}
+
+.section-icon {
+	font-size: 1.3em;
+	line-height: 1;
+}
+
+.section-name {
+	flex: 1;
+}
+
+.section-unread-count {
+	background-color: var(--freshvibes-background-primary);
+	color: var(--freshvibes-text-primary);
+	padding: 4px 12px;
+	border-radius: calc(var(--freshvibes-border-radius) * 3);
+	font-size: 0.85em;
+	font-weight: normal;
+	border: 1px solid var(--freshvibes-border-color);
+}
+
+.freshvibes-section-content {
+	padding: 15px;
+	background-color: var(--freshvibes-background-primary);
+}
+
+/* Move subscription buttons styling for vertical mode */
+.freshvibes-vertical-section:first-child .moved-subscription-buttons {
+	margin-left: auto;
+	margin-right: 0;
+}
+
+/* Ensure proper spacing in vertical mode */
+.freshvibes-view[data-layout="vertical"] .freshvibes-header {
+	display: none;
+}
+
+/* Remove minimum height for columns in vertical layout */
+.freshvibes-view[data-layout="vertical"] .freshvibes-column {
+	min-height: 100px;
+	/* Minimum height for drag/drop target */
+	padding-bottom: 20px;
+	/* Extra space at bottom for dropping */
+}
+
+
+/* Ensure the columns container has appropriate height */
+.freshvibes-view[data-layout="vertical"] .freshvibes-section-content .freshvibes-columns {
+	min-height: 150px;
+	/* Ensure droppable area */
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
 	:root.darkMode_auto {
@@ -1005,7 +1128,8 @@ input[type="color"] {
 .no-entries {
 	color: var(--freshvibes-text-secondary);
 	text-align: center;
-	padding: 20px 0;
+	padding: 5px 0;
+	margin: 0.5rem 0 0.5rem;
 	font-style: italic;
 }
 

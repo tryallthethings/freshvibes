@@ -10,15 +10,13 @@ document.addEventListener('DOMContentLoaded', () => {
 		} catch (error) {
 			console.error('Failed to parse dashboard data attributes:', error);
 			freshvibesView.innerHTML = '<p>Error loading dashboard. Please refresh the page.</p>';
-			return;
 		}
 	}
 });
 
 function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
-
 	// --- STATE ---
-	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
+	const state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
 	// --- DOM & CONFIG ---
 	const isCategoryMode = settings.mode === 'categories';
@@ -52,15 +50,20 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 	// --- RENDER FUNCTIONS ---
 	function render() {
-		renderTabs();
-		renderPanels();
-		activateTab(state.activeTabId || state.layout[0]?.id, false);
+		const layoutMode = freshvibesView.getAttribute('data-layout') || 'tabs';
+
+		if (layoutMode === 'vertical') {
+			renderVerticalLayout();
+		} else {
+			renderTabs();
+			renderPanels();
+			activateTab(state.activeTabId || state.layout[0]?.id, false);
+		}
 	}
 
 	function renderTabs() {
 		// Store reference to subscription buttons before clearing
 		const subscriptionButtons = document.querySelector('.moved-subscription-buttons');
-		const parentElement = subscriptionButtons?.parentElement;
 
 		tabsContainer.innerHTML = '';
 		state.layout.forEach(tab => {
@@ -111,6 +114,174 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		if (subscriptionButtons) {
 			tabsContainer.appendChild(subscriptionButtons);
 		}
+	}
+
+	function renderVerticalLayout() {
+		// Clear existing content
+		tabsContainer.innerHTML = '';
+		panelsContainer.innerHTML = '';
+
+		// Hide the original containers
+		tabsContainer.style.display = 'none';
+		panelsContainer.style.display = 'none';
+
+		// Create or get vertical container
+		let verticalContainer = document.querySelector('.freshvibes-vertical-container');
+		if (!verticalContainer) {
+			verticalContainer = document.createElement('div');
+			verticalContainer.className = 'freshvibes-vertical-container';
+			panelsContainer.parentNode.insertBefore(verticalContainer, panelsContainer);
+		}
+
+		verticalContainer.innerHTML = '';
+
+		// Render each tab as a section
+		state.layout.forEach((tab, index) => {
+			// Create section container
+			const section = document.createElement('div');
+			section.className = 'freshvibes-vertical-section';
+			section.dataset.tabId = tab.id;
+
+			// Create section header
+			const header = document.createElement('div');
+			header.className = 'freshvibes-section-header';
+
+			// Apply custom colors if set
+			if (tab.bg_color) {
+				header.style.setProperty('--section-bg-color', tab.bg_color);
+				header.style.setProperty('--section-font-color', tab.font_color || getContrastColor(tab.bg_color));
+			}
+
+			// Add icon if present
+			if (tab.icon) {
+				const iconSpan = document.createElement('span');
+				iconSpan.className = 'section-icon';
+				iconSpan.textContent = tab.icon;
+				if (tab.icon_color) {
+					iconSpan.style.color = tab.icon_color;
+				}
+				header.appendChild(iconSpan);
+			}
+
+			// Add name
+			const nameSpan = document.createElement('span');
+			nameSpan.className = 'section-name';
+			nameSpan.textContent = tab.name;
+			header.appendChild(nameSpan);
+
+			// Calculate unread count
+			let tabUnreadCount = 0;
+			if (tab.columns) {
+				Object.values(tab.columns).forEach(feedIds => {
+					feedIds.forEach(feedId => {
+						const feed = state.feeds[feedId];
+						if (feed && feed.nbUnread) {
+							tabUnreadCount += feed.nbUnread;
+						}
+					});
+				});
+			}
+
+			// Add unread count badge (clickable for mark all as read)
+			if (tabUnreadCount > 0) {
+				const badge = document.createElement('span');
+				badge.className = 'section-unread-count clickable';
+				badge.textContent = tabUnreadCount;
+				badge.title = tr.confirm_mark_tab_read || 'Mark all entries in this section as read?';
+				badge.dataset.tabId = tab.id;
+				header.appendChild(badge);
+			}
+
+			// Add settings button (only for custom mode)
+			if (!isCategoryMode) {
+				const settingsWrapper = document.createElement('div');
+				settingsWrapper.className = 'section-settings';
+
+				const settingsButton = document.createElement('button');
+				settingsButton.type = 'button';
+				settingsButton.className = 'section-settings-button';
+				settingsButton.innerHTML = '&#x25BC;';
+				settingsButton.dataset.tabId = tab.id;
+
+				settingsWrapper.appendChild(settingsButton);
+				header.appendChild(settingsWrapper);
+			}
+
+			// Add subscription controls to first section only
+			if (index === 0) {
+				const subscriptionButtons = document.querySelector('.moved-subscription-buttons');
+				if (subscriptionButtons && subscriptionButtons.parentElement !== header) {
+					header.appendChild(subscriptionButtons);
+				}
+			}
+
+			section.appendChild(header);
+
+			// Create content area
+			const content = document.createElement('div');
+			content.className = 'freshvibes-section-content';
+
+			const columnsContainer = document.createElement('div');
+			columnsContainer.className = `freshvibes-columns columns-${tab.num_columns}`;
+			content.appendChild(columnsContainer);
+
+			section.appendChild(content);
+			verticalContainer.appendChild(section);
+
+			// Render the tab content
+			renderTabContentInContainer(tab, columnsContainer);
+		});
+
+		// Setup click handlers for section controls
+		setupVerticalLayoutHandlers();
+	}
+
+	function setupVerticalLayoutHandlers() {
+		// Handle mark all as read for sections
+		document.querySelectorAll('.section-unread-count.clickable').forEach(badge => {
+			badge.addEventListener('click', e => {
+				e.stopPropagation();
+				const tabId = badge.dataset.tabId;
+				const tabData = state.layout.find(t => t.id === tabId);
+				const shouldConfirm = settings.confirmMarkRead === '1';
+
+				if (tabData && parseInt(badge.textContent) > 0) {
+					const performMarkRead = () => {
+						api(urls.markTabRead, { tab_id: tabId }).then(data => {
+							if (data.status === 'success') {
+								badge.textContent = '0';
+								badge.style.display = 'none';
+								// Update feeds in this section
+								const section = badge.closest('.freshvibes-vertical-section');
+								section.querySelectorAll('.freshvibes-container').forEach(container => {
+									const unreadBadge = container.querySelector('.feed-unread-badge');
+									if (unreadBadge) unreadBadge.remove();
+									container.querySelectorAll('.entry-item:not(.read)').forEach(li => li.classList.add('read'));
+								});
+							}
+						}).catch(console.error);
+					};
+
+					if (shouldConfirm) {
+						if (confirm(tr.confirm_mark_tab_read || `Mark all entries in "${tabData.name}" as read?`)) {
+							performMarkRead();
+						}
+					} else {
+						performMarkRead();
+					}
+				}
+			});
+		});
+
+		// Handle settings button for sections (implement similar menu as tabs)
+		document.querySelectorAll('.section-settings-button').forEach(button => {
+			button.addEventListener('click', e => {
+				e.stopPropagation();
+				// You can implement a dropdown menu here similar to tab settings
+				// For now, just a placeholder
+				alert('Section settings not implemented yet');
+			});
+		});
 	}
 
 	function renderPanels() {
@@ -215,7 +386,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			}
 		}
 
-
 		return link;
 	}
 
@@ -223,6 +393,52 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		const panel = templates.tabPanel.content.cloneNode(true).firstElementChild;
 		panel.id = tab.id;
 		return panel;
+	}
+
+	function renderTabContentInContainer(tab, columnsContainer) {
+		const columns = Array.from({ length: tab.num_columns }, (_, i) => {
+			const colDiv = document.createElement('div');
+			colDiv.className = 'freshvibes-column';
+			colDiv.dataset.columnId = `col${i + 1}`;
+			columnsContainer.appendChild(colDiv);
+			return colDiv;
+		});
+
+		const renderedFeeds = new Set();
+
+		if (tab.columns && typeof tab.columns === 'object') {
+			Object.entries(tab.columns).forEach(([colId, feedIds]) => {
+				const colIndex = parseInt(colId.replace('col', ''), 10) - 1;
+				if (columns[colIndex] && Array.isArray(feedIds)) {
+					feedIds.forEach(feedId => {
+						const feedIdStr = String(feedId);
+						const feedData = state.feeds[feedIdStr] || state.feeds[feedId];
+
+						if (feedData && !renderedFeeds.has(feedIdStr)) {
+							columns[colIndex].appendChild(createFeedContainer(feedData, tab.id));
+							renderedFeeds.add(feedIdStr);
+						}
+					});
+				}
+			});
+		}
+
+		const isFirstTab = state.layout.length > 0 && state.layout[0].id === tab.id;
+		if (isFirstTab) {
+			Object.entries(state.feeds).forEach(([feedKey, feedData]) => {
+				const feedIdStr = String(feedData.id);
+				if (!state.allPlacedFeedIds.has(feedIdStr) && !renderedFeeds.has(feedIdStr)) {
+					if (columns[0]) {
+						columns[0].appendChild(createFeedContainer(feedData, tab.id));
+						renderedFeeds.add(feedIdStr);
+					}
+				}
+			});
+		}
+
+		setTimeout(() => {
+			initializeSortable(columns);
+		}, 100);
 	}
 
 	function setupAutoRefresh() {
@@ -316,7 +532,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				if (columns[colIndex] && Array.isArray(feedIds)) {
 					feedIds.forEach(feedId => {
 						const feedIdStr = String(feedId);
-						let feedData = state.feeds[feedIdStr] || state.feeds[feedId];
+						const feedData = state.feeds[feedIdStr] || state.feeds[feedId];
 
 						if (feedData && !renderedFeeds.has(feedIdStr)) {
 							columns[colIndex].appendChild(createFeedContainer(feedData, tab.id));
@@ -495,7 +711,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				input.value = feed.currentMaxHeight;
 				input.placeholder = feed.currentMaxHeight;
 
-
 				const picker = document.createElement('div');
 				picker.className = 'fv-height-picker';
 
@@ -542,7 +757,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}
 				}
 			}
-
 
 			// Add move-to options if there are other tabs
 			if (!isCategoryMode) {
@@ -1018,7 +1232,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	function assignUniqueSlugs(tabs) {
 		const seen = new Map();
 		tabs.forEach(tab => {
-			let base = slugify(tab.name) || 'tab';
+			const base = slugify(tab.name) || 'tab';
 			let slug = base;
 			let i = 1;
 			while (seen.has(slug)) {
@@ -1093,9 +1307,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 	// --- EVENT LISTENERS ---
 	function setupEventListeners() {
-
 		freshvibesView.addEventListener('click', e => {
-
 			if (e.target.closest('.tab-settings-menu')) {
 				// Handle column buttons
 				const columnsButton = e.target.closest('[data-columns]');
@@ -1176,7 +1388,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						tabEl.style.removeProperty('--tab-font-color');
 						tabEl.classList.remove('has-custom-color');
 
-
 						api(urls.tabAction, { operation: 'set_colors', tab_id: tabId, bg_color: '', font_color: '' })
 							.then(data => {
 								if (data.status === 'success') {
@@ -1247,7 +1458,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			if (columnsButton) {
 				const numCols = columnsButton.dataset.columns;
 				const tabId = columnsButton.closest('.freshvibes-tab').dataset.tabId;
-				const tabLink = tabsContainer.querySelector(`[data-tab-id="${tabId}"]`);
 
 				// Update active state immediately
 				columnsButton.parentElement.querySelectorAll('button').forEach(btn => {
@@ -1427,7 +1637,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							}
 						})
 						.catch(console.error);
-
 				} else if (colorInput.classList.contains('feed-header-color-input')) {
 					const container = resetBtn.closest('.freshvibes-container');
 					const feedId = container.dataset.feedId;
@@ -1457,7 +1666,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						}
 					}).catch(console.error);
 				}
-				return;
 			}
 		});
 
@@ -1610,8 +1818,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							updateTabBadge(feedId);
 						}
 					}).catch(console.error);
-
-				return; // Stop further execution in the main click handler
 			}
 		});
 
@@ -1913,7 +2119,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				// Only handle header color if it's the color input that changed
 				if (e.target.classList.contains('feed-header-color-input')) {
 					const headerColor = e.target.value;
-					const header = container.querySelector('.freshvibes-container-header');
 
 					api(urls.saveFeedSettings, {
 						feed_id: feedId,
@@ -1944,7 +2149,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							const oldDisplayMode = feed.currentDisplayMode;
 
 							// Update state
-							feed.currentLimit = isNaN(parseInt(feedSettingsEditor.querySelector('.feed-limit-select').value, 10)) ? feedSettingsEditor.querySelector('.feed-limit-select').value : parseInt(feedSettingsEditor.querySelector('.feed-limit-select').value, 10);
+							feed.currentLimit = isNaN(parseInt(feedSettingsEditor.querySelector('.feed-limit-select').value, 10)) ?
+								feedSettingsEditor.querySelector('.feed-limit-select').value :
+								parseInt(feedSettingsEditor.querySelector('.feed-limit-select').value, 10);
 							feed.currentFontSize = fontSize;
 							feed.currentMaxHeight = maxHeight;
 							feed.currentDisplayMode = displayMode;
@@ -2146,7 +2353,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				});
 			});
 		}
-
 	}
 
 	// --- INITIALIZATION ---

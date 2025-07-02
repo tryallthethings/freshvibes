@@ -61,6 +61,8 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 	data-freshvibes-urls='<?= $urlsJson ?>'
 	data-freshvibes-settings='<?= $settingsJson ?>'
 	data-animations="<?= $this->animationsEnabled ? 'enabled' : 'disabled' ?>"
+	data-empty-feeds="<?= $this->emptyFeedsDisplay ?>"
+	data-layout="<?= $this->dashboardLayout ?>"
 	data-freshvibes-is-logged-in="<?= FreshRSS_Auth::hasAccess() ? '1' : '0' ?>"
 	data-freshvibes-csrf-token="<?= htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 

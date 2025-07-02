@@ -170,6 +170,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		$this->view->animationsEnabled = $userConf->attributeBool(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY);
+		$this->view->emptyFeedsDisplay = $userConf->attributeString(FreshVibesViewExtension::EMPTY_FEEDS_DISPLAY_CONFIG_KEY) ?: 'show';
 
 		$this->view->viewMode = $mode;
 		$this->view->rss_title = _t('ext.FreshVibesView.title');
@@ -184,6 +185,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->refreshFeedsUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'refreshfeeds'], 'json', false);
 		$this->view->feedSettingsUrl = Minz_Url::display() . '?c=subscription&a=feed&id=';
 		$this->view->categorySettingsUrl = Minz_Url::display() . '?c=category&a=update&id=';
+		$this->view->dashboardLayout = $userConf->attributeString(FreshVibesViewExtension::DASHBOARD_LAYOUT_CONFIG_KEY) ?: 'tabs';
 
 		$tags = FreshRSS_Context::labels(true);
 		$this->view->tags = $tags;
@@ -214,7 +216,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			FreshVibesViewExtension::LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::CATEGORY_LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::MODE_CONFIG_KEY => 'custom',
+			FreshVibesViewExtension::DASHBOARD_LAYOUT_CONFIG_KEY => 'tabs',
 			FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY => true,
+			FreshVibesViewExtension::EMPTY_FEEDS_DISPLAY_CONFIG_KEY => 'show',
 		];
 
 		foreach ($defaults as $key => $value) {

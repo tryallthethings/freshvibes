@@ -55,4 +55,6 @@ final class View extends \Minz_View {
 	public string $feedSettingsUrl;
 	public string $categorySettingsUrl;
 	public bool $animationsEnabled;
+	public string $emptyFeedsDisplay;
+	public string $dashboardLayout;
 }
