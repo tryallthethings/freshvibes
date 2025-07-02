@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Fondo de la pestaña',
 		'header_color' => 'Color de cabecera',
 		'confirm_mark_tab_read' => '¿Marcar todas las entradas de esta pestaña como leídas?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Su modo de vista predeterminado fue proporcionado por la extensión que acaba de desactivar.
+			Se ha restablecido a la vista "Normal".',
 		'settings_confirm_tab_delete_label' => 'Confirmar eliminación de pestaña',
 		'settings_confirm_tab_delete_help' => 'Mostrar diálogo de confirmación al eliminar pestañas',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Oculta la barra lateral izquierda al usar la vista de Vibes Fresh',
 		'settings_hide_subscription_control_label' => 'Ocultar controles de suscripción',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Oculta la suscripción y añade botones de feed en el encabezado.
+			Esto solo funciona cuando la barra lateral está oculta.',
 		'mark_read' => 'Marcar como leído',
 		'mark_unread' => 'Marcar como no leído',
 		'mark_favorite' => 'Cambiar favorito',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ajustes no válidos',
 		'error_applying_settings' => 'Error al aplicar la configuración. Por favor, inténtelo de nuevo.',
 		'error_resetting_settings' => 'Error al restablecer la configuración. Por favor, inténtelo de nuevo.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Necesitas estar conectado para hacer cambios.',
+		'login' => 'Ingresar',
+		'settings_animations_enabled_label' => 'Activar animaciones',
+		'settings_animations_enabled_help' => 'Habilita transiciones suaves y efectos de paso a través de la interfaz',
+		'error_moving_feed' => 'Error al mover el feed. Por favor, inténtelo de nuevo.',
 	),
 );
