@@ -48,7 +48,7 @@ $settingsArray = [
 	"order" => $this->currentOrder ?? 'DESC',
 	"dateMode" => $this->dateMode ?? 'absolute',
 	"confirmMarkRead" => $this->confirmMarkRead ? '1' : '0',
-	"refreshEnabled" => $this->refreshEnabled ? '1' : '0'
+	"refreshEnabled" => $this->refreshEnabled ? '1' : '0',
 ];
 
 // JSON encode then htmlspecialchars the entire JSON string
@@ -60,6 +60,8 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 	role="main"
 	data-freshvibes-urls='<?= $urlsJson ?>'
 	data-freshvibes-settings='<?= $settingsJson ?>'
+	data-animations="<?= $this->animationsEnabled ? 'enabled' : 'disabled' ?>"
+	data-freshvibes-is-logged-in="<?= FreshRSS_Auth::hasAccess() ? '1' : '0' ?>"
 	data-freshvibes-csrf-token="<?= htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 	<header class="freshvibes-header">
@@ -257,6 +259,8 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 		'error_applying_settings' => _t('ext.FreshVibesView.error_applying_settings', 'Error applying settings. Please try again.'),
 		'error_resetting_settings' => _t('ext.FreshVibesView.error_resetting_settings', 'Error resetting settings. Please try again.'),
 		'icon_starred' => _i('starred'),
+		'login_required' => _t('ext.FreshVibesView.login_required', 'You need to be logged in to make changes'),
+		'login' => _t('ext.FreshVibesView.login', 'Login'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
 </script>
 
@@ -370,7 +374,6 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 							$svg,
 							1
 						);
-
 						echo $svg;
 					} else {
 						echo '⚙️';

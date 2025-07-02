@@ -48,6 +48,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const NEW_FEED_POSITION_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_new_feed_position';
 	public const NEW_FEED_POSITIONS = ['bottom', 'top'];
 	public const DEFAULT_NEW_FEED_POSITION = 'bottom';
+	public const ANIMATIONS_ENABLED_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_animations_enabled';
 
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
@@ -77,12 +78,9 @@ class FreshVibesViewExtension extends Minz_Extension {
 		$this->registerHook('nav_reading_modes', [self::class, 'addReadingMode']);
 		$this->registerHook('view_modes', [self::class, 'addViewMode']);
 
-		// @phpstan-ignore-next-line
-		Minz_View::appendStyle($this->getFileUrl('style.css', 'css'));
-		// @phpstan-ignore-next-line
-		Minz_View::appendScript($this->getFileUrl('Sortable.min.js', 'js'), false, true, false);
-		// @phpstan-ignore-next-line
-		Minz_View::appendScript($this->getFileUrl('script.js', 'js'), false, true, false);
+		Minz_View::appendStyle($this->getFileUrl('style.css'));
+		Minz_View::appendScript($this->getFileUrl('Sortable.min.js'), false, true, false);
+		Minz_View::appendScript($this->getFileUrl('script.js'), false, true, false);
 	}
 
 	public function autoload(string $class_name): void {
@@ -169,6 +167,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::DATE_MODE_CONFIG_KEY, Minz_Request::paramString('freshvibes_date_mode') ?: 'absolute');
 			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read'));
 			$userConf->_attribute(self::NEW_FEED_POSITION_CONFIG_KEY, Minz_Request::paramString('freshvibes_new_feed_position') ?: 'bottom');
+			$userConf->_attribute(self::ANIMATIONS_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_animations_enabled'));
 
 			$userConf->save();
 		}

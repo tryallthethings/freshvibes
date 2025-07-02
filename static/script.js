@@ -16,6 +16,7 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
+
 	// --- STATE ---
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 
@@ -239,16 +240,24 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active') ||
 				(document.activeElement && ['INPUT', 'TEXTAREA', 'BUTTON', 'A'].includes(document.activeElement.tagName));
 
-			// If the user is busy, we will skip this refresh and try again after the next interval.
 			if (isInteracting) {
 				setTimeout(refreshLoop, refreshMs);
 				return;
 			}
 
-			// If not interacting, perform the API call.
-			api(urls.refreshFeeds, {})
-				.then(newFeedsData => {
-					if (newFeedsData) {
+			// Instead of calling refreshfeeds, reload the page via AJAX
+			fetch(window.location.href, {
+				headers: { 'X-Requested-With': 'XMLHttpRequest' }
+			})
+				.then(res => res.text())
+				.then(html => {
+					// Extract feeds data from the response
+					const parser = new DOMParser();
+					const doc = parser.parseFromString(html, 'text/html');
+					const feedsScript = doc.getElementById('feeds-data-script');
+
+					if (feedsScript) {
+						const newFeedsData = JSON.parse(feedsScript.textContent);
 						state.feeds = newFeedsData;
 						renderTabs();
 						const activeTab = state.layout.find(t => t.id === state.activeTabId);
@@ -258,7 +267,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}
 				})
 				.catch(error => {
-					console.error('Error during AJAX refresh:', error);
+					console.log('Refresh error:', error.message);
 				})
 				.finally(() => {
 					const nextTime = new Date(Date.now() + refreshMs);
@@ -798,9 +807,50 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
 			body: new URLSearchParams({ ...body, '_csrf': csrfToken }),
 		}).then(res => {
-			if (!res.ok) throw new Error(`Network response was not ok (${res.status})`);
+			if (res.status === 403) {
+				showAuthNotification();
+				return { status: 'error', requiresAuth: true };
+			}
+
+			const contentType = res.headers.get('content-type');
+			if (!contentType || !contentType.includes('application/json')) {
+				showAuthNotification();
+				return { status: 'error', requiresAuth: true };
+			}
+
 			return res.json();
+		}, error => {
+			// Network error or CORS issue
+			console.error('Fetch error:', error);
+			showAuthNotification();
+			return { status: 'error', requiresAuth: true };
 		});
+	}
+
+	function showAuthNotification() {
+		if (document.querySelector('.freshvibes-auth-notice')) return;
+
+		const notificationArea = document.querySelector('#notification');
+		if (!notificationArea) return;
+
+		// Remove 'closed' class and make visible
+		notificationArea.classList.remove('closed');
+		notificationArea.style.display = 'block';
+
+		// Find the message span
+		const msgSpan = notificationArea.querySelector('.msg');
+		if (!msgSpan) return;
+
+		// Add our message to the span
+		msgSpan.className = 'msg bad freshvibes-auth-notice';
+		msgSpan.innerHTML = `${tr.login_required || 'You need to be logged in to make changes.'} <a href="?c=auth&a=login">${tr.login || 'Login'}</a>`;
+
+		// Auto-hide after 5 seconds
+		setTimeout(() => {
+			notificationArea.classList.add('closed');
+			msgSpan.innerHTML = '';
+			msgSpan.className = 'msg';
+		}, 5000);
 	}
 
 	function activateTab(tabId, persist = true) {
@@ -1239,6 +1289,10 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 				api(urls.moveFeed, { feed_id: feedId, source_tab_id: sourceTabId, target_tab_id: targetTabId })
 					.then(data => {
+						if (data.status === 'error') {
+							alert(tr.error_moving_feed || 'Error moving feed. Please try again.');
+							return;
+						}
 						if (data.status === 'success' && data.new_layout) {
 							// Update the entire layout with the server response
 							state.layout = assignUniqueSlugs(data.new_layout);

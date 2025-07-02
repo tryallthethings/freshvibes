@@ -54,4 +54,5 @@ final class View extends \Minz_View {
 	public string $refreshFeedsUrl;
 	public string $feedSettingsUrl;
 	public string $categorySettingsUrl;
+	public bool $animationsEnabled;
 }
