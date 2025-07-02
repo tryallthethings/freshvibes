@@ -454,7 +454,6 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 
 	public function refreshfeedsAction() {
-		$this->validatePostRequest();
 		header('Content-Type: application/json');
 
 		$feedDAO = FreshRSS_Factory::createFeedDao();
@@ -629,8 +628,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					FreshVibesViewExtension::TAB_FONT_COLOR_CONFIG_PREFIX) .
 					$tab['id'];
 
-				$tab['bg_color'] = $userConf->attributeString($bgColorKey) ?? '';
-				$tab['font_color'] = $userConf->attributeString($fontColorKey) ?? '';
+				$tab['bg_color'] = $userConf->hasParam($bgColorKey) ? $userConf->attributeString($bgColorKey) : '';
+				$tab['font_color'] = $userConf->hasParam($fontColorKey) ? $userConf->attributeString($fontColorKey) : '';
 
 				// Calculate unread count for tab
 				$tabUnreadCount = 0;
