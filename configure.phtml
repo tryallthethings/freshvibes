@@ -49,9 +49,9 @@ $newFeedPositionValue = $userConf->hasParam(FreshVibesViewExtension::NEW_FEED_PO
 	? $userConf->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY)
 	: 'bottom';
 
-$animationsenabled = $userConf->hasParam(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY)
+$animationsEnabledValue = $userConf->hasParam(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY)
 	? $userConf->attributeBool(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY)
-	: false;
+	: true;
 
 ?>
 <form
@@ -254,7 +254,7 @@ $animationsenabled = $userConf->hasParam(FreshVibesViewExtension::ANIMATIONS_ENA
 				type="checkbox"
 				name="freshvibes_animations_enabled"
 				id="freshvibes_animations_enabled"
-				<?= $animationsenabled ? 'checked="checked"' : '' ?> />
+				<?= $animationsEnabledValue ? 'checked="checked"' : '' ?> />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_animations_enabled_help') ?>
 			</p>
