@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Tab bakgrunn',
 		'header_color' => 'Topptekst farge',
 		'confirm_mark_tab_read' => 'Merk alle oppføringer i denne fanen som lest?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Din standard visningsmodus ble gitt av utvidelsen du nettopp har skrudd av.
+			ARS It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Bekreft sletting av fane',
 		'settings_confirm_tab_delete_help' => 'Vis bekreftelsesdialog når du sletter faner',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Skjuler den venstre sidepanelet når du bruker Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Skjul abonnements kontroller',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Skjuler abonnementet og legg til matingsknapper i overskriften.
+			Dette fungerer bare når sidepanelet er skjult.',
 		'mark_read' => 'Merk som lest',
 		'mark_unread' => 'Merk som ulest',
 		'mark_favorite' => 'Favoritt av/på',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ugyldige innstillinger',
 		'error_applying_settings' => 'Feil ved påføring av innstillinger. Prøv på nytt.',
 		'error_resetting_settings' => 'Feil ved tilbakestilling av innstillinger. Vennligst prøv igjen.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Du må være logget inn for å gjøre endringer.',
+		'login' => 'Innlogging',
+		'settings_animations_enabled_label' => 'Aktiver animasjoner',
+		'settings_animations_enabled_help' => 'Aktiver glatte overganger og hover-effekter i grensesnittet',
+		'error_moving_feed' => 'Feil under flytting av feed. Prøv på nytt.',
 	),
 );

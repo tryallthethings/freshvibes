@@ -46,8 +46,8 @@ return array(
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Ukrywa lewy pasek boczny podczas używania Widoku Świeży Vibes',
 		'settings_hide_subscription_control_label' => 'Ukryj ustawienia subskrypcji',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Ukrywa subskrypcję i dodaj przyciski kanałów w nagłówku.
+			Działa tylko wtedy, gdy pasek boczny jest ukryty.',
 		'mark_read' => 'Oznacz jako przeczytane',
 		'mark_unread' => 'Oznacz jako nieprzeczytane',
 		'mark_favorite' => 'Przełącz ulubione',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Nieprawidłowe ustawienia',
 		'error_applying_settings' => 'Wystąpił błąd podczas stosowania ustawień. Spróbuj ponownie.',
 		'error_resetting_settings' => 'Błąd podczas resetowania ustawień. Spróbuj ponownie.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Musisz być zalogowany, aby wprowadzić zmiany.',
+		'login' => 'Logowanie',
+		'settings_animations_enabled_label' => 'Włącz animacje',
+		'settings_animations_enabled_help' => 'Włącz płynne przejścia i efekty najechania przez cały interfejs',
+		'error_moving_feed' => 'Błąd podczas przenoszenia kanału. Spróbuj ponownie.',
 	),
 );
