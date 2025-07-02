@@ -126,7 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ungültige Einstellungen',
 		'error_applying_settings' => 'Fehler beim Anwenden der Einstellungen. Bitte erneut versuchen.',
 		'error_resetting_settings' => 'Fehler beim Zurücksetzen der Einstellungen. Bitte erneut versuchen.',
-		'login_required' => 'Sie müssen angemeldet sein, um Änderungen vorzunehmen.',
-		'login' => 'Anmelden',
+		'login_required' => 'Sie müssen eingeloggt sein, um Änderungen vorzunehmen.',
+		'login' => 'Einloggen',
+		'settings_animations_enabled_label' => 'Animationen aktivieren',
+		'settings_animations_enabled_help' => 'Eingangsanimationen und Hover-Effekte in der gesamten Oberfläche aktivieren',
+		'error_moving_feed' => 'Fehler beim Verschieben des Feeds. Bitte versuchen Sie es erneut.',
 	),
 );

@@ -39,13 +39,15 @@ return array(
 		'tab_bg_color' => 'Couleur de l’onglet',
 		'header_color' => 'Couleur de l’en-tête',
 		'confirm_mark_tab_read' => 'Marquer tous les articles de cet onglet comme lus ?',
-		'disable_extension_reset_viewmode' => 'Votre vue par défaut était gérée par l’extension que vous venez de désactiver. La vue normale a été réactivée à sa place.',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Confirmer la suppression d’un onglet',
 		'settings_confirm_tab_delete_help' => 'Demander une confirmation lors de la suppression d’onglets',
 		'settings_hide_sidebar_label' => 'Masquer la barre latérale',
 		'settings_hide_sidebar_help' => 'Ne pas afficher la barre latérale en vue Fresh Vibes',
 		'settings_hide_subscription_control_label' => 'Masquer la gestion des abonnements',
-		'settings_hide_subscription_control_help' => 'Ne pas afficher les boutons de gestion et d’ajout de flux dans l’en-tête lorsque la barre latérale est masquée.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Marquer comme lu',
 		'mark_unread' => 'Marquer comme non-lu',
 		'mark_favorite' => 'Marquer ou non comme favori',
@@ -124,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Paramètres invalides',
 		'error_applying_settings' => 'Impossible d’enregistrer les paramètres. Merci d’essayer à nouveau.',
 		'error_resetting_settings' => 'Impossible de réinitialiser les paramètres. Merci d’essayer à nouveau.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );

@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Tło karty',
 		'header_color' => 'Kolor nagłówka',
 		'confirm_mark_tab_read' => 'Oznaczyć wszystkie wpisy w tej karcie jako przeczytane?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled. 
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
 			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Potwierdź usunięcie karty',
 		'settings_confirm_tab_delete_help' => 'Pokaż okno dialogowe potwierdzenia podczas usuwania kart',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Ukrywa lewy pasek boczny podczas używania Widoku Świeży Vibes',
 		'settings_hide_subscription_control_label' => 'Ukryj ustawienia subskrypcji',
-		'settings_hide_subscription_control_help' => 'Ukrywa subskrypcję i dodaj przyciski kanałów w nagłówku. 
-			Działa tylko wtedy, gdy pasek boczny jest ukryty.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Oznacz jako przeczytane',
 		'mark_unread' => 'Oznacz jako nieprzeczytane',
 		'mark_favorite' => 'Przełącz ulubione',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Nieprawidłowe ustawienia',
 		'error_applying_settings' => 'Wystąpił błąd podczas stosowania ustawień. Spróbuj ponownie.',
 		'error_resetting_settings' => 'Błąd podczas resetowania ustawień. Spróbuj ponownie.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );

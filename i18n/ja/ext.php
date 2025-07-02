@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'タブの背景',
 		'header_color' => 'ヘッダーの色',
 		'confirm_mark_tab_read' => 'このタブのすべての項目を既読にしますか？',
-		'disable_extension_reset_viewmode' => '既定のビューモードは、あなたが無効になった拡張機能によって提供されました。 
-			「ノーマル」ビューにリセットされました。',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'タブの削除を確認',
 		'settings_confirm_tab_delete_help' => 'タブを削除するときに確認ダイアログを表示する',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Fresh Vibes View を使用している場合、左サイドバーを非表示にします。',
 		'settings_hide_subscription_control_label' => 'サブスクリプションのコントロールを隠す',
-		'settings_hide_subscription_control_help' => 'サブスクリプションを非表示にし、ヘッダーにフィードボタンを追加します。 
-			これはサイドバーが非表示の場合にのみ機能します。',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => '既読にする',
 		'mark_unread' => '未読にする',
 		'mark_favorite' => 'お気に入りの切り替え',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => '無効な設定',
 		'error_applying_settings' => '設定の適用中にエラーが発生しました。もう一度やり直してください。',
 		'error_resetting_settings' => '設定のリセット中にエラーが発生しました。もう一度やり直してください。',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
