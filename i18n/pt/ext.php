@@ -39,8 +39,8 @@ return array(
 		'tab_bg_color' => 'Fundo da aba',
 		'header_color' => 'Cor do cabeçalho',
 		'confirm_mark_tab_read' => 'Marcar todas as entradas nesta guia como lidas?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Seu modo de visualização padrão foi fornecido pela extensão que você acabou de desabilitar. U
+			├Ele foi redefinido para a exibição "Normal".',
 		'settings_confirm_tab_delete_label' => 'Confirmar exclusão de aba',
 		'settings_confirm_tab_delete_help' => 'Mostrar diálogo de confirmação quando excluir abas',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Configurações inválidas',
 		'error_applying_settings' => 'Erro ao aplicar as configurações. Tente novamente.',
 		'error_resetting_settings' => 'Erro ao redefinir as configurações. Por favor, tente novamente.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Você precisa estar logado para fazer alterações.',
+		'login' => 'Conectar-se',
+		'settings_animations_enabled_label' => 'Habilitar animações',
+		'settings_animations_enabled_help' => 'Habilitar transições suaves e efeitos de pairar em toda a interface',
+		'error_moving_feed' => 'Erro ao mover o feed. Tente novamente.',
 	),
 );
