@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Fane baggrund',
 		'header_color' => 'Header farve',
 		'confirm_mark_tab_read' => 'Markér alle indgange i dette faneblad som læst?',
-		'disable_extension_reset_viewmode' => 'Din standardvisningstilstand blev leveret af den udvidelse, du lige har deaktiveret. 
-			● Det er blevet nulstillet til "Normal" visningen.',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Bekræft sletning af fane',
 		'settings_confirm_tab_delete_help' => 'Vis bekræftelsesdialog ved sletning af faneblade',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Skjuler venstre sidebjælke når du bruger Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Skjul abonnementskontroller',
-		'settings_hide_subscription_control_help' => 'Skjuler abonnementet og tilføj feed-knapper i overskriften. 
-			● Dette virker kun, når sidebjælken er skjult.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Markér som læst',
 		'mark_unread' => 'Markér som ulæst',
 		'mark_favorite' => 'Skift favorit',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ugyldige indstillinger',
 		'error_applying_settings' => 'Fejl under anvendelse af indstillinger. Prøv venligst igen.',
 		'error_resetting_settings' => 'Fejl under nulstilling af indstillinger. Prøv venligst igen.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
