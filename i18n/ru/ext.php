@@ -39,14 +39,14 @@ return array(
 		'tab_bg_color' => 'Фон вкладки',
 		'header_color' => 'Цвет заголовка',
 		'confirm_mark_tab_read' => 'Пометить все записи в этой вкладке как прочитанные?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled. 
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
 			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Подтвердите удаление вкладки',
 		'settings_confirm_tab_delete_help' => 'Показывать окно подтверждения при удалении вкладок',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Скрывает левую боковую панель при использовании Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Скрыть управление подпиской',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header. 
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
 			This only works when the sidebar is hidden.',
 		'mark_read' => 'Отметить как прочитанное',
 		'mark_unread' => 'Пометить как непрочитанное',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Неверные настройки',
 		'error_applying_settings' => 'Ошибка применения настроек. Пожалуйста, попробуйте еще раз.',
 		'error_resetting_settings' => 'Ошибка сброса настроек. Пожалуйста, попробуйте еще раз.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
