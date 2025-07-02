@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Sfondo scheda',
 		'header_color' => 'Colore intestazione',
 		'confirm_mark_tab_read' => 'Contrassegnare tutte le voci in questa scheda come lette?',
-		'disable_extension_reset_viewmode' => 'La tua modalità di visualizzazione predefinita è stata fornita dall\'estensione che hai appena disabilitato. 
-			<unk> <unk> <unk> <unk> È stata ripristinata alla vista "Normale".',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Conferma eliminazione tabulazioni',
 		'settings_confirm_tab_delete_help' => 'Mostra la finestra di conferma quando si eliminano le schede',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Nasconde la barra laterale sinistra quando si usa la vista Fresh Vibes',
 		'settings_hide_subscription_control_label' => 'Nascondi controlli abbonamento',
-		'settings_hide_subscription_control_help' => 'Nasconde la sottoscrizione e aggiungi i pulsanti di alimentazione nell\'intestazione. 
-			<unk> <unk> <unk> Questo funziona solo quando la barra laterale è nascosta.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Segna come letto',
 		'mark_unread' => 'Segna come non letto',
 		'mark_favorite' => 'Attiva/disattiva preferito',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Impostazioni non valide',
 		'error_applying_settings' => 'Errore nell\'applicazione delle impostazioni. Per favore riprova.',
 		'error_resetting_settings' => 'Errore nel resettare le impostazioni. Riprova.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
