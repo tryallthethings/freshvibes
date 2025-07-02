@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Тло вкладки',
 		'header_color' => 'Колір заголовка',
 		'confirm_mark_tab_read' => 'Позначити всі записи у цій вкладці як прочитані?',
-		'disable_extension_reset_viewmode' => 'Режим перегляду за замовчуванням був наданий розширенням, яке ви щойно вимкнуто. 
-			було скинуто до "Нормально" вигляду.',
+		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
+			It has been reset to the "Normal" view.',
 		'settings_confirm_tab_delete_label' => 'Підтвердити видалення вкладки',
 		'settings_confirm_tab_delete_help' => 'Показувати вікно підтвердження при видаленні вкладок',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Приховує ліву бічну панель під час використання Свіжого Виду Вібсів',
 		'settings_hide_subscription_control_label' => 'Приховати елементи керування підпискою',
-		'settings_hide_subscription_control_help' => 'Приховати підписку і додати стрічки кнопок у заголовку. 
-			Це працює лише коли бічна панель прихована.',
+		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
+			This only works when the sidebar is hidden.',
 		'mark_read' => 'Відмітити як прочитане',
 		'mark_unread' => 'Позначити як непрочитане',
 		'mark_favorite' => 'Перемкнути улюблене',
@@ -126,5 +126,10 @@ return array(
 		'error_invalid_settings' => 'Невірні налаштування',
 		'error_applying_settings' => 'Помилка при застосуванні параметрів. Будь ласка, спробуйте знову.',
 		'error_resetting_settings' => 'Помилка при скиданні налаштувань. Будь ласка, спробуйте знову.',
+		'login_required' => 'You need to be logged in to make changes.',
+		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
