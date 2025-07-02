@@ -214,6 +214,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			FreshVibesViewExtension::LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::CATEGORY_LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::MODE_CONFIG_KEY => 'custom',
+			FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY => true,
 		];
 
 		foreach ($defaults as $key => $value) {

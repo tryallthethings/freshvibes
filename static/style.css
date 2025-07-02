@@ -443,7 +443,7 @@ input[type="color"] {
 
 /* Feed Header */
 .freshvibes-container-header {
-	padding: 8px 12px;
+	padding: 2px 12px;
 	background-color: var(--header-bg-color, var(--background-color-grey, var(--freshvibes-background-secondary)));
 	border-bottom: 1px solid var(--freshvibes-border-color);
 	cursor: grab;

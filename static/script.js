@@ -17,8 +17,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
 function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
-	const isLoggedIn = freshvibesView.getAttribute('data-freshvibes-is-logged-in') === '1';
-
 	// --- STATE ---
 	let state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 

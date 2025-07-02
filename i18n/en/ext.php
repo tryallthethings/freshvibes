@@ -130,5 +130,6 @@ return array(
 		'login' => 'Login',
 		'settings_animations_enabled_label' => 'Enable animations',
 		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
+		'error_moving_feed' => 'Error moving feed. Please try again.',
 	),
 );
