@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Välilehden tausta',
 		'header_color' => 'Otsikon väri',
 		'confirm_mark_tab_read' => 'Merkitse kaikki merkinnät tähän välilehteen luetuksi?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Oletusnäkymätilasi on antanut laajennus, jonka juuri poistit käytöstä.
+			¶ It has been reset to the "Normal"-näkymään.',
 		'settings_confirm_tab_delete_label' => 'Vahvista välilehden poisto',
 		'settings_confirm_tab_delete_help' => 'Näytä vahvistusikkuna poistettaessa välilehtiä',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Piilottaa vasemman sivupalkin käytettäessä Fresh Vibes -näkymää',
 		'settings_hide_subscription_control_label' => 'Piilota tilauksen asetukset',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Piilottaa tilauksen ja lisää syötteen painikkeet otsikkoon.
+			¶ Tämä toimii vain kun sivupalkki on piilotettu.',
 		'mark_read' => 'Merkitse luetuksi',
 		'mark_unread' => 'Merkitse lukemattomaksi',
 		'mark_favorite' => 'Vaihda suosikkiasi',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Virheelliset asetukset',
 		'error_applying_settings' => 'Virhe asetuksia sovellettaessa. Yritä uudelleen.',
 		'error_resetting_settings' => 'Virhe asetusten palauttamisessa. Yritä uudelleen.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Sinun täytyy olla kirjautuneena sisään tehdäksesi muutoksia.',
+		'login' => 'Kirjaudu',
+		'settings_animations_enabled_label' => 'Ota animaatiot käyttöön',
+		'settings_animations_enabled_help' => 'Ota käyttöön sujuvat siirtymät ja leikkurit koko käyttöliittymän ajan',
+		'error_moving_feed' => 'Virhe siirrettäessä syötettä. Yritä uudelleen.',
 	),
 );
