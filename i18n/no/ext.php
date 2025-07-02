@@ -47,7 +47,7 @@ return array(
 		'settings_hide_sidebar_help' => 'Skjuler den venstre sidepanelet når du bruker Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Skjul abonnements kontroller',
 		'settings_hide_subscription_control_help' => 'Skjuler abonnementet og legg til matingsknapper i overskriften.
-			tikasonDette fungerer bare når sidepanelet er skjult.',
+			Dette fungerer bare når sidepanelet er skjult.',
 		'mark_read' => 'Merk som lest',
 		'mark_unread' => 'Merk som ulest',
 		'mark_favorite' => 'Favoritt av/på',
