@@ -39,15 +39,15 @@ return array(
 		'tab_bg_color' => 'Tab achtergrond',
 		'header_color' => 'Kleur koptekst',
 		'confirm_mark_tab_read' => 'Markeer alle invoergegevens in dit tabblad als gelezen?',
-		'disable_extension_reset_viewmode' => 'Your default view mode was provided by the extension you just disabled.
-			It has been reset to the "Normal" view.',
+		'disable_extension_reset_viewmode' => 'Uw standaard weergavemodus werd geboden door de extensie die u zojuist hebt uitgeschakeld.
+			+unnamed@@0 Het is gereset naar de "Normaal" weergave.',
 		'settings_confirm_tab_delete_label' => 'Tabblad verwijderen bevestigen',
 		'settings_confirm_tab_delete_help' => 'Bevestigingsdialoog tonen bij het verwijderen van tabbladen',
 		'settings_hide_sidebar_label' => 'Hide sidebar',
 		'settings_hide_sidebar_help' => 'Verbergt de linker zijbalk bij het gebruik van Fresh Vibes View',
 		'settings_hide_subscription_control_label' => 'Verberg abonnementsopties',
-		'settings_hide_subscription_control_help' => 'Hides the subscription and add feed buttons in the header.
-			This only works when the sidebar is hidden.',
+		'settings_hide_subscription_control_help' => 'Verbergt het abonnement en voeg feed knoppen toe in de header.
+			+unnamed@@0 Dit werkt alleen als de sidebar verborgen is.',
 		'mark_read' => 'Markeren als gelezen',
 		'mark_unread' => 'Markeren als ongelezen',
 		'mark_favorite' => 'Favoriet in-/uitschakelen',
@@ -126,10 +126,10 @@ return array(
 		'error_invalid_settings' => 'Ongeldige instellingen',
 		'error_applying_settings' => 'Fout bij het toepassen van instellingen. Probeer het opnieuw.',
 		'error_resetting_settings' => 'Fout bij het resetten van de instellingen. Probeer het opnieuw.',
-		'login_required' => 'You need to be logged in to make changes.',
-		'login' => 'Login',
-		'settings_animations_enabled_label' => 'Enable animations',
-		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
-		'error_moving_feed' => 'Error moving feed. Please try again.',
+		'login_required' => 'Je moet ingelogd zijn om wijzigingen door te voeren.',
+		'login' => 'Aanmelden',
+		'settings_animations_enabled_label' => 'Animaties inschakelen',
+		'settings_animations_enabled_help' => 'Vloeiende overgangen en zwevende effecten in de interface inschakelen',
+		'error_moving_feed' => 'Fout bij verplaatsen van feed. Probeer het opnieuw.',
 	),
 );
