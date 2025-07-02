@@ -128,5 +128,7 @@ return array(
 		'error_resetting_settings' => 'Error resetting settings. Please try again.',
 		'login_required' => 'You need to be logged in to make changes.',
 		'login' => 'Login',
+		'settings_animations_enabled_label' => 'Enable animations',
+		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
 	),
 );

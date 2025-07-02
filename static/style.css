@@ -49,6 +49,28 @@
 	--freshvibes-button-important-hover: var(--background-color-button-important-hover, var(--contrast-background-color-hover, var(--accent, #47a447)));
 }
 
+/* Animations */
+.freshvibes-view[data-animations="enabled"] .freshvibes-tab:hover {
+	transform: translateY(-1px);
+}
+
+.freshvibes-view[data-animations="enabled"] .entry-item:hover {
+	transition: all 0.3s ease 0s;
+	transform: scale(1.01);
+}
+
+.freshvibes-view[data-animations="enabled"] .fv-modal-close:hover {
+	transform: rotate(90deg);
+}
+
+.freshvibes-view[data-animations="enabled"] .entry-actions {
+	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.freshvibes-view[data-animations="disabled"] {
+	--freshvibes-transition-duration: 0s;
+}
+
 /* Dark mode support */
 @media (prefers-color-scheme: dark) {
 	:root.darkMode_auto {
@@ -123,7 +145,6 @@
 
 .freshvibes-tab:hover {
 	filter: brightness(1.1);
-	transform: translateY(-1px);
 }
 
 .freshvibes-tab.active {
@@ -852,7 +873,6 @@ input[type="color"] {
 	display: flex;
 	gap: 4px;
 	opacity: 0;
-	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 	z-index: 10;
 }
 
@@ -953,8 +973,6 @@ input[type="color"] {
 	background-color: var(--freshvibes-background-secondary);
 	color: var(--freshvibes-text-primary);
 	text-decoration: none;
-	transition: all 0.3s ease 0s;
-	transform: scale(1.01);
 }
 
 .entry-item.read {
@@ -1051,7 +1069,6 @@ input[type="color"] {
 .fv-modal-close:hover {
 	background-color: var(--freshvibes-background-active);
 	color: var(--freshvibes-text-primary);
-	transform: rotate(90deg);
 }
 
 .fv-modal-article {

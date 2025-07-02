@@ -49,6 +49,10 @@ $newFeedPositionValue = $userConf->hasParam(FreshVibesViewExtension::NEW_FEED_PO
 	? $userConf->attributeString(FreshVibesViewExtension::NEW_FEED_POSITION_CONFIG_KEY)
 	: 'bottom';
 
+$animationsenabled = $userConf->hasParam(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY)
+	: false;
+
 ?>
 <form
 	action="<?= _url('extension', 'configure', 'e', urlencode($this->getName())) ?>"
@@ -237,6 +241,22 @@ $newFeedPositionValue = $userConf->hasParam(FreshVibesViewExtension::NEW_FEED_PO
 			</select>
 			<p class="help">
 				<?= _t('ext.FreshVibesView.new_feed_position_help', 'Choose where newly added feeds appear in tabs') ?>
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_animations_enabled">
+			<?= _t('ext.FreshVibesView.settings_animations_enabled_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="checkbox"
+				name="freshvibes_animations_enabled"
+				id="freshvibes_animations_enabled"
+				<?= $animationsenabled ? 'checked="checked"' : '' ?> />
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_animations_enabled_help') ?>
 			</p>
 		</div>
 	</div>

@@ -169,6 +169,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->bookmarkUrl = Minz_Url::display(['c' => 'entry', 'a' => 'bookmark'], 'json', false);
 		$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
+		$this->view->animationsEnabled = $userConf->attributeBool(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY);
 
 		$this->view->viewMode = $mode;
 		$this->view->rss_title = _t('ext.FreshVibesView.title');
