@@ -169,6 +169,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->bookmarkUrl = Minz_Url::display(['c' => 'entry', 'a' => 'bookmark'], 'json', false);
 		$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
+		$this->view->animationsEnabled = $userConf->attributeBool(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY);
 
 		$this->view->viewMode = $mode;
 		$this->view->rss_title = _t('ext.FreshVibesView.title');
@@ -213,25 +214,24 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			FreshVibesViewExtension::LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::CATEGORY_LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::MODE_CONFIG_KEY => 'custom',
+			FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY => true,
 		];
 
 		foreach ($defaults as $key => $value) {
 			$storedValue = $userConf->param($key);
 
-			// Condition 1: Key is missing or its value is null. Set the default.
+
 			if (!$userConf->hasParam($key) || $storedValue === null) {
+				// Condition 1: Key is missing or its value is null. Set the default.
 				$userConf->_attribute($key, $value);
 				$configChanged = true;
-			}
-
-			// Condition 2: It's a boolean setting, but the stored type is wrong (e.g. int).
-			// Coerce the existing value to a boolean to migrate it.
-			elseif (is_bool($value) && !is_bool($storedValue)) {
+			} elseif (is_bool($value) && !is_bool($storedValue)) {
+				// Condition 2: It's a boolean setting, but the stored type is wrong (e.g. int).
+				// Coerce the existing value to a boolean to migrate it.
 				$userConf->_attribute($key, (bool)$storedValue);
 				$configChanged = true;
 			}
 		}
-
 		$feedDAO = FreshRSS_Factory::createFeedDao();
 		$feeds = $feedDAO->listFeeds();
 		$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
@@ -239,10 +239,18 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		foreach ($feeds as $feed) {
 			$feedId = $feed->id();
 			$feedDefaults = [
-				($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX : FreshVibesViewExtension::LIMIT_CONFIG_PREFIX) . $feedId => FreshVibesViewExtension::DEFAULT_ARTICLES_PER_FEED,
-				($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX : FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) . $feedId => FreshVibesViewExtension::DEFAULT_FONT_SIZE,
-				($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY : FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY) . $feedId => FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY,
-				($mode === 'categories' ? FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX : FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX) . $feedId => FreshVibesViewExtension::DEFAULT_DISPLAY_MODE,
+				($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_LIMIT_CONFIG_PREFIX :
+					FreshVibesViewExtension::LIMIT_CONFIG_PREFIX) . $feedId => FreshVibesViewExtension::DEFAULT_ARTICLES_PER_FEED,
+				($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FONT_SIZE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FONT_SIZE_CONFIG_PREFIX) . $feedId => FreshVibesViewExtension::DEFAULT_FONT_SIZE,
+				($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_MAX_HEIGHT_CONFIG_KEY :
+					FreshVibesViewExtension::MAX_HEIGHT_CONFIG_KEY) . $feedId => FreshVibesViewExtension::DEFAULT_MAX_HEIGHT_CONFIG_KEY,
+				($mode === 'categories' ?
+					FreshVibesViewExtension::CATEGORY_FEED_DISPLAY_MODE_CONFIG_PREFIX :
+					FreshVibesViewExtension::FEED_DISPLAY_MODE_CONFIG_PREFIX) . $feedId => FreshVibesViewExtension::DEFAULT_DISPLAY_MODE,
 			];
 
 			foreach ($feedDefaults as $key => $value) {

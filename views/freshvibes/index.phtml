@@ -48,7 +48,7 @@ $settingsArray = [
 	"order" => $this->currentOrder ?? 'DESC',
 	"dateMode" => $this->dateMode ?? 'absolute',
 	"confirmMarkRead" => $this->confirmMarkRead ? '1' : '0',
-	"refreshEnabled" => $this->refreshEnabled ? '1' : '0'
+	"refreshEnabled" => $this->refreshEnabled ? '1' : '0',
 ];
 
 // JSON encode then htmlspecialchars the entire JSON string
@@ -60,6 +60,7 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 	role="main"
 	data-freshvibes-urls='<?= $urlsJson ?>'
 	data-freshvibes-settings='<?= $settingsJson ?>'
+	data-animations="<?= $this->animationsEnabled ? 'enabled' : 'disabled' ?>"
 	data-freshvibes-is-logged-in="<?= FreshRSS_Auth::hasAccess() ? '1' : '0' ?>"
 	data-freshvibes-csrf-token="<?= htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 

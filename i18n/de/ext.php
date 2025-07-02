@@ -39,14 +39,14 @@ return array(
 		'tab_bg_color' => 'Tab-Hintergrund',
 		'header_color' => 'Kopfzeilenfarbe',
 		'confirm_mark_tab_read' => 'Alle Einträge in diesem Tab als gelesen markieren?',
-		'disable_extension_reset_viewmode' => 'Ihre Standard-Ansicht wurde durch die Erweiterung, 
+		'disable_extension_reset_viewmode' => 'Ihre Standard-Ansicht wurde durch die Erweiterung,
 			die Sie gerade deaktiviert haben, bereitgestellt. Sie wurde auf "Normale Ansicht" zurückgesetzt.',
 		'settings_confirm_tab_delete_label' => 'Tab-Löschung bestätigen',
 		'settings_confirm_tab_delete_help' => 'Bestätigungsdialog beim Löschen von Tabs anzeigen',
 		'settings_hide_sidebar_label' => 'Seitenleiste ausblenden',
 		'settings_hide_sidebar_help' => 'Blendet die linke Seitenleiste bei Verwendung der FreshVibes Ansicht aus',
 		'settings_hide_subscription_control_label' => 'Abonnementverwaltung ausblenden',
-		'settings_hide_subscription_control_help' => 'Blendet die Abonnement- und Feed-hinzufügen-Schaltflächen in der Kopfzeile aus. 
+		'settings_hide_subscription_control_help' => 'Blendet die Abonnement- und Feed-hinzufügen-Schaltflächen in der Kopfzeile aus.
 			Nur relevant, wenn die Seitenleiste ausgeblendet ist.',
 		'mark_read' => 'Als gelesen markieren',
 		'mark_unread' => 'Als ungelesen markieren',
@@ -126,5 +126,7 @@ return array(
 		'error_invalid_settings' => 'Ungültige Einstellungen',
 		'error_applying_settings' => 'Fehler beim Anwenden der Einstellungen. Bitte erneut versuchen.',
 		'error_resetting_settings' => 'Fehler beim Zurücksetzen der Einstellungen. Bitte erneut versuchen.',
+		'login_required' => 'Sie müssen angemeldet sein, um Änderungen vorzunehmen.',
+		'login' => 'Anmelden',
 	),
 );
