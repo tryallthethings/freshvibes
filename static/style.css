@@ -20,8 +20,8 @@
 	--freshvibes-background-active: var(--background-color-dark, var(--accent-bg, var(--frss-background-color-dark, #333)));
 
 	/* Text colors */
-	--freshvibes-text-primary: var(--font-color-light, var(--accent, var(--font-color, var(--font-color-middle, var(--text-default, var(--frss-font-color-light, var(--frss-font-color-dark, #111)))))));
-	--freshvibes-text-secondary: var(--font-color-grey, var(--font-color-light, var(--font-color-middle, var(--text-accent, var(--frss-font-color-grey-dark, #666)))));
+	--freshvibes-text-primary: var(--font-color, var(--font-color-middle, var(--text-default, var(--frss-font-color-dark, var(--accent, #111)))));
+	--freshvibes-text-secondary: var(--font-color-grey, var(--font-color-middle, var(--text-accent, var(--frss-font-color-grey-dark, #666))));
 	--freshvibes-text-light: var(--font-color-light, var(--text-accent, var(--frss-font-color-light, #fff)));
 
 	/* Border colors */
@@ -41,6 +41,7 @@
 	--freshvibes-highlight-background: var(--accent-bg, var(--background-color-hover, #effcfd));
 
 	/* Button colors */
+	--freshvibes-button-text: var(--font-color, var(--font-color-grey, var(--frss-font-color-dark, #111)));
 	--freshvibes-button-bg: var(--background-color-light, var(--accent-bg, #fff));
 	--freshvibes-button-hover: var(--background-color-grey, var(--dropdown-bg, #f0f0f0));
 	--freshvibes-button-active: var(--background-color-grey-button-active, var(--background-color-dark, var(--accent-bg, #eee)));
@@ -115,8 +116,8 @@
 	text-align: center;
 	flex: 0 1 auto;
 	gap: 8px;
-	background-color: var(--tab-bg-color, var(--freshvibes-background-secondary));
-	color: var(--tab-font-color, var(--freshvibes-text-secondary));
+	background-color: var(--tab-bg-color, var(--background-color-grey, var(--freshvibes-background-secondary)));
+	color: var(--tab-font-color, var(--freshvibes-button-text));
 	transition: all var(--freshvibes-transition-duration) ease;
 }
 
@@ -324,7 +325,7 @@ input[type="color"] {
 	padding: 5px;
 	text-align: center;
 	background-color: var(--freshvibes-error-color);
-	color: var(--freshvibes-text-light);
+	color: var(--font-color-light, #fff);
 	border: none;
 	border-radius: var(--freshvibes-border-radius);
 	cursor: pointer;
@@ -412,7 +413,7 @@ input[type="color"] {
 
 .freshvibes-container {
 	border: 1px solid var(--freshvibes-border-shadow);
-	background-color: var(--accent-bg, var(--frss-background-color-light, var(--freshvibes-background-primary)));
+	background-color: var(--background-color-white, var(--frss-background-color-light, var(--freshvibes-background-primary)));
 	border-radius: var(--freshvibes-border-radius);
 	box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 	position: relative;
@@ -422,14 +423,14 @@ input[type="color"] {
 /* Feed Header */
 .freshvibes-container-header {
 	padding: 8px 12px;
-	background-color: var(--header-bg-color, var(--freshvibes-background-dark));
+	background-color: var(--header-bg-color, var(--background-color-grey, var(--freshvibes-background-secondary)));
 	border-bottom: 1px solid var(--freshvibes-border-color);
 	cursor: grab;
 	display: flex;
 	align-items: center;
 	gap: 8px;
 	font-weight: bold;
-	color: var(--header-font-color, var(--freshvibes-text-primary));
+	color: var(--header-font-color, var(--freshvibes-button-text));
 }
 
 .freshvibes-container-header .feed-title {
@@ -459,7 +460,7 @@ input[type="color"] {
 .feed-unread-badge,
 .tab-unread-count {
 	background-color: var(--freshvibes-background-primary);
-	color: var(--freshvibes-text-primary);
+	color: var(--freshvibes-button-text);
 	padding: 2px 8px;
 	border-radius: calc(var(--freshvibes-border-radius) * 2);
 	font-size: 0.85em;
@@ -554,6 +555,12 @@ input[type="color"] {
 	width: max-content;
 	max-width: 90vw;
 	font-size: 0.95em;
+}
+
+.feed-settings-editor,
+.feed-settings-editor label,
+.bulk-settings-section label {
+	color: var(--freshvibes-button-text);
 }
 
 .freshvibes-container:has(.feed-settings-editor.active) {
@@ -703,7 +710,7 @@ input[type="color"] {
 
 .entry-title {
 	font-weight: bold;
-	color: inherit;
+	color: var(--font-color, var(--font-color-link-title, var(--freshvibes-text-primary)));
 	vertical-align: middle;
 }
 
@@ -724,6 +731,12 @@ input[type="color"] {
 
 .entry-snippet:empty {
 	display: none;
+}
+
+.entry-date,
+.entry-excerpt,
+.entry-snippet {
+	color: var(--font-color-grey, var(--font-color-article, var(--freshvibes-text-secondary)));
 }
 
 .entry-date {
