@@ -754,7 +754,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		let entryHTML = '';
 		if (feed.currentDisplayMode === 'tiny') {
 			entryHTML = `
-				<a class="entry-link" href="${entry.link}" target="_blank" rel="noopener noreferrer" data-entry-id="${entry.id}" data-feed-id="${feed.id}">
+				<a class="entry-link" href="${entry.link}" target="_blank" rel="noopener noreferrer" data-entry-id="${entry.id}" data-feed-id="${feed.id}" title="${entry.detailedSnippet}">
 					<div class="entry-main">
 						${favoriteIndicatorHTML}
 						<span class="entry-title">${entry.title || '(No title)'}</span>
