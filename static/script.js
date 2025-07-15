@@ -1,3 +1,4 @@
+/* global Sortable */
 document.addEventListener('DOMContentLoaded', () => {
 	const freshvibesView = document.querySelector('.freshvibes-view');
 	if (freshvibesView) {
@@ -219,7 +220,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 		// Initialize sortable for vertical tab headers (custom mode only)
 		if (typeof Sortable !== 'undefined' && !isCategoryMode) {
-			new Sortable(verticalContainer, {
+			const verticalLayoutSortable = new Sortable(verticalContainer, { // eslint-disable-line no-unused-vars
 				animation: 150,
 				draggable: '.freshvibes-vertical-section',
 				handle: '.freshvibes-tab',
@@ -412,7 +413,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}
 				}
 			});
-
 		});
 
 		// Enable double-click rename for vertical tabs
@@ -463,7 +463,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							tabNameSpan.textContent = oldName;
 						}
 					})
-					.catch(() => tabNameSpan.textContent = oldName);
+					.catch(() => { tabNameSpan.textContent = oldName; });
 			} else {
 				tabNameSpan.textContent = oldName;
 			}
@@ -484,7 +484,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		input.focus();
 		input.select();
 	}
-
 
 	function renderPanels() {
 		panelsContainer.innerHTML = '';
@@ -581,9 +580,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				const tempTab = document.createElement('div');
 				tempTab.className = 'freshvibes-tab';
 				document.body.appendChild(tempTab);
-				const defaultBg = window.getComputedStyle(tempTab).backgroundColor;
 				document.body.removeChild(tempTab);
-
 				const defaultColor = getColorFromComputedStyle(document.body, 'freshvibes-tab');
 				resetColorInput(bgColorInput, defaultColor);
 			}
@@ -1209,7 +1206,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			li.appendChild(wrapper);
 		}
 
-
 		// Add action buttons using the template
 		const actionsTemplate = document.getElementById('template-entry-actions');
 		if (actionsTemplate) {
@@ -1255,6 +1251,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				return false;
 			})
 			.catch(err => {
+				console.error('CSRF token refresh failed:', err);
 				return false;
 			});
 	}
@@ -1748,7 +1745,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 						saveTabColors(tabId, '', '').then(data => {
 							if (data.status === 'success') {
-
 								// Reset color‐picker to default computed style
 								const tempTab = document.createElement('div');
 								tempTab.className = 'freshvibes-tab';
@@ -1922,7 +1918,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							badge.remove();
 							feedData.nbUnread = 0;
 							container.querySelectorAll('.entry-item:not(.read)').forEach(li => li.classList.add('read'));
-							feedData.entries.forEach(entry => entry.isRead = true);
+							feedData.entries.forEach(entry => { entry.isRead = true; });
 							updateTabBadge(feedId);
 						}
 					}).catch(error => handleAPIError('Mark feed read', error));
@@ -2013,7 +2009,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							}
 						}
 					})
-						.catch(error => handleAPIError('Reset tab color', error));;
+						.catch(error => handleAPIError('Reset tab color', error));
 				} else if (colorInput.classList.contains('feed-header-color-input')) {
 					const container = resetBtn.closest('.freshvibes-container');
 					const feedId = container.dataset.feedId;
@@ -2571,7 +2567,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			}
 		}
 	}
-
 
 	// --- INITIALIZATION ---
 	fetch(urls.getLayout)

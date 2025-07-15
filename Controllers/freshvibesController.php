@@ -1036,45 +1036,39 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			exit;
 		}
 
-		try {
-			$layout = $this->getLayout();
+		$layout = $this->getLayout();
 
-			// Globally remove the feed from all tabs to prevent duplicates
-			foreach ($layout as &$tab) {
-				if (isset($tab['columns']) && is_array($tab['columns'])) {
-					foreach ($tab['columns'] as &$column) {
-						if (is_array($column)) {
-							$column = array_values(array_filter($column, function ($id) use ($feedId) {
-								return intval($id) !== $feedId;
-							}));
-						}
+		// Globally remove the feed from all tabs to prevent duplicates
+		foreach ($layout as &$tab) {
+			if (isset($tab['columns']) && is_array($tab['columns'])) {
+				foreach ($tab['columns'] as &$column) {
+					if (is_array($column)) {
+						$column = array_values(array_filter($column, function ($id) use ($feedId) {
+							return intval($id) !== $feedId;
+						}));
 					}
-					unset($column);
 				}
+				unset($column);
 			}
-			unset($tab);
-
-			// Add the feed to the target tab
-			foreach ($layout as &$tab) {
-				if ($tab['id'] === $targetTabId) {
-					$firstColKey = !empty($tab['columns']) ? key($tab['columns']) : 'col1';
-					if (!isset($tab['columns'][$firstColKey])) {
-						$tab['columns'][$firstColKey] = [];
-					}
-					// Add feed to the beginning of the first column
-					array_unshift($tab['columns'][$firstColKey], $feedId);
-					break;
-				}
-			}
-			unset($tab);
-
-			$this->saveLayout($layout);
-			echo json_encode(['status' => 'success', 'new_layout' => $layout]);
-		} catch (Exception $e) {
-			http_response_code(500);
-			error_log('FreshVibesView moveFeedAction error: ' . $e->getMessage());
-			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_server')]);
 		}
+		unset($tab);
+
+		// Add the feed to the target tab
+		foreach ($layout as &$tab) {
+			if ($tab['id'] === $targetTabId) {
+				$firstColKey = !empty($tab['columns']) ? key($tab['columns']) : 'col1';
+				if (!isset($tab['columns'][$firstColKey])) {
+					$tab['columns'][$firstColKey] = [];
+				}
+				// Add feed to the beginning of the first column
+				array_unshift($tab['columns'][$firstColKey], $feedId);
+				break;
+			}
+		}
+		unset($tab);
+
+		$this->saveLayout($layout);
+		echo json_encode(['status' => 'success', 'new_layout' => $layout]);
 		exit;
 	}
 
