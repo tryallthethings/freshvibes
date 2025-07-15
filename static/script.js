@@ -18,6 +18,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	// --- STATE ---
 	const state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 	let currentCsrfToken = csrfToken;
+	let heightPickerHandler = null;
 
 	// --- DOM & CONFIG ---
 	const isCategoryMode = settings.mode === 'categories';
@@ -1259,7 +1260,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	}
 
 	function api(url, body, retryCount = 0) {
-		console.log('API call to:', url, 'retry:', retryCount, 'token:', currentCsrfToken);
 		return fetch(url, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
@@ -1364,6 +1364,15 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				handle: '.freshvibes-container-header',
 				delay: 300,
 				delayOnTouchOnly: true,
+				onMove: evt => {
+					if (isCategoryMode) {
+						const sourcePanel = evt.from.closest('.freshvibes-panel');
+						const targetPanel = evt.to.closest('.freshvibes-panel');
+						if (sourcePanel && targetPanel && sourcePanel.id !== targetPanel.id) {
+							return false; // Prevent the move
+						}
+					}
+				},
 				onEnd: evt => {
 					const sourcePanel = evt.from.closest('.freshvibes-panel');
 					const targetPanel = evt.to.closest('.freshvibes-panel');
@@ -1599,8 +1608,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			document.addEventListener('mouseup', stopDrag);
 		});
 	}
-
-	let heightPickerHandler = null;
 
 	// --- EVENT LISTENERS ---
 	function setupEventListeners() {
