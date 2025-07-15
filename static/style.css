@@ -54,9 +54,20 @@
 	transform: translateY(-1px);
 }
 
+.freshvibes-view[data-animations="enabled"] .freshvibes-container-content li.entry-item {
+	transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
 .freshvibes-view[data-animations="enabled"] .entry-item:hover {
-	transition: all 0.3s ease 0s;
 	transform: scale(1.01);
+}
+
+.freshvibes-view[data-animations="enabled"] .freshvibes-container.display-compact .entry-item:hover,
+.freshvibes-view[data-animations="enabled"] .freshvibes-container.display-detailed .entry-item:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--freshvibes-box-shadow);
+	z-index: 5;
+	/* Ensures the shadow appears above the next item */
 }
 
 .freshvibes-view[data-animations="enabled"] .fv-modal-close:hover {
@@ -65,6 +76,22 @@
 
 .freshvibes-view[data-animations="enabled"] .entry-actions {
 	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.freshvibes-view[data-animations="enabled"] .tab-settings-menu {
+	opacity: 0;
+	/* When hiding, fade out first, then set visibility to hidden after a delay. */
+	transition: opacity 0.1s ease-in-out, visibility 0s linear 0.1s;
+}
+
+.freshvibes-view[data-animations="enabled"] .tab-settings-menu.active {
+	opacity: 1;
+	/* When showing, just fade in the opacity. */
+	transition: opacity 0.1s ease-in-out;
+}
+
+.freshvibes-view[data-animations="enabled"] .freshvibes-tab.menu-is-open:hover {
+	transform: none;
 }
 
 .freshvibes-view[data-animations="disabled"] {
@@ -112,11 +139,6 @@
 	align-items: center;
 	gap: 4px;
 	justify-content: flex-start;
-}
-
-.section-unread-count.clickable {
-	cursor: pointer;
-	transition: all var(--freshvibes-transition-duration) ease;
 }
 
 .section-unread-count.clickable {
@@ -366,7 +388,8 @@
 
 /* Tab Settings Menu */
 .tab-settings-menu {
-	display: none;
+	display: flex;
+	visibility: hidden;
 	position: absolute;
 	top: calc(100% + 5px);
 	right: -10px;
@@ -388,7 +411,7 @@
 }
 
 .tab-settings-menu.active {
-	display: flex;
+	visibility: visible;
 }
 
 .tab-settings-menu .menu-section {
@@ -982,12 +1005,26 @@ input[type="color"] {
 	overflow: hidden;
 }
 
+.freshvibes-container.display-compact .entry-link,
+.freshvibes-container.display-detailed .entry-link {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.3em;
+}
+
+.freshvibes-container.display-compact .entry-favorite-indicator,
+.freshvibes-container.display-detailed .entry-favorite-indicator {
+	flex-shrink: 0;
+	margin-top: 0.15em;
+}
+
 /* Hover styles for new layouts */
 .freshvibes-container.display-compact .entry-item:hover,
 .freshvibes-container.display-detailed .entry-item:hover {
 	background-color: var(--freshvibes-background-secondary);
-	margin: 0 -12px;
-	padding: 8px 12px;
+	outline: 1px solid var(--freshvibes-border-color);
+	/* Adds a crisp edge without affecting layout */
+	outline-offset: -1px;
 }
 
 /* Entry Actions */
@@ -1748,14 +1785,8 @@ input[type="color"] {
 	text-decoration: underline;
 }
 
-/*
- * Fix for Tab Settings Menu Layout Issues
- * This resolves items appearing on new lines and having incorrect sizes.
- */
 .tab-settings-menu .icon-settings,
 .tab-settings-menu .color-settings {
-	/* This rule was not specific enough in the new file, causing it to be overridden. */
-	/* This forces the label, input, and button onto a single row. */
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
@@ -1763,30 +1794,21 @@ input[type="color"] {
 
 .tab-settings-menu .icon-settings label,
 .tab-settings-menu .color-settings label {
-	/* Allows the label to take up available space, pushing inputs to the right. */
 	flex: 1;
 	margin-bottom: 0;
 }
 
 .tab-icon-input {
-	/* Fixes the "giant" icon text box by giving it a fixed width. */
 	flex: 0 0 60px !important;
 	width: 60px !important;
 }
 
 
-/*
- * Fix for Feed Settings Height Picker
- * This ensures the height options act as a dropdown instead of a static block,
- * which also fixes the settings window being overly large.
- */
 .height-picker-wrapper {
-	/* Establishes the positioning context for the dropdown. */
 	position: relative;
 	flex-grow: 1;
 }
 
-/* Styles the text input for our new custom dropdown */
 .height-picker-wrapper>input[type="text"] {
 	width: 100%;
 	box-sizing: border-box;
@@ -1797,7 +1819,6 @@ input[type="color"] {
 	color: var(--freshvibes-text-primary);
 }
 
-/* Ensures the wrapper aligns correctly with other controls in the bulk settings form */
 .bulk-settings-form .height-picker-wrapper {
 	flex: 1;
 	max-width: 180px;
@@ -1822,7 +1843,6 @@ input[type="color"] {
 }
 
 .fv-height-picker.active {
-	/* This rule, provided by the script, makes the dropdown visible on click. */
 	display: block;
 }
 
@@ -1845,9 +1865,7 @@ input[type="color"] {
 
 .feed-settings-editor .setting-row select,
 .feed-settings-editor .height-picker-wrapper {
-	/* This stops the elements from growing and stretching the popup. */
 	flex-grow: 0;
-	/* This gives the inputs a neat, consistent width. */
 	width: 130px;
 }
 
