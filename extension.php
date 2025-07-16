@@ -55,6 +55,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const DASHBOARD_LAYOUT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_dashboard_layout';
 	public const DASHBOARD_LAYOUT_OPTIONS = ['tabs', 'vertical'];
 	public const DEFAULT_DASHBOARD_LAYOUT = 'tabs';
+	public const ALLOW_CATEGORY_SORT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_allow_category_sort';
 
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
@@ -174,6 +175,8 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read'));
 			$userConf->_attribute(self::NEW_FEED_POSITION_CONFIG_KEY, Minz_Request::paramString('freshvibes_new_feed_position') ?: 'bottom');
 			$userConf->_attribute(self::ANIMATIONS_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_animations_enabled'));
+			$userConf->_attribute(self::ALLOW_CATEGORY_SORT_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_allow_category_sort'));
+
 			$emptyFeedsDisplay = Minz_Request::paramString('freshvibes_empty_feeds_display') ?: 'show';
 			if (!in_array($emptyFeedsDisplay, self::EMPTY_FEEDS_DISPLAY_OPTIONS, true)) {
 				$emptyFeedsDisplay = self::DEFAULT_EMPTY_FEEDS_DISPLAY;

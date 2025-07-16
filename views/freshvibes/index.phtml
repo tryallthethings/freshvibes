@@ -35,6 +35,7 @@ $urlsArray = [
 	"refreshFeeds" => $this->refreshFeedsUrl,
 	"feedSettings" => $this->feedSettingsUrl,
 	"categorySettings" => $this->categorySettingsUrl,
+	"saveCategoryOrder" => $this->saveCategoryOrderUrl,
 ];
 
 // Prepare settings array
@@ -49,6 +50,7 @@ $settingsArray = [
 	"dateMode" => $this->dateMode ?? 'absolute',
 	"confirmMarkRead" => $this->confirmMarkRead ? '1' : '0',
 	"refreshEnabled" => $this->refreshEnabled ? '1' : '0',
+	"allowCategorySort" => $this->allowCategorySort ? '1' : '0',
 ];
 
 // JSON encode then htmlspecialchars the entire JSON string

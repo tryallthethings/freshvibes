@@ -186,6 +186,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->feedSettingsUrl = Minz_Url::display() . '?c=subscription&a=feed&id=';
 		$this->view->categorySettingsUrl = Minz_Url::display() . '?c=category&a=update&id=';
 		$this->view->dashboardLayout = $userConf->attributeString(FreshVibesViewExtension::DASHBOARD_LAYOUT_CONFIG_KEY) ?: 'tabs';
+		$this->view->allowCategorySort = $userConf->attributeBool(FreshVibesViewExtension::ALLOW_CATEGORY_SORT_CONFIG_KEY) ?? false;
+		$this->view->saveCategoryOrderUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'savecategoryorder'], 'json', false);
 
 		$tags = FreshRSS_Context::labels(true);
 		$this->view->tags = $tags;
@@ -1568,5 +1570,52 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				$column = $cleanColumn;
 			}
 		}
+	}
+
+	public function saveCategoryOrderAction() {
+		$this->validatePostRequest();
+		header('Content-Type: application/json');
+
+		if ($_SERVER['REQUEST_METHOD'] !== 'POST' || !isset($_POST['category_ids'])) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_invalid_request')]);
+			exit;
+		}
+
+		$categoryIds = explode(',', Minz_Request::paramString('category_ids'));
+		if (empty($categoryIds)) {
+			http_response_code(400);
+			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_invalid_request')]);
+			exit;
+		}
+
+		try {
+			$categoryDAO = FreshRSS_Factory::createCategoryDao();
+			$position = 1;
+
+			foreach ($categoryIds as $catIdStr) {
+				// Extract numeric ID from 'cat-123' format
+				if (preg_match('/^cat-(\d+)$/', $catIdStr, $matches)) {
+					$catId = (int)$matches[1];
+					$category = $categoryDAO->searchById($catId);
+					if ($category !== null) {
+						$category->_attribute('position', $position);
+						$categoryDAO->updateCategory($catId, [
+							'name' => $category->name(),
+							'kind' => $category->kind(),
+							'attributes' => $category->attributes(),
+						]);
+						$position++;
+					}
+				}
+			}
+
+			echo json_encode(['status' => 'success']);
+		} catch (Exception $e) {
+			http_response_code(500);
+			error_log('FreshVibesView saveCategoryOrderAction error: ' . $e->getMessage());
+			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_server')]);
+		}
+		exit;
 	}
 }

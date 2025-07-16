@@ -117,6 +117,7 @@
 }
 
 .freshvibes-vertical-section {
+	margin-top: 10px;
 	border-radius: var(--freshvibes-border-radius);
 	overflow: visible;
 }
@@ -192,7 +193,7 @@
 }
 
 .freshvibes-section-content {
-	padding: 10px;
+	padding: 10px 0;
 	background-color: var(--freshvibes-background-primary);
 }
 
@@ -589,7 +590,7 @@ input[type="color"] {
 
 /* Feed Header */
 .freshvibes-container-header {
-	padding: 2px 12px;
+	padding: 0px 12px;
 	display: flex;
 	color: var(--header-font-color, var(--freshvibes-button-text));
 	border-bottom: 1px solid var(--freshvibes-border-color);
