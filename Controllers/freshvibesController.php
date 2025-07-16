@@ -107,7 +107,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					sort: $sort,
 					order: $order,
 					continuation_id: '0',
-					continuation_values: [],
+					continuation_value: 0,
 					limit: $queryLimit ?? 0,
 					offset: 0
 				);
@@ -573,7 +573,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				(FreshRSS_Context::$sort ?? 'date'),
 				(FreshRSS_Context::$order ?? 'DESC'),
 				'0',
-				[],
+				0,
 				$queryLimit ?? 0,
 				0
 			);

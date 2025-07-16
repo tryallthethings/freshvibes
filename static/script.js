@@ -1165,6 +1165,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		entryLink.rel = 'noopener noreferrer';
 		entryLink.dataset.entryId = entry.id;
 		entryLink.dataset.feedId = feed.id;
+		entryLink.title = entry.detailedSnippet.replace(/<[^>]*>/g, '');
 
 		if (feed.currentDisplayMode === 'tiny') {
 			const mainDiv = document.createElement('div');
