@@ -60,6 +60,11 @@ $animationsEnabledValue = $userConf->hasParam(FreshVibesViewExtension::ANIMATION
 $emptyFeedsDisplayValue = $userConf->hasParam(FreshVibesViewExtension::EMPTY_FEEDS_DISPLAY_CONFIG_KEY)
 	? $userConf->attributeString(FreshVibesViewExtension::EMPTY_FEEDS_DISPLAY_CONFIG_KEY)
 	: 'show';
+
+$allowCategorySortValue = $userConf->hasParam(FreshVibesViewExtension::ALLOW_CATEGORY_SORT_CONFIG_KEY)
+	? $userConf->attributeBool(FreshVibesViewExtension::ALLOW_CATEGORY_SORT_CONFIG_KEY)
+	: false;
+
 ?>
 <form
 	action="<?= _url('extension', 'configure', 'e', urlencode($this->getName())) ?>"
@@ -81,7 +86,21 @@ $emptyFeedsDisplayValue = $userConf->hasParam(FreshVibesViewExtension::EMPTY_FEE
 			</select>
 		</div>
 	</div>
-
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_allow_category_sort">
+			<?= _t('ext.FreshVibesView.settings_allow_category_sort_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="checkbox"
+				name="freshvibes_allow_category_sort"
+				id="freshvibes_allow_category_sort"
+				<?= $allowCategorySortValue ? 'checked="checked"' : '' ?> />
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_allow_category_sort_help') ?>
+			</p>
+		</div>
+	</div>
 	<div class="form-group">
 		<label class="group-name" for="freshvibes_dashboard_layout">
 			<?= _t('ext.FreshVibesView.settings_dashboard_layout_label') ?>

@@ -140,5 +140,7 @@ return array(
 		'settings_dashboard_layout_help' => 'Choose between tabbed interface or vertical sections',
 		'dashboard_layout_tabs' => 'Horizontal tabs',
 		'dashboard_layout_vertical' => 'Vertical sections',
+		'settings_allow_category_sort_label' => 'Allow category reordering',
+		'settings_allow_category_sort_help' => 'Enable drag-and-drop reordering of categories in category mode',
 	),
 );

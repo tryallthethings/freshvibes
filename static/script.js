@@ -219,7 +219,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		});
 
 		// Initialize sortable for vertical tab headers (custom mode only)
-		if (typeof Sortable !== 'undefined' && !isCategoryMode) {
+		const canSortVertical = !isCategoryMode || (isCategoryMode && (settings.allowCategorySort === true || settings.allowCategorySort === '1'));
+		if (typeof Sortable !== 'undefined' && canSortVertical) {
 			const verticalLayoutSortable = new Sortable(verticalContainer, { // eslint-disable-line no-unused-vars
 				animation: 150,
 				draggable: '.freshvibes-vertical-section',
@@ -240,10 +241,15 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					state.layout = newLayout;
 
 					// Save the new layout order
-					api(urls.tabAction, { operation: 'reorder', tab_ids: newOrder.join(',') })
+					const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
+					const payload = isCategoryMode
+						? { category_ids: newOrder.join(',') }
+						: { operation: 'reorder', tab_ids: newOrder.join(',') };
+
+					api(url, payload)
 						.then(data => {
 							if (data.status !== 'success') {
-								// Revert on failure
+								// Revert on failure by re-rendering
 								renderVerticalLayout();
 							}
 						})
@@ -1422,11 +1428,13 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			sortableInstances.set(column, sortable);
 		});
 
-		if (typeof Sortable !== 'undefined' && tabsContainer && !tabsContainer.sortable && !isCategoryMode) {
+		// Initialize sortable for tabs container (if in tabs layout)
+		const allowCategorySort = settings.allowCategorySort === '1' || settings.allowCategorySort === true;
+		if (typeof Sortable !== 'undefined' && tabsContainer && !tabsContainer.sortable && (!isCategoryMode || (isCategoryMode && allowCategorySort))) {
 			tabsContainer.sortable = new Sortable(tabsContainer, {
 				animation: 150,
 				draggable: '.freshvibes-tab',
-				filter: '.tab-add-button',
+				filter: '.tab-add-button, .tab-bulk-button, .moved-subscription-buttons',
 				delay: 300,
 				delayOnTouchOnly: true,
 				onEnd: evt => {
@@ -1440,9 +1448,15 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 					state.layout = newLayout;
 
-					api(urls.tabAction, { operation: 'reorder', tab_ids: newOrder.join(',') })
+					const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
+					const payload = isCategoryMode
+						? { category_ids: newOrder.join(',') }
+						: { operation: 'reorder', tab_ids: newOrder.join(',') };
+
+					api(url, payload)
 						.then(data => {
 							if (data.status !== 'success') {
+								// Revert on failure by re-rendering
 								render();
 							}
 						})
