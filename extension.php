@@ -49,6 +49,12 @@ class FreshVibesViewExtension extends Minz_Extension {
 	public const NEW_FEED_POSITIONS = ['bottom', 'top'];
 	public const DEFAULT_NEW_FEED_POSITION = 'bottom';
 	public const ANIMATIONS_ENABLED_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_animations_enabled';
+	public const EMPTY_FEEDS_DISPLAY_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_empty_feeds_display';
+	public const EMPTY_FEEDS_DISPLAY_OPTIONS = ['show', 'collapse_content', 'hide_completely'];
+	public const DEFAULT_EMPTY_FEEDS_DISPLAY = 'show';
+	public const DASHBOARD_LAYOUT_CONFIG_KEY = self::CONTROLLER_NAME_BASE . '_dashboard_layout';
+	public const DASHBOARD_LAYOUT_OPTIONS = ['tabs', 'vertical'];
+	public const DEFAULT_DASHBOARD_LAYOUT = 'tabs';
 
 	// Feed Limits
 	public const DEFAULT_ARTICLES_PER_FEED = 10;
@@ -168,6 +174,16 @@ class FreshVibesViewExtension extends Minz_Extension {
 			$userConf->_attribute(self::CONFIRM_MARK_READ_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_confirm_mark_read'));
 			$userConf->_attribute(self::NEW_FEED_POSITION_CONFIG_KEY, Minz_Request::paramString('freshvibes_new_feed_position') ?: 'bottom');
 			$userConf->_attribute(self::ANIMATIONS_ENABLED_CONFIG_KEY, Minz_Request::paramBoolean('freshvibes_animations_enabled'));
+			$emptyFeedsDisplay = Minz_Request::paramString('freshvibes_empty_feeds_display') ?: 'show';
+			if (!in_array($emptyFeedsDisplay, self::EMPTY_FEEDS_DISPLAY_OPTIONS, true)) {
+				$emptyFeedsDisplay = self::DEFAULT_EMPTY_FEEDS_DISPLAY;
+			}
+			$userConf->_attribute(self::EMPTY_FEEDS_DISPLAY_CONFIG_KEY, $emptyFeedsDisplay);
+			$dashboardLayout = Minz_Request::paramString('freshvibes_dashboard_layout') ?: 'tabs';
+			if (!in_array($dashboardLayout, self::DASHBOARD_LAYOUT_OPTIONS, true)) {
+				$dashboardLayout = self::DEFAULT_DASHBOARD_LAYOUT;
+			}
+			$userConf->_attribute(self::DASHBOARD_LAYOUT_CONFIG_KEY, $dashboardLayout);
 
 			$userConf->save();
 		}

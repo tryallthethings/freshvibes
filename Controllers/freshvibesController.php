@@ -170,6 +170,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->searchAuthorUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		$this->view->searchTagUrl = Minz_Url::display(['a' => 'normal'], 'html', false);
 		$this->view->animationsEnabled = $userConf->attributeBool(FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY);
+		$this->view->emptyFeedsDisplay = $userConf->attributeString(FreshVibesViewExtension::EMPTY_FEEDS_DISPLAY_CONFIG_KEY) ?: 'show';
 
 		$this->view->viewMode = $mode;
 		$this->view->rss_title = _t('ext.FreshVibesView.title');
@@ -184,6 +185,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->view->refreshFeedsUrl = Minz_Url::display(['c' => $controllerParam, 'a' => 'refreshfeeds'], 'json', false);
 		$this->view->feedSettingsUrl = Minz_Url::display() . '?c=subscription&a=feed&id=';
 		$this->view->categorySettingsUrl = Minz_Url::display() . '?c=category&a=update&id=';
+		$this->view->dashboardLayout = $userConf->attributeString(FreshVibesViewExtension::DASHBOARD_LAYOUT_CONFIG_KEY) ?: 'tabs';
 
 		$tags = FreshRSS_Context::labels(true);
 		$this->view->tags = $tags;
@@ -214,7 +216,9 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			FreshVibesViewExtension::LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::CATEGORY_LAYOUT_CONFIG_KEY => null,
 			FreshVibesViewExtension::MODE_CONFIG_KEY => 'custom',
+			FreshVibesViewExtension::DASHBOARD_LAYOUT_CONFIG_KEY => 'tabs',
 			FreshVibesViewExtension::ANIMATIONS_ENABLED_CONFIG_KEY => true,
+			FreshVibesViewExtension::EMPTY_FEEDS_DISPLAY_CONFIG_KEY => 'show',
 		];
 
 		foreach ($defaults as $key => $value) {
@@ -331,6 +335,10 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 					// Remove feeds that don't belong to this category
 					foreach ($columns as $colKey => &$colFeeds) {
+						if (!is_array($colFeeds)) {
+							$colFeeds = [];
+							continue;
+						}
 						$colFeeds = array_values(array_intersect($colFeeds, $feedIds));
 					}
 					unset($colFeeds);
@@ -339,10 +347,12 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					$existingFeedIds = [];
 					foreach ($columns as $colFeeds) {
 						if (is_array($colFeeds)) {
-							$existingFeedIds = array_merge($existingFeedIds, $colFeeds);
+							foreach ($colFeeds as $fid) {
+								$existingFeedIds[strval($fid)] = true;
+							}
 						}
 					}
-					$missingFeeds = array_diff($feedIds, $existingFeedIds);
+					$missingFeeds = array_diff($feedIds, array_keys($existingFeedIds));
 
 					if (!empty($missingFeeds)) {
 						if ($newFeedPosition === 'top') {
@@ -439,9 +449,20 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		// Ensure all layout columns are arrays before returning
 		foreach ($layout as &$tab) {
 			if (isset($tab['columns']) && is_array($tab['columns'])) {
+				$seenFeeds = [];
 				foreach ($tab['columns'] as &$column) {
 					if (!is_array($column)) {
 						$column = [];
+					} else {
+						// Remove duplicates within and across columns
+						$uniqueColumn = [];
+						foreach ($column as $feedId) {
+							if (!in_array($feedId, $seenFeeds, true)) {
+								$uniqueColumn[] = $feedId;
+								$seenFeeds[] = $feedId;
+							}
+						}
+						$column = $uniqueColumn;
 					}
 				}
 			}
@@ -451,6 +472,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 	}
 
 	private function saveLayout(array $layout): void {
+		// Clean up any duplicates before saving
+		$this->deduplicateLayout($layout);
 		$userConf = FreshRSS_Context::userConf();
 		$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
 		$layoutKey = $mode === 'categories'
@@ -570,7 +593,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 						'detailedSnippet' => $this->generateSnippet($entry, 100, 3),
 						'isRead' => $entry->isRead(),
 						'isFavorite' => $entry->isFavorite(),
-						'author' => html_entity_decode($entry->author(), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
+						'author' => html_entity_decode($entry->authors(asString: true), ENT_QUOTES | ENT_HTML5, 'UTF-8'),
 						'tags' => $entry->tags(),
 						'feedId' => $feedId,
 					];
@@ -623,7 +646,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				$userConf->save();
 			}
 
-			$feedDAO = new FreshRSS_FeedDAO();
+			$feedDAO = FreshRSS_Factory::createFeedDao();
 
 			foreach ($layout as &$tab) {
 				$tab['name'] = html_entity_decode($tab['name'], ENT_QUOTES | ENT_HTML5, 'UTF-8');
@@ -757,7 +780,14 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 						unset($layout[$deletedTabIndex]);
 						$layout = array_values($layout);
 						if (!empty($feedsToMove)) {
+							// Ensure columns exist and get first column key safely
+							if (!isset($layout[0]['columns']) || empty($layout[0]['columns'])) {
+								$layout[0]['columns'] = ['col1' => []];
+							}
 							$firstColKey = key($layout[0]['columns']);
+							if (!isset($layout[0]['columns'][$firstColKey])) {
+								$layout[0]['columns'][$firstColKey] = [];
+							}
 							$layout[0]['columns'][$firstColKey] = array_unique(array_merge($layout[0]['columns'][$firstColKey], $feedsToMove));
 						}
 					}
@@ -995,100 +1025,79 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$this->validatePostRequest();
 		header('Content-Type: application/json');
 
-		$feedId = Minz_Request::paramString('feed_id');  // Changed from paramInt to paramString
+		$feedId = Minz_Request::paramInt('feed_id');
 		$targetTabId = Minz_Request::paramString('target_tab_id');
+		// source_tab_id is not strictly needed with the new robust logic, but we keep the parameter for API consistency
 		$sourceTabId = Minz_Request::paramString('source_tab_id');
 
-		if ($feedId == '' || $targetTabId == '' || $sourceTabId == '') {
+		if ($feedId <= 0 || $targetTabId == '' || $sourceTabId == '') {
 			http_response_code(400);
 			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_invalid_request')]);
 			exit;
 		}
 
-		try {
-			$layout = $this->getLayout();
+		$layout = $this->getLayout();
 
-			// Find and remove the feed from the source tab
-			foreach ($layout as &$tab) {
-				if ($tab['id'] === $sourceTabId) {
-					foreach ($tab['columns'] as &$column) {
-						if (!is_array($column)) {
-							continue;
-						}
-
-						$filtered_column = [];
-						foreach ($column as $id) {
-							if ($id !== $feedId) {
-								$filtered_column[] = $id;
-							}
-						}
-						$column = $filtered_column;
+		// Globally remove the feed from all tabs to prevent duplicates
+		foreach ($layout as &$tab) {
+			if (isset($tab['columns']) && is_array($tab['columns'])) {
+				foreach ($tab['columns'] as &$column) {
+					if (is_array($column)) {
+						$column = array_values(array_filter($column, function ($id) use ($feedId) {
+							return intval($id) !== $feedId;
+						}));
 					}
-					unset($column);
 				}
+				unset($column);
 			}
-			unset($tab);
-
-			// Add the feed to the target tab
-			foreach ($layout as &$tab) {
-				if ($tab['id'] === $targetTabId) {
-					$firstColKey = !empty($tab['columns']) ? key($tab['columns']) : 'col1';
-					if (!isset($tab['columns'][$firstColKey])) {
-						$tab['columns'][$firstColKey] = [];
-					}
-					// Add the feed ID if it's not already there
-					if (!in_array($feedId, $tab['columns'][$firstColKey], true)) {
-						$tab['columns'][$firstColKey][] = $feedId;
-					}
-					break;
-				}
-			}
-			unset($tab);
-
-			$this->saveLayout($layout);
-			echo json_encode(['status' => 'success', 'new_layout' => $layout]);
-		} catch (Exception $e) {
-			http_response_code(500);
-			error_log('FreshVibesView moveFeedAction error: ' . $e->getMessage());
-			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.error_server')]);
 		}
+		unset($tab);
+
+		// Add the feed to the target tab
+		foreach ($layout as &$tab) {
+			if ($tab['id'] === $targetTabId) {
+				$firstColKey = !empty($tab['columns']) ? key($tab['columns']) : 'col1';
+				if (!isset($tab['columns'][$firstColKey])) {
+					$tab['columns'][$firstColKey] = [];
+				}
+				// Add feed to the beginning of the first column
+				array_unshift($tab['columns'][$firstColKey], $feedId);
+				break;
+			}
+		}
+		unset($tab);
+
+		$this->saveLayout($layout);
+		echo json_encode(['status' => 'success', 'new_layout' => $layout]);
 		exit;
 	}
 
 	private function generateSnippet(FreshRSS_Entry $entry, int $wordLimit = 15, int $sentenceLimit = 1): string {
 		$content = $entry->content();
 
-		// Decode HTML entities first
+		// Decode HTML entities first, once.
 		$content = html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 
-		// For modal excerpts, preserve some HTML
 		if ($wordLimit > 50) {
-			// Remove the custom sanitization - trust FreshRSS's sanitization
-			// Just strip all tags for safety since we're manipulating the HTML
-			$content = strip_tags($content);
+			// To prevent CSP errors, remove tags that load external content like images.
+			$content = preg_replace('/<img[^>]*>/i', '', $content);
 
-			// Truncate to 500 characters if needed
-			if (mb_strlen($content) > 500) {
-				$content = mb_substr($content, 0, 500);
-				$lastSpace = mb_strrpos($content, ' ');
-				if ($lastSpace !== false) {
-					$content = mb_substr($content, 0, $lastSpace);
-				}
-				$content .= '…';
+			// A simple approximation of word counting that preserves HTML tags.
+			$words = preg_split('/(<\/?[a-zA-Z0-9\s="\'#\/?]+>|\s+)/', $content, $wordLimit + 1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY);
+			if (count($words) > $wordLimit) {
+				return implode('', array_slice($words, 0, $wordLimit)) . '…';
 			}
-
 			return $content;
 		}
 
-		// For regular snippets, strip all HTML
-		$plainText = trim(strip_tags(html_entity_decode($content, ENT_QUOTES | ENT_HTML5, 'UTF-8')));
+		// Generate a plain text snippet for list views.
+		$plainText = trim(strip_tags($content));
 		if (empty($plainText)) {
 			return '';
 		}
 
-		// For detailed view with sentence limit
+		// For the detailed list view, limit by sentences.
 		if ($sentenceLimit > 1) {
-			// Split by sentence endings
 			$sentences = preg_split('/(?<=[.!?])\s+/', $plainText, -1, PREG_SPLIT_NO_EMPTY);
 			if (count($sentences) <= $sentenceLimit) {
 				return $plainText;
@@ -1096,9 +1105,13 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			return implode(' ', array_slice($sentences, 0, $sentenceLimit)) . '…';
 		}
 
-		// Original word-based limiting
+		// For tiny and compact list views, limit by words.
 		$words = preg_split('/[\s,]+/', $plainText, $wordLimit + 1);
-		return count($words) > $wordLimit ? implode(' ', array_slice($words, 0, $wordLimit)) . '…' : implode(' ', $words);
+		if (count($words) > $wordLimit) {
+			return implode(' ', array_slice($words, 0, $wordLimit)) . '…';
+		}
+
+		return $plainText;
 	}
 
 	public function markFeedReadAction() {
@@ -1273,7 +1286,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		try {
 			$userConf = FreshRSS_Context::userConf();
 			$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
-			$feedDAO = new FreshRSS_FeedDAO();
+			$feedDAO = FreshRSS_Factory::createFeedDao();
 			$feeds = $feedDAO->listFeeds();
 
 			foreach ($feeds as $feed) {
@@ -1392,7 +1405,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		try {
 			$userConf = FreshRSS_Context::userConf();
 			$mode = $userConf->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
-			$feedDAO = new FreshRSS_FeedDAO();
+			$feedDAO = FreshRSS_Factory::createFeedDao();
 			$feeds = $feedDAO->listFeeds();
 
 			foreach ($feeds as $feed) {
@@ -1507,6 +1520,53 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 			http_response_code(403);
 			echo json_encode(['status' => 'error', 'message' => _t('ext.FreshVibesView.csrf_error')]);
 			exit;
+		}
+	}
+
+	private function deduplicateLayout(array &$layout): void {
+		$firstTabForFeed = [];
+
+		// First pass: find the canonical tab for each feed ID
+		foreach ($layout as $tab) {
+			if (!isset($tab['columns']) || !is_array($tab['columns'])) {
+				continue;
+			}
+			foreach ($tab['columns'] as $column) {
+				if (!is_array($column)) {
+					continue;
+				}
+				foreach ($column as $feedId) {
+					$feedIdStr = strval($feedId);
+					if (!isset($firstTabForFeed[$feedIdStr])) {
+						$firstTabForFeed[$feedIdStr] = $tab['id'];
+					}
+				}
+			}
+		}
+
+		// Second pass: clean up duplicates based on the canonical tab
+		foreach ($layout as &$tab) {
+			if (!isset($tab['columns']) || !is_array($tab['columns'])) {
+				continue;
+			}
+			foreach ($tab['columns'] as &$column) {
+				if (!is_array($column)) {
+					$column = [];
+					continue;
+				}
+				$cleanColumn = [];
+				foreach ($column as $feedId) {
+					$feedIdStr = strval($feedId);
+					// Keep the feed only if this is its canonical tab
+					if (isset($firstTabForFeed[$feedIdStr]) && $firstTabForFeed[$feedIdStr] === $tab['id']) {
+						// Also ensure no duplicates within the same column
+						if (!in_array($feedId, $cleanColumn, true)) {
+							$cleanColumn[] = $feedId;
+						}
+					}
+				}
+				$column = $cleanColumn;
+			}
 		}
 	}
 }

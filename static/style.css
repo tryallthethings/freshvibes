@@ -7,6 +7,7 @@
 /* ========================================
    CSS VARIABLES & THEME INTEGRATION
    ======================================== */
+
 :root {
 	/* Extension-specific variables with fallbacks from base theme */
 	--freshvibes-border-radius: var(--border-radius, 0.25rem);
@@ -54,9 +55,20 @@
 	transform: translateY(-1px);
 }
 
+.freshvibes-view[data-animations="enabled"] .freshvibes-container-content li.entry-item {
+	transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
 .freshvibes-view[data-animations="enabled"] .entry-item:hover {
-	transition: all 0.3s ease 0s;
 	transform: scale(1.01);
+}
+
+.freshvibes-view[data-animations="enabled"] .freshvibes-container.display-compact .entry-item:hover,
+.freshvibes-view[data-animations="enabled"] .freshvibes-container.display-detailed .entry-item:hover {
+	transform: translateY(-2px);
+	box-shadow: var(--freshvibes-box-shadow);
+	z-index: 5;
+	/* Ensures the shadow appears above the next item */
 }
 
 .freshvibes-view[data-animations="enabled"] .fv-modal-close:hover {
@@ -67,13 +79,147 @@
 	transition: right 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
+.freshvibes-view[data-animations="enabled"] .tab-settings-menu {
+	opacity: 0;
+	/* When hiding, fade out first, then set visibility to hidden after a delay. */
+	transition: opacity 0.1s ease-in-out, visibility 0s linear 0.1s;
+}
+
+.freshvibes-view[data-animations="enabled"] .tab-settings-menu.active {
+	opacity: 1;
+	/* When showing, just fade in the opacity. */
+	transition: opacity 0.1s ease-in-out;
+}
+
+.freshvibes-view[data-animations="enabled"] .freshvibes-tab.menu-is-open:hover {
+	transform: none;
+}
+
 .freshvibes-view[data-animations="disabled"] {
 	--freshvibes-transition-duration: 0s;
 }
 
+/* Collapse or hide empty containers*/
+/* Collapse content only - shows header but hides the content area */
+.freshvibes-view[data-empty-feeds="collapse_content"] .freshvibes-container:has(.no-entries) .freshvibes-container-content {
+	display: none;
+}
+
+/* Hide completely - hides the entire feed container */
+.freshvibes-view[data-empty-feeds="hide_completely"] .freshvibes-container:has(.no-entries) {
+	display: none;
+}
+
+
+/* Vertical Layout Styles */
+.freshvibes-vertical-container {
+	padding: 0 12px;
+}
+
+.freshvibes-vertical-section {
+	border-radius: var(--freshvibes-border-radius);
+	overflow: visible;
+}
+
+.freshvibes-vertical-section:first-child .freshvibes-section-header {
+	justify-content: flex-start;
+}
+
+.freshvibes-vertical-section:has(.tab-settings-menu.active) {
+	position: relative;
+}
+
+.freshvibes-view[data-layout="vertical"] .freshvibes-section-content .freshvibes-columns {
+	min-height: 20px;
+	align-items: stretch;
+}
+
+.freshvibes-section-header {
+	display: flex;
+	border-bottom: 2px solid var(--freshvibes-border-color);
+	align-items: center;
+	gap: 4px;
+	justify-content: flex-start;
+}
+
+.section-unread-count.clickable {
+	cursor: pointer;
+	transition: all var(--freshvibes-transition-duration) ease;
+}
+
+.section-unread-count.clickable:hover {
+	background-color: var(--freshvibes-accent-primary);
+	color: var(--freshvibes-text-light);
+	border-color: var(--freshvibes-accent-primary);
+}
+
+.section-settings {
+	margin-left: auto;
+	position: relative;
+}
+
+.section-settings-button {
+	padding: 4px 8px;
+	background: none;
+	color: var(--section-font-color, var(--freshvibes-text-secondary));
+	font-size: 0.9em;
+	border: none;
+	cursor: pointer;
+	line-height: 1;
+}
+
+.section-settings-button:hover {
+	color: var(--section-font-color, var(--freshvibes-text-primary));
+}
+
+.section-icon {
+	font-size: 1.3em;
+	line-height: 1;
+}
+
+.section-name {
+	flex: 1;
+}
+
+.section-unread-count {
+	padding: 4px 12px;
+	color: var(--freshvibes-text-primary);
+	font-size: 0.85em;
+	border: 1px solid var(--freshvibes-border-color);
+	border-radius: calc(var(--freshvibes-border-radius) * 3);
+	background-color: var(--freshvibes-background-primary);
+	font-weight: normal;
+}
+
+.freshvibes-section-content {
+	padding: 10px;
+	background-color: var(--freshvibes-background-primary);
+}
+
+/* Move subscription buttons styling for vertical mode */
+.freshvibes-vertical-section:first-child .moved-subscription-buttons {
+	margin-left: 8px;
+}
+
+.freshvibes-vertical-section:first-child .tab-bulk-button {
+	margin-left: 8px;
+}
+
+/* Ensure proper spacing in vertical mode */
+.freshvibes-view[data-layout="vertical"] .freshvibes-header {
+	display: none;
+}
+
+/* Remove minimum height for columns in vertical layout */
+.freshvibes-view[data-layout="vertical"] .freshvibes-column {
+	min-height: 20px;
+}
+
 /* Dark mode support */
+
 @media (prefers-color-scheme: dark) {
 	:root.darkMode_auto {
+
 		--freshvibes-background-primary: var(--background-color-dark, var(--background-color-light, var(--frss-background-color, #111)));
 		--freshvibes-background-secondary: var(--background-color-grey, var(--background-color-middle, var(--frss-background-color-middle, #1f1f1f)));
 		--freshvibes-background-hover: var(--background-color-hover, var(--dark-background-color-blue, #212227));
@@ -115,10 +261,10 @@
 
 /* Tab Navigation */
 .freshvibes-tabs {
+	margin: 0;
+	padding: 0;
 	display: flex;
 	list-style: none;
-	padding: 0;
-	margin: 0;
 	align-items: center;
 	flex-wrap: wrap;
 	gap: 4px;
@@ -126,20 +272,20 @@
 
 .freshvibes-tab {
 	padding: 8px 15px;
-	cursor: pointer;
+	display: flex;
+	color: var(--tab-font-color, var(--freshvibes-button-text));
 	border: 1px solid transparent;
 	border-bottom: none;
 	border-radius: var(--freshvibes-border-radius) var(--freshvibes-border-radius) 0 0;
+	cursor: pointer;
 	margin-bottom: -1px;
 	position: relative;
-	display: flex;
 	align-items: center;
 	justify-content: center;
 	text-align: center;
 	flex: 0 1 auto;
 	gap: 8px;
 	background-color: var(--tab-bg-color, var(--background-color-grey, var(--freshvibes-background-secondary)));
-	color: var(--tab-font-color, var(--freshvibes-button-text));
 	transition: all var(--freshvibes-transition-duration) ease;
 }
 
@@ -167,30 +313,30 @@
 
 /* Tab Elements */
 .tab-name-input {
-	border: 1px solid var(--freshvibes-accent-primary);
 	padding: 2px 4px;
-	font: inherit;
-	background-color: var(--freshvibes-background-primary);
 	color: var(--freshvibes-text-primary);
+	font: inherit;
+	border: 1px solid var(--freshvibes-accent-primary);
+	background-color: var(--freshvibes-background-primary);
 }
 
 .tab-icon {
+	color: var(--tab-icon-color, inherit);
 	font-size: 1.2em;
 	line-height: 1;
-	color: var(--tab-icon-color, inherit);
 }
 
 /* Tab Controls */
 .tab-add-button,
 .tab-bulk-button {
 	padding: 4px 12px;
-	font-weight: bold;
+	color: var(--freshvibes-text-primary);
 	font-size: 1.5em;
-	line-height: 1;
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
+	font-weight: bold;
+	line-height: 1;
 	background-color: var(--freshvibes-background-secondary);
-	color: var(--freshvibes-text-primary);
 	cursor: pointer;
 	margin-left: 8px;
 	text-align: center;
@@ -220,12 +366,12 @@
 }
 
 .tab-settings-button {
-	background: none;
-	border: none;
-	cursor: pointer;
 	padding: 0 4px;
+	background: none;
 	color: var(--freshvibes-text-secondary);
 	font-size: 1em;
+	border: none;
+	cursor: pointer;
 	line-height: 1;
 	margin-left: 5px;
 	font-weight: normal;
@@ -240,29 +386,30 @@
 
 /* Tab Settings Menu */
 .tab-settings-menu {
-	display: none;
-	position: absolute;
-	top: calc(100% + 5px);
-	right: -10px;
-	z-index: 100;
+	padding: 10px;
 	background: var(--freshvibes-background-primary);
+	display: flex;
+	color: var(--freshvibes-text-primary);
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
 	box-shadow: var(--freshvibes-box-shadow);
-	padding: 10px;
+	visibility: hidden;
+	position: absolute;
+	top: calc(100% + 5px);
+	right: -10px;
+	z-index: 1000;
 	min-width: 200px;
 	flex-direction: column;
 	gap: 10px;
-	color: var(--freshvibes-text-primary);
 }
 
 .freshvibes-tab:has(.tab-settings-menu.active) {
 	position: relative;
-	z-index: 10;
+	z-index: 110;
 }
 
 .tab-settings-menu.active {
-	display: flex;
+	visibility: visible;
 }
 
 .tab-settings-menu .menu-section {
@@ -299,21 +446,20 @@
 	align-items: center;
 }
 
-.tab-icon-input {
-	width: 60px;
+input.tab-icon-input {
 	flex: 0 0 60px;
+	width: 60px;
 	text-align: center;
 }
 
 input[type="color"] {
+	padding: 0;
 	width: 32px;
 	height: 32px;
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
 	cursor: pointer;
-	padding: 0;
 	flex-shrink: 0;
-	-webkit-appearance: none;
 	appearance: none;
 }
 
@@ -325,10 +471,10 @@ input[type="color"] {
 }
 
 .columns-selector button {
-	flex: 1;
 	padding: 4px 8px;
-	border: 1px solid var(--freshvibes-border-color);
 	color: var(--freshvibes-text-secondary);
+	border: 1px solid var(--freshvibes-border-color);
+	flex: 1;
 	cursor: pointer;
 	transition: all var(--freshvibes-transition-duration) ease;
 }
@@ -359,16 +505,16 @@ input[type="color"] {
 
 /* Icon Picker */
 .icon-picker {
-	display: none;
-	position: absolute;
+	padding: 5px;
 	background: var(--freshvibes-background-primary);
+	display: none;
+	max-width: 200px;
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
-	padding: 5px;
 	box-shadow: var(--freshvibes-box-shadow);
-	z-index: 30;
+	position: absolute;
+	z-index: 1100;
 	flex-wrap: wrap;
-	max-width: 200px;
 	gap: 2px;
 }
 
@@ -377,14 +523,14 @@ input[type="color"] {
 }
 
 .icon-picker span {
+	display: flex;
 	width: 30px;
 	height: 30px;
-	display: flex;
+	font-size: 1.2em;
+	border-radius: var(--freshvibes-border-radius);
 	align-items: center;
 	justify-content: center;
 	cursor: pointer;
-	border-radius: var(--freshvibes-border-radius);
-	font-size: 1.2em;
 }
 
 .icon-picker span:hover {
@@ -444,14 +590,14 @@ input[type="color"] {
 /* Feed Header */
 .freshvibes-container-header {
 	padding: 2px 12px;
-	background-color: var(--header-bg-color, var(--background-color-grey, var(--freshvibes-background-secondary)));
-	border-bottom: 1px solid var(--freshvibes-border-color);
-	cursor: grab;
 	display: flex;
+	color: var(--header-font-color, var(--freshvibes-button-text));
+	border-bottom: 1px solid var(--freshvibes-border-color);
+	background-color: var(--header-bg-color, var(--background-color-grey, var(--freshvibes-background-secondary)));
+	cursor: grab;
 	align-items: center;
 	gap: 8px;
 	font-weight: bold;
-	color: var(--header-font-color, var(--freshvibes-button-text));
 }
 
 .freshvibes-container-header .feed-title {
@@ -480,15 +626,15 @@ input[type="color"] {
 /* Feed Badges */
 .feed-unread-badge,
 .tab-unread-count {
-	background-color: var(--freshvibes-background-primary);
-	color: var(--freshvibes-button-text);
 	padding: 2px 8px;
-	border-radius: calc(var(--freshvibes-border-radius) * 2);
+	color: var(--freshvibes-button-text);
 	font-size: 0.85em;
+	border: 1px solid var(--freshvibes-border-color);
+	border-radius: calc(var(--freshvibes-border-radius) * 2);
+	background-color: var(--freshvibes-background-primary);
 	font-weight: normal;
 	cursor: pointer;
 	flex-shrink: 0;
-	border: 1px solid var(--freshvibes-border-color);
 }
 
 .feed-unread-badge {
@@ -533,18 +679,18 @@ input[type="color"] {
 }
 
 .feed-settings-button {
+	padding: 8px 12px;
+	background: transparent;
 	display: inline-flex;
+	color: var(--freshvibes-text-secondary);
+	font-size: 1.1em;
+	border: none;
 	align-items: center;
 	justify-content: center;
-	background: transparent;
-	border: none;
-	padding: 8px 12px;
 	cursor: pointer;
-	color: var(--freshvibes-text-secondary);
 	line-height: 1;
 	min-width: 40px;
 	min-height: 32px;
-	font-size: 1.1em;
 }
 
 .feed-settings-button:hover,
@@ -553,29 +699,29 @@ input[type="color"] {
 }
 
 .feed-settings-button svg {
+	display: block;
 	width: 1.5rem;
 	height: 1.5rem;
-	display: block;
 }
 
 /* Feed Settings Editor */
 .feed-settings-editor {
+	padding: 10px 15px;
 	display: none;
+	max-width: 90vw;
+	width: max-content;
+	color: var(--freshvibes-text-primary);
+	font-size: 0.95em;
+	border: 1px solid var(--freshvibes-border-shadow);
+	border-radius: var(--freshvibes-border-radius);
+	box-shadow: var(--freshvibes-box-shadow);
 	flex-direction: column;
 	gap: 10px;
 	position: absolute;
 	top: calc(100% + 5px);
 	right: 0;
 	background-color: var(--freshvibes-background-primary);
-	color: var(--freshvibes-text-primary);
-	border: 1px solid var(--freshvibes-border-shadow);
-	padding: 10px 15px;
-	border-radius: var(--freshvibes-border-radius);
-	box-shadow: var(--freshvibes-box-shadow);
 	z-index: 50;
-	width: max-content;
-	max-width: 90vw;
-	font-size: 0.95em;
 }
 
 .feed-settings-editor,
@@ -607,13 +753,13 @@ input[type="color"] {
 }
 
 .feed-maxheight-input {
-	width: 100%;
 	padding: 4px 8px;
+	width: 100%;
+	color: var(--freshvibes-text-primary);
+	font-size: inherit;
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
 	background-color: var(--freshvibes-background-primary);
-	color: var(--freshvibes-text-primary);
-	font-size: inherit;
 }
 
 .setting-row select {
@@ -628,30 +774,30 @@ input[type="color"] {
 }
 
 .feed-move-to label {
-	font-weight: bold;
-	font-size: 0.95em;
-	margin-bottom: 4px;
 	display: block;
+	font-size: 0.95em;
+	font-weight: bold;
+	margin-bottom: 4px;
 }
 
 .feed-move-to-list {
-	list-style: none;
-	padding: 0;
 	margin: 0;
+	padding: 0;
 	max-height: 150px;
+	list-style: none;
 	overflow-y: auto;
 }
 
 .feed-move-to-list li button {
-	width: 100%;
-	text-align: left;
-	background: var(--freshvibes-button-bg);
-	border: 1px solid var(--freshvibes-border-color);
 	padding: 6px 12px;
-	cursor: pointer;
-	border-radius: var(--freshvibes-border-radius);
-	font-size: 0.95em;
+	background: var(--freshvibes-button-bg);
+	width: 100%;
 	color: var(--freshvibes-text-primary);
+	font-size: 0.95em;
+	border: 1px solid var(--freshvibes-border-color);
+	border-radius: var(--freshvibes-border-radius);
+	text-align: left;
+	cursor: pointer;
 	transition: all var(--freshvibes-transition-duration) ease;
 }
 
@@ -669,6 +815,8 @@ input[type="color"] {
 	padding: 0 12px;
 	overflow-y: auto;
 	overflow-x: hidden;
+	scrollbar-width: thin;
+	scrollbar-color: var(--frss-font-color-grey-light, #aaa) var(--freshvibes-background-secondary);
 }
 
 /* Custom scrollbar styling */
@@ -683,8 +831,8 @@ input[type="color"] {
 
 .freshvibes-container-content::-webkit-scrollbar-thumb {
 	background: var(--frss-font-color-grey-light, #aaa);
-	border-radius: var(--freshvibes-border-radius);
 	border: 1px solid var(--freshvibes-background-secondary);
+	border-radius: var(--freshvibes-border-radius);
 }
 
 .freshvibes-container-content::-webkit-scrollbar-thumb:hover {
@@ -692,16 +840,10 @@ input[type="color"] {
 	filter: brightness(1.2);
 }
 
-/* Firefox scrollbar */
-.freshvibes-container-content {
-	scrollbar-width: thin;
-	scrollbar-color: var(--frss-font-color-grey-light, #aaa) var(--freshvibes-background-secondary);
-}
-
 .freshvibes-container-content ul {
-	list-style: none;
-	padding: 6px 0;
 	margin: 0;
+	padding: 6px 0;
+	list-style: none;
 }
 
 .freshvibes-container-content li.entry-item {
@@ -741,8 +883,8 @@ input[type="color"] {
 }
 
 .entry-snippet {
-	font-size: 0.95em;
 	color: var(--freshvibes-text-secondary);
+	font-size: 0.95em;
 	vertical-align: middle;
 }
 
@@ -761,21 +903,21 @@ input[type="color"] {
 }
 
 .entry-date {
-	flex-shrink: 0;
-	font-size: 0.85em;
 	color: var(--freshvibes-text-secondary);
+	font-size: 0.85em;
+	flex-shrink: 0;
 	white-space: nowrap;
 }
 
 .entry-link {
+	padding: 4px 0;
 	display: flex;
+	width: 100%;
+	color: inherit;
 	justify-content: space-between;
 	align-items: center;
 	gap: 10px;
 	text-decoration: none;
-	color: inherit;
-	width: 100%;
-	padding: 4px 0;
 }
 
 .entry-link:hover {
@@ -791,8 +933,8 @@ input[type="color"] {
 /* Display Modes */
 .freshvibes-container.display-compact .entry-item,
 .freshvibes-container.display-detailed .entry-item {
-	display: block;
 	padding: 0px 0;
+	display: block;
 }
 
 .freshvibes-container.display-compact .entry-wrapper,
@@ -833,8 +975,8 @@ input[type="color"] {
 }
 
 .freshvibes-container .entry-excerpt {
-	font-size: 0.95em;
 	color: var(--freshvibes-text-secondary);
+	font-size: 0.95em;
 	line-height: 1.4;
 	margin-top: 2px;
 }
@@ -856,12 +998,26 @@ input[type="color"] {
 	overflow: hidden;
 }
 
+.freshvibes-container.display-compact .entry-link,
+.freshvibes-container.display-detailed .entry-link {
+	display: flex;
+	align-items: flex-start;
+	gap: 0.3em;
+}
+
+.freshvibes-container.display-compact .entry-favorite-indicator,
+.freshvibes-container.display-detailed .entry-favorite-indicator {
+	flex-shrink: 0;
+	margin-top: 0.15em;
+}
+
 /* Hover styles for new layouts */
 .freshvibes-container.display-compact .entry-item:hover,
 .freshvibes-container.display-detailed .entry-item:hover {
 	background-color: var(--freshvibes-background-secondary);
-	margin: 0 -12px;
-	padding: 8px 12px;
+	outline: 1px solid var(--freshvibes-border-color);
+	/* Adds a crisp edge without affecting layout */
+	outline-offset: -1px;
 }
 
 /* Entry Actions */
@@ -892,17 +1048,16 @@ input[type="color"] {
 }
 
 .entry-action-btn {
+	padding: 4px 8px;
 	background: rgba(var(--frss-background-color-middle, 240, 240, 240), 0.9);
-	backdrop-filter: blur(8px);
-	-webkit-backdrop-filter: blur(8px);
+	display: flex;
+	font-size: 0.9em;
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
-	padding: 4px 8px;
-	cursor: pointer;
-	font-size: 0.9em;
-	transition: all var(--freshvibes-transition-duration) ease;
 	box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-	display: flex;
+	backdrop-filter: blur(8px);
+	cursor: pointer;
+	transition: all var(--freshvibes-transition-duration) ease;
 	align-items: center;
 	gap: 4px;
 }
@@ -1003,9 +1158,10 @@ input[type="color"] {
 
 /* No entries message */
 .no-entries {
+	margin: 0.5rem 0 0.5rem;
+	padding: 5px 0;
 	color: var(--freshvibes-text-secondary);
 	text-align: center;
-	padding: 20px 0;
 	font-style: italic;
 }
 
@@ -1015,15 +1171,15 @@ input[type="color"] {
 
 /* Entry Modal */
 .fv-modal {
+	background: rgba(0, 0, 0, 0.7);
+	display: none;
+	width: 100%;
+	height: 100%;
 	position: fixed;
 	top: 0;
 	left: 0;
-	width: 100%;
-	height: 100%;
-	display: none;
 	align-items: center;
 	justify-content: center;
-	background: rgba(0, 0, 0, 0.7);
 	z-index: 1000;
 	backdrop-filter: blur(3px);
 }
@@ -1034,34 +1190,34 @@ input[type="color"] {
 
 .fv-modal-content {
 	background: var(--frss-background-color-middle, var(--freshvibes-background-primary));
-	color: var(--freshvibes-text-primary);
-	border-radius: calc(var(--freshvibes-border-radius) * 2);
+	display: flex;
 	max-width: 800px;
 	width: 90%;
 	max-height: 85vh;
-	overflow: hidden;
-	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+	color: var(--freshvibes-text-primary);
 	border: 1px solid var(--freshvibes-border-color);
+	border-radius: calc(var(--freshvibes-border-radius) * 2);
+	box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+	overflow: hidden;
 	position: relative;
-	display: flex;
 	flex-direction: column;
 }
 
 .fv-modal-close {
+	background: var(--freshvibes-background-secondary);
+	display: flex;
+	width: 36px;
+	height: 36px;
+	color: var(--freshvibes-text-secondary);
+	font-size: 1.5em;
+	border: none;
+	border-radius: 50%;
 	position: absolute;
 	top: 15px;
 	right: 15px;
-	border: none;
-	background: var(--freshvibes-background-secondary);
-	font-size: 1.5em;
 	cursor: pointer;
-	color: var(--freshvibes-text-secondary);
-	width: 36px;
-	height: 36px;
-	display: flex;
 	align-items: center;
 	justify-content: center;
-	border-radius: 50%;
 	z-index: 1;
 	transition: all var(--freshvibes-transition-duration);
 }
@@ -1079,24 +1235,24 @@ input[type="color"] {
 
 .fv-modal-header {
 	padding: 30px 30px 20px;
-	border-bottom: 1px solid var(--freshvibes-border-color);
 	background: var(--freshvibes-background-secondary);
+	border-bottom: 1px solid var(--freshvibes-border-color);
 }
 
 .fv-modal-title {
 	margin: 0 40px 12px 0;
+	color: var(--freshvibes-text-primary);
 	font-size: 1.6em;
 	line-height: 1.3;
-	color: var(--freshvibes-text-primary);
 	font-weight: 600;
 }
 
 .fv-modal-meta {
 	display: flex;
+	color: var(--freshvibes-text-secondary);
+	font-size: 0.95em;
 	align-items: center;
 	justify-content: space-between;
-	font-size: 0.95em;
-	color: var(--freshvibes-text-secondary);
 	flex-wrap: wrap;
 	gap: 15px;
 }
@@ -1116,10 +1272,10 @@ input[type="color"] {
 }
 
 .fv-modal-feed {
-	font-weight: 500;
-	color: var(--freshvibes-accent-primary);
-	text-decoration: none;
 	display: flex;
+	color: var(--freshvibes-accent-primary);
+	font-weight: 500;
+	text-decoration: none;
 	align-items: center;
 	gap: 4px;
 }
@@ -1198,13 +1354,13 @@ input[type="color"] {
 }
 
 .fv-modal-tag {
-	display: inline-block;
 	padding: 4px 12px;
 	background: var(--freshvibes-background-active);
+	display: inline-block;
 	color: var(--freshvibes-accent-primary);
-	border-radius: calc(var(--freshvibes-border-radius) * 3);
 	font-size: 0.85em;
 	border: 1px solid var(--freshvibes-border-color);
+	border-radius: calc(var(--freshvibes-border-radius) * 3);
 	text-decoration: none;
 }
 
@@ -1223,14 +1379,14 @@ input[type="color"] {
 
 .fv-modal-actions .fvbtn {
 	padding: 8px 20px;
+	background: var(--freshvibes-background-primary);
+	display: inline-flex;
+	color: var(--freshvibes-text-primary);
+	font-size: 0.95em;
 	border: 1px solid var(--frss-border-color, var(--freshvibes-border-color));
 	border-radius: var(--freshvibes-border-radius);
-	background: var(--freshvibes-background-primary);
-	color: var(--freshvibes-text-primary);
 	text-decoration: none;
 	cursor: pointer;
-	font-size: 0.95em;
-	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 	transition: all var(--freshvibes-transition-duration);
@@ -1257,11 +1413,11 @@ input[type="color"] {
 
 /* Bulk Settings Modal */
 #bulk-settings-modal .fv-modal-content {
+	display: flex;
+	max-width: 600px;
 	max-height: 85vh;
 	overflow: hidden;
-	display: flex;
 	flex-direction: column;
-	max-width: 600px;
 }
 
 #bulk-settings-modal .fv-modal-header {
@@ -1270,8 +1426,8 @@ input[type="color"] {
 
 #bulk-settings-modal .fv-modal-header p {
 	margin: 5px 0 0 0;
-	font-size: 0.95em;
 	color: var(--freshvibes-text-secondary);
+	font-size: 0.95em;
 }
 
 #bulk-settings-modal .fv-modal-body {
@@ -1282,11 +1438,11 @@ input[type="color"] {
 }
 
 .bulk-settings-section {
-	margin-bottom: 20px;
 	padding: 15px;
 	background: var(--freshvibes-background-secondary);
-	border-radius: var(--freshvibes-border-radius);
 	border: 1px solid var(--freshvibes-border-color);
+	border-radius: var(--freshvibes-border-radius);
+	margin-bottom: 20px;
 }
 
 .bulk-settings-section:last-child {
@@ -1361,14 +1517,14 @@ input[type="color"] {
 /* General Button Styles */
 .fvbtn {
 	padding: 8px 16px;
+	display: inline-flex;
+	color: var(--freshvibes-text-primary);
+	font-size: 0.95em;
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
 	background-color: var(--freshvibes-background-secondary);
-	color: var(--freshvibes-text-primary);
 	cursor: pointer;
-	font-size: 0.95em;
 	transition: all var(--freshvibes-transition-duration) ease;
-	display: inline-flex;
 	align-items: center;
 	gap: 6px;
 }
@@ -1401,17 +1557,17 @@ input[type="color"] {
 
 /* Color Reset Button */
 .color-reset {
-	background: none;
-	border: none;
-	cursor: pointer;
 	padding: 2px 4px;
-	color: var(--freshvibes-text-secondary);
-	font-size: 1em;
-	line-height: 1;
-	flex-shrink: 0;
+	background: none;
+	display: flex;
 	width: 32px;
 	height: 32px;
-	display: flex;
+	color: var(--freshvibes-text-secondary);
+	font-size: 1em;
+	border: none;
+	cursor: pointer;
+	line-height: 1;
+	flex-shrink: 0;
 	align-items: center;
 	justify-content: center;
 }
@@ -1430,6 +1586,7 @@ input[type="color"] {
 }
 
 /* Dark mode support for specific components */
+
 @media (prefers-color-scheme: dark) {
 	.entry-action-btn {
 		background: rgba(var(--frss-background-color-middle, 60, 60, 60), 0.9);
@@ -1458,20 +1615,20 @@ input[type="color"] {
 }
 
 .moved-subscription-buttons {
-	position: relative;
-	display: flex;
-	align-items: center;
 	padding: 4px 12px;
-	border: 1px solid var(--freshvibes-border-color);
-	border-radius: var(--freshvibes-border-radius);
-	background-image: linear-gradient(to bottom, var(--freshvibes-accent-primary), var(--contrast-background-color-gradient, var(--freshvibes-accent-primary)));
+	display: flex;
+	height: 34px;
 	color: var(--font-color-light, var(--freshvibes-text-light));
+	border: 1px solid var(--freshvibes-border-color);
 	border: 1px solid var(--contrast-border-color, var(--freshvibes-accent-primary));
+	border-radius: var(--freshvibes-border-radius);
+	position: relative;
+	align-items: center;
+	background-image: linear-gradient(to bottom, var(--freshvibes-accent-primary), var(--contrast-background-color-gradient, var(--freshvibes-accent-primary)));
 	cursor: pointer;
 	transition: all var(--freshvibes-transition-duration) ease;
 	margin-left: 8px;
 	flex: 0 1 auto;
-	height: 34px;
 	box-sizing: border-box;
 }
 
@@ -1480,10 +1637,10 @@ input[type="color"] {
 }
 
 .subscription-icon {
+	display: block;
 	font-size: 1.5em;
 	font-weight: bold;
 	line-height: 1;
-	display: block;
 }
 
 .subscription-buttons {
@@ -1501,17 +1658,17 @@ input[type="color"] {
 
 .subscription-buttons .btn {
 	padding: 2px 8px;
+	display: flex;
+	height: 26px;
+	color: white;
 	font-size: 0.9em;
+	border: 1px solid rgba(255, 255, 255, 0.3);
+	border-radius: var(--freshvibes-border-radius);
 	white-space: nowrap;
 	background-color: rgba(255, 255, 255, 0.2);
-	border: 1px solid rgba(255, 255, 255, 0.3);
-	color: white;
 	text-decoration: none;
-	border-radius: var(--freshvibes-border-radius);
 	line-height: 1.2;
-	height: 26px;
 	box-sizing: border-box;
-	display: flex;
 	align-items: center;
 }
 
@@ -1576,15 +1733,16 @@ input[type="color"] {
  * Styles for the handle that allows resizing the height of a feed container.
  * This was missing entirely from the new stylesheet.
  */
+
 .fv-resize-handle {
+	display: flex;
+	width: 100%;
+	height: 10px;
 	position: absolute;
 	bottom: 0;
 	left: 0;
-	width: 100%;
-	height: 10px;
 	cursor: ns-resize;
 	z-index: 2;
-	display: flex;
 	align-items: center;
 	justify-content: center;
 }
@@ -1607,11 +1765,11 @@ input[type="color"] {
 }
 
 .fv-native-settings-link {
-	color: var(--link-color);
-	text-decoration: none;
 	padding: 4px 8px;
-	border-radius: var(--border-radius);
 	display: inline-block;
+	color: var(--link-color);
+	border-radius: var(--border-radius);
+	text-decoration: none;
 	transition: background-color 0.2s ease;
 }
 
@@ -1621,14 +1779,8 @@ input[type="color"] {
 	text-decoration: underline;
 }
 
-/*
- * Fix for Tab Settings Menu Layout Issues
- * This resolves items appearing on new lines and having incorrect sizes.
- */
 .tab-settings-menu .icon-settings,
 .tab-settings-menu .color-settings {
-	/* This rule was not specific enough in the new file, causing it to be overridden. */
-	/* This forces the label, input, and button onto a single row. */
 	flex-direction: row;
 	justify-content: space-between;
 	align-items: center;
@@ -1636,49 +1788,37 @@ input[type="color"] {
 
 .tab-settings-menu .icon-settings label,
 .tab-settings-menu .color-settings label {
-	/* Allows the label to take up available space, pushing inputs to the right. */
 	flex: 1;
 	margin-bottom: 0;
 }
 
-.tab-icon-input {
-	/* Fixes the "giant" icon text box by giving it a fixed width. */
-	flex: 0 0 60px !important;
-	width: 60px !important;
-}
-
-
-/*
- * Fix for Feed Settings Height Picker
- * This ensures the height options act as a dropdown instead of a static block,
- * which also fixes the settings window being overly large.
- */
 .height-picker-wrapper {
-	/* Establishes the positioning context for the dropdown. */
 	position: relative;
 	flex-grow: 1;
 }
 
-/* Styles the text input for our new custom dropdown */
 .height-picker-wrapper>input[type="text"] {
-	width: 100%;
-	box-sizing: border-box;
 	padding: 5px;
+	width: 100%;
+	color: var(--freshvibes-text-primary);
 	border: 1px solid var(--freshvibes-border-color);
 	border-radius: var(--freshvibes-border-radius);
+	box-sizing: border-box;
 	background-color: var(--freshvibes-background-primary);
-	color: var(--freshvibes-text-primary);
 }
 
-/* Ensures the wrapper aligns correctly with other controls in the bulk settings form */
 .bulk-settings-form .height-picker-wrapper {
 	flex: 1;
 	max-width: 180px;
 }
 
 .fv-height-picker {
+	padding: 5px;
 	/* Hides the dropdown by default. */
 	display: none;
+	border: 1px solid var(--freshvibes-border-color);
+	border-radius: var(--freshvibes-border-radius);
+	box-shadow: var(--freshvibes-box-shadow);
 	/* Positions the dropdown relative to its wrapper, taking it out of the normal flow. */
 	position: absolute;
 	top: 100%;
@@ -1686,30 +1826,25 @@ input[type="color"] {
 	right: 0;
 	z-index: 60;
 	margin-top: 2px;
-	padding: 5px;
 	/* Ensures consistent background and border with other popups. */
 	background-color: var(--freshvibes-background-secondary);
-	border: 1px solid var(--freshvibes-border-color);
-	border-radius: var(--freshvibes-border-radius);
-	box-shadow: var(--freshvibes-box-shadow);
 }
 
 .fv-height-picker.active {
-	/* This rule, provided by the script, makes the dropdown visible on click. */
 	display: block;
 }
 
 .fv-height-picker button {
+	padding: 6px 8px;
+	background: none;
 	display: block;
 	width: 100%;
-	text-align: left;
-	background: none;
-	border: none;
-	padding: 6px 8px;
-	cursor: pointer;
-	border-radius: var(--freshvibes-border-radius);
-	font-size: 0.95em;
 	color: var(--freshvibes-text-primary);
+	font-size: 0.95em;
+	border: none;
+	border-radius: var(--freshvibes-border-radius);
+	text-align: left;
+	cursor: pointer;
 }
 
 .fv-height-picker button:hover {
@@ -1718,9 +1853,7 @@ input[type="color"] {
 
 .feed-settings-editor .setting-row select,
 .feed-settings-editor .height-picker-wrapper {
-	/* This stops the elements from growing and stretching the popup. */
 	flex-grow: 0;
-	/* This gives the inputs a neat, consistent width. */
 	width: 130px;
 }
 
@@ -1732,12 +1865,12 @@ input[type="color"] {
 
 	/* Tab adjustments */
 	.tab-settings-menu {
+		max-width: calc(100vw - 40px);
+		width: min(280px, calc(100vw - 40px));
 		position: fixed !important;
 		left: 50% !important;
 		right: auto !important;
 		transform: translateX(-50%);
-		width: min(280px, calc(100vw - 40px));
-		max-width: calc(100vw - 40px);
 	}
 
 	.freshvibes-tab:first-child .tab-settings-menu,
@@ -1782,17 +1915,17 @@ input[type="color"] {
 
 	.tab-add-button,
 	.tab-bulk-button {
-		flex: 0 0 auto;
-		width: 40px;
 		margin: 2px 0;
+		width: 40px;
+		flex: 0 0 auto;
 	}
 
 	.tab-settings-button {
 		padding: 8px 12px;
+		display: inline-flex;
+		font-size: 1.2em;
 		min-width: 40px;
 		min-height: 40px;
-		font-size: 1.2em;
-		display: inline-flex;
 		align-items: center;
 		justify-content: center;
 	}
@@ -1865,10 +1998,10 @@ input[type="color"] {
 	}
 
 	.fv-modal-content {
-		width: 95%;
-		height: 90vh;
-		max-height: 90vh;
 		display: flex;
+		width: 95%;
+		max-height: 90vh;
+		height: 90vh;
 		flex-direction: column;
 		overflow: hidden;
 	}
@@ -1949,8 +2082,8 @@ input[type="color"] {
 
 	/* Bulk settings modal */
 	#bulk-settings-modal .fv-modal-content {
-		width: 95%;
 		max-width: 95%;
+		width: 95%;
 		max-height: 85vh;
 	}
 
@@ -1990,6 +2123,7 @@ input[type="color"] {
 
 	.moved-subscription-buttons {
 		margin: 2px 0;
+		width: 100%;
 		flex: 1 1 auto;
 		justify-content: center;
 	}
@@ -1999,10 +2133,5 @@ input[type="color"] {
 		align-items: stretch;
 		width: 100%;
 		gap: 4px;
-	}
-
-	.moved-subscription-buttons {
-		width: 100%;
-		justify-content: center;
 	}
 }
