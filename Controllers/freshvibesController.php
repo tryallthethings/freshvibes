@@ -735,7 +735,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		$layout = $this->getLayout();
 		$mode = FreshRSS_Context::userConf()->attributeString(FreshVibesViewExtension::MODE_CONFIG_KEY) ?? 'custom';
 
-    try {
+		try {
 			switch ($operation) {
 				case 'add':
 					if ($mode === 'categories') {
