@@ -1,3 +1,31 @@
 files:
   - source: /i18n/en/ext.php
     translation: /i18n/%locale%/ext.php
+    languages_mapping:
+        locale:
+          'cs-CZ': 'cs'
+          'de-DE': 'de'
+          'el-GR': 'el'
+          'en-US': 'en-us'
+          'en-GB': 'en'
+          'es-ES': 'es'
+          'fa-IR': 'fa'
+          'fi-FI': 'fi'
+          'fr-FR': 'fr'
+          'he-IL': 'he'
+          'hu-HU': 'hu'
+          'id-ID': 'id'
+          'it-IT': 'it'
+          'ja-JP': 'ja'
+          'ko-KR': 'ko'
+          'lv-LV': 'lv'
+          'nl-NL': 'nl'
+          'oc-FR': 'oc'
+          'pl-PL': 'pl'
+          'pt-BR': 'pt-br'
+          'pt-PT': 'pt-pt'
+          'ru-RU': 'ru'
+          'sk-SK': 'sk'
+          'tr-TR': 'tr'
+          'zh-CN': 'zh-cn'
+          'zh-TW': 'zh-tw'
