@@ -37,22 +37,26 @@ With the recent shutdown of Netvibes, I was looking for an alternative. FreshRSS
 - **Tab Customization**:
     - Custom icons/emojis for each tab
     - Configurable background colors with automatic contrast adjustment
-    - Rename tabs with double-click  
+    - Rename tabs with double-click
+    - Unique URL slugs allow linking directly to specific tabs
  
 <img src="https://github.com/user-attachments/assets/848771d7-4ef9-4b02-a7c1-75a98e7c37b2" width="400px" alt="Tab customization options screenshot">
 
 - **Feed Settings**:
-    - Adjust the number of articles shown for each feed
+    - Adjust the number of articles shown for each feed and freely size the feed height
     - Multiple font sizes for each feed
     - Custom header colors for each feed
+    - Different feed entry display modes (tiny, compact, detailed), relative and absolute feed entry post date / time option
+    - Mark feed entries read / unread and favorite them via mouseover menu
  
 <img src="https://github.com/user-attachments/assets/2e0ad702-6657-4f7b-a514-322ed66032ce" width="400px" alt="Feed customization options screenshot">
 
 ### 📱 User Experience
 - **Article Preview Modal**: Quickly peek into any article with a modal
-- **Auto-refresh**: Optional automatic dashboard refresh at configurable intervals
+- **Auto-refresh**: Optional AJAX-powered auto-refresh
 - **Responsive Design**: Partly mobile-optimized layout
-- **Multi-language Support**: Currently available in English and German
+- **Multi-language Support**: Available in many languages (English, German and French currently maintained, rest is machine translated. If you want to help, check [Contributing](#-contributing)
+- and a lot more options to customize your experience
 
 ## 📋 Requirements
 
@@ -83,7 +87,7 @@ _or via command line:_
 ## 🎯 Usage
 
 ### Getting Started
-1. After enabling the extension, click the **📊** icon in the reading modes toolbar
+1. After enabling the extension, click the <img src="img/freshvibes.svg" width="24" height="24" alt="Freshvibes logo" /> icon in the reading modes toolbar
 2. Choose your preferred view mode in the extension settings.
 
 ### Managing Tabs
@@ -113,6 +117,7 @@ Access the extension settings through **Configuration** → **Extensions** → *
 ## 🤝 Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+If you'd like to help translate FreshVibes, join our project on [Crowdin](https://crowdin.com/project/freshvibes).
 
 ## 🐛 Issues
 
