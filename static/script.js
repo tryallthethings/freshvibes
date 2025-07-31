@@ -380,7 +380,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 	function setupVerticalLayoutHandlers() {
 		// Mark all as read for sections
-		document.querySelectorAll('.section-unread-count.clickable').forEach(badge => {
+		document.querySelectorAll('.tab-unread-count.clickable').forEach(badge => {
 			badge.addEventListener('click', e => {
 				e.stopPropagation();
 				const section = badge.closest('.freshvibes-vertical-section');
@@ -404,7 +404,14 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 								Object.values(tabData.columns || {}).flat().forEach(feedId => {
 									const feed = state.feeds[feedId];
-									if (feed) feed.nbUnread = 0;
+									if (feed) {
+										feed.nbUnread = 0;
+										if (feed.entries) {
+											feed.entries.forEach(entry => {
+												entry.isRead = true;
+											});
+										}
+									}
 								});
 							}
 						}).catch(error => handleAPIError('Mark section read', error));
@@ -656,10 +663,21 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			let isRefreshing = false;
 			// Instead of calling refreshfeeds, reload the page via AJAX
 			fetch(window.location.href, {
-				headers: { 'X-Requested-With': 'XMLHttpRequest' }
+				headers: { 'X-Requested-With': 'XMLHttpRequest' },
+				credentials: 'same-origin'
 			})
-				.then(res => res.text())
+				.then(res => {
+					// Handle authentication issues
+					if (res.status === 401 || res.status === 403) {
+						console.log('Authentication issue detected, reloading page...');
+						window.location.reload();
+						return null;
+					}
+					return res.text();
+				})
 				.then(html => {
+					if (!html) return;
+
 					// Skip update if user is interacting
 					const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active');
 					if (isInteracting || isRefreshing) return;
@@ -669,6 +687,15 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, 'text/html');
 					const feedsScript = doc.getElementById('feeds-data-script');
+
+					// Also update CSRF token during refresh
+					const freshvibesView = doc.querySelector('.freshvibes-view');
+					if (freshvibesView) {
+						const newToken = freshvibesView.getAttribute('data-freshvibes-csrf-token');
+						if (newToken && newToken !== currentCsrfToken) {
+							currentCsrfToken = newToken;
+						}
+					}
 
 					if (feedsScript) {
 						const newFeedsData = JSON.parse(feedsScript.textContent);
@@ -693,6 +720,17 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 		// Start the first refresh cycle.
 		setTimeout(refreshLoop, refreshMs);
+	}
+
+	function setupCsrfTokenRefresh() {
+		// Refresh CSRF token every 30 minutes for all users
+		setInterval(() => {
+			refreshCsrfToken().then(success => {
+				if (success) {
+					console.log('CSRF token refreshed proactively');
+				}
+			});
+		}, 30 * 60 * 1000); // 30 minutes
 	}
 
 	function renderTabContent(tab) {
@@ -1268,20 +1306,28 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/x-www-form-urlencoded', 'X-Requested-With': 'XMLHttpRequest' },
 			body: new URLSearchParams({ ...body, '_csrf': currentCsrfToken }),
+			credentials: 'same-origin'  // Important for all auth systems
 		}).then(res => {
-			if (res.status === 403 && retryCount === 0) {
-				// Try to refresh CSRF token and retry once
+			// Handle both 401 (session expired) and 403 (CSRF mismatch)
+			if ((res.status === 401 || res.status === 403) && retryCount === 0) {
+				// First try to refresh CSRF token
 				return refreshCsrfToken().then(success => {
 					if (success) {
 						return api(url, body, 1);
 					} else {
+						// If still failing, handle appropriately
+						if (res.status === 401) {
+							// Let FreshRSS handle the redirect (works with any auth system)
+							window.location.href = window.location.href;
+							return { status: 'error', requiresAuth: true };
+						}
 						showAuthNotification();
 						return { status: 'error', requiresAuth: true };
 					}
 				});
 			}
 
-			if (res.status === 403) {
+			if (res.status === 401 || res.status === 403) {
 				showAuthNotification();
 				return { status: 'error', requiresAuth: true };
 			}
@@ -1315,15 +1361,13 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		const msgSpan = notificationArea.querySelector('.msg');
 		if (!msgSpan) return;
 
-		// Add our message to the span
+		// Generic message that works with any auth system
 		msgSpan.className = 'msg bad freshvibes-auth-notice';
-		msgSpan.innerHTML = `${tr.login_required || 'You need to be logged in to make changes.'} <a href="?c=auth&a=login">${tr.login || 'Login'}</a>`;
+		msgSpan.innerHTML = `${tr.session_expired || 'Your session has expired. Please refresh the page.'}`;
 
-		// Auto-hide after 5 seconds
+		// Auto-hide after 5 seconds, then refresh
 		setTimeout(() => {
-			notificationArea.classList.add('closed');
-			msgSpan.innerHTML = '';
-			msgSpan.className = 'msg';
+			window.location.reload();
 		}, 5000);
 	}
 
@@ -1960,6 +2004,13 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 			if (e.target.closest('.tab-unread-count')) {
 				const badge = e.target.closest('.tab-unread-count');
+
+				// Check if we're in vertical layout - if so, let the vertical handler deal with it
+				if (badge.closest('.freshvibes-vertical-section')) {
+					return; // Let setupVerticalLayoutHandlers handle this
+				}
+
+				// Original tabs layout handling
 				const tabEl = badge.closest('.freshvibes-tab');
 				const tabId = tabEl.dataset.tabId;
 				const tabData = state.layout.find(t => t.id === tabId);
@@ -1970,7 +2021,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						api(urls.markTabRead, { tab_id: tabId }).then(data => {
 							if (data.status === 'success') {
 								badge.textContent = '0';
-								badge.style.display = 'none';
+								badge.classList.remove('has-count');
 								tabData.unread_count = 0;
 								if (state.activeTabId === tabId) {
 									document.querySelectorAll('.freshvibes-container').forEach(container => {
@@ -1979,6 +2030,19 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 										container.querySelectorAll('.entry-item:not(.read)').forEach(li => li.classList.add('read'));
 									});
 								}
+
+
+								Object.values(tabData.columns || {}).flat().forEach(feedId => {
+									const feed = state.feeds[feedId];
+									if (feed) {
+										feed.nbUnread = 0;
+										if (feed.entries) {
+											feed.entries.forEach(entry => {
+												entry.isRead = true;
+											});
+										}
+									}
+								});
 							}
 						}).catch(error => handleAPIError('Mark tab read', error));
 					};
@@ -2621,6 +2685,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			render();
 			setupEventListeners();
 			setupAutoRefresh();
+			setupCsrfTokenRefresh();
 		})
 		.catch(error => {
 			console.error('FreshVibesView: Could not initialize.', error);
