@@ -60,7 +60,7 @@ With the recent shutdown of Netvibes, I was looking for an alternative. FreshRSS
 
 ## 📋 Requirements
 
-- FreshRSS 1.26.3 or higher
+- FreshRSS 1.27.0 or higher
 - Modern web browser with JavaScript enabled
 
 ## 🚀 Installation
