@@ -1318,7 +1318,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						// If still failing, handle appropriately
 						if (res.status === 401) {
 							// Let FreshRSS handle the redirect (works with any auth system)
-							window.location.href = window.location.href;
+							window.location.reload();
 							return { status: 'error', requiresAuth: true };
 						}
 						showAuthNotification();
@@ -2030,7 +2030,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 										container.querySelectorAll('.entry-item:not(.read)').forEach(li => li.classList.add('read'));
 									});
 								}
-
 
 								Object.values(tabData.columns || {}).flat().forEach(feedId => {
 									const feed = state.feeds[feedId];
