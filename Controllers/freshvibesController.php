@@ -107,7 +107,7 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 					sort: $sort,
 					order: $order,
 					continuation_id: '0',
-					continuation_value: 0,
+					continuation_values: [0],
 					limit: $queryLimit ?? 0,
 					offset: 0
 				);
