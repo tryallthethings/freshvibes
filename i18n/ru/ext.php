@@ -1,4 +1,5 @@
 <?php
+
 return array(
 	'FreshVibesView' => array(
 		'title' => 'Свежий вид вибсов',

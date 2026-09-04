@@ -1,4 +1,5 @@
 <?php
+
 return array(
 	'FreshVibesView' => array(
 		'title' => '新鮮な雰囲気表示',
