@@ -6,7 +6,6 @@
 	<exclude-pattern>./data/config.php</exclude-pattern>
 	<exclude-pattern>./data/update.php</exclude-pattern>
 	<exclude-pattern>./data/users/*/config.php</exclude-pattern>
-	<exclude-pattern>./extensions/</exclude-pattern>
 	<exclude-pattern>./lib/http-conditional.php</exclude-pattern>
 	<exclude-pattern>./lib/marienfressinaud/</exclude-pattern>
 	<exclude-pattern>./lib/phpgt/</exclude-pattern>
@@ -33,7 +32,6 @@
 		<exclude name="PSR12.ControlStructures.ControlStructureSpacing.CloseParenthesisLine"/>
 		<exclude name="PSR12.ControlStructures.ControlStructureSpacing.FirstExpressionLine"/><!-- Consider using PSR12 defaults instead -->
 		<exclude name="PSR12.Files.FileHeader.IncorrectOrder"/><!-- Consider using PSR12 defaults instead -->
-		<exclude name="PSR12.Files.FileHeader.SpacingAfterBlock"/><!-- Consider using PSR12 defaults instead -->
 		<exclude name="PSR12.Traits.UseDeclaration.MultipleImport"/>
 		<exclude name="PSR2.Classes.ClassDeclaration.CloseBraceAfterBody"/><!-- Consider using PSR12 defaults instead -->
 		<exclude name="PSR2.Classes.ClassDeclaration.OpenBraceNewLine"/><!-- Consider using PSR12 defaults instead -->
@@ -45,7 +43,7 @@
 		<exclude name="PSR2.Methods.FunctionCallSignature.Indent"/>
 		<exclude name="PSR2.Methods.FunctionCallSignature.MultipleArguments"/>
 		<exclude name="PSR2.Methods.MethodDeclaration.Underscore"/>
-		<exclude name="Squiz.Classes.ValidClassName.NotCamelCaps"/>
+		<exclude name="Squiz.Classes.ValidClassName.NotPascalCase"/>
 		<exclude name="Squiz.Functions.MultiLineFunctionDeclaration.BraceOnSameLine"/>
 		<exclude name="Squiz.Functions.MultiLineFunctionDeclaration.CloseBracketLine"/>
 		<exclude name="Squiz.Functions.MultiLineFunctionDeclaration.ContentAfterBrace"/>

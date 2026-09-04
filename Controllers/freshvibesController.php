@@ -94,8 +94,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 
 			try {
 				// Get sorting from FreshRSS context
-				$sort = FreshRSS_Context::$sort ?? 'date';
-				$order = FreshRSS_Context::$order ?? 'DESC';
+				$sort = FreshRSS_Context::$sort;
+				$order = FreshRSS_Context::$order;
 
 				$entryGenerator = $entryDAO->listWhere(
 					type: 'f',
@@ -572,8 +572,8 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 				null,
 				'0',
 				'0',
-				(FreshRSS_Context::$sort ?? 'date'),
-				(FreshRSS_Context::$order ?? 'DESC'),
+				FreshRSS_Context::$sort,
+				FreshRSS_Context::$order,
 				'0',
 				[0],
 				$queryLimit ?? 0,

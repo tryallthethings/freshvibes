@@ -78,6 +78,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 		return self::EXT_ID;
 	}
 
+	#[\Override]
 	public function init(): void {
 		$this->registerTranslates();
 		$this->registerController(self::CONTROLLER_NAME_BASE);
@@ -98,6 +99,7 @@ class FreshVibesViewExtension extends Minz_Extension {
 		}
 	}
 
+	#[\Override]
 	public function uninstall() {
 		$userConf = FreshRSS_Context::userConf();
 

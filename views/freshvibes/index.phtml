@@ -1,6 +1,7 @@
 <?php
 
 declare(strict_types=1);
+
 /** @var tryallthethings\FreshVibes\Models\View $this */
 
 $hideSidebar = FreshRSS_Context::userConf()->attributeBool(FreshVibesViewExtension::HIDE_SIDEBAR_CONFIG_KEY) ?? false;
@@ -45,8 +46,8 @@ $settingsArray = [
 	"mode" => $this->viewMode ?? 'custom',
 	"confirmTabDelete" => $this->confirmTabDelete ? '1' : '0',
 	"entryClickMode" => $this->entryClickMode ?? 'modal',
-	"sort" => $this->currentSort ?? 'date',
-	"order" => $this->currentOrder ?? 'DESC',
+	"sort" => $this->currentSort,
+	"order" => $this->currentOrder,
 	"dateMode" => $this->dateMode ?? 'absolute',
 	"confirmMarkRead" => $this->confirmMarkRead ? '1' : '0',
 	"refreshEnabled" => $this->refreshEnabled ? '1' : '0',
