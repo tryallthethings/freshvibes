@@ -24,7 +24,10 @@ $refreshIntervalValue = $userConf->hasParam(FreshVibesViewExtension::REFRESH_INT
 
 $dateFormatValue = $userConf->hasParam(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY)
 	? $userConf->attributeString(FreshVibesViewExtension::DATE_FORMAT_CONFIG_KEY)
-	: 'Y-m-d H:i';
+	: FreshVibesViewExtension::DEFAULT_DATE_FORMAT;
+
+$maxEntriesCapValue = $userConf->attributeInt(FreshVibesViewExtension::MAX_ENTRIES_CAP_CONFIG_KEY)
+	?: FreshVibesViewExtension::DEFAULT_MAX_ENTRIES_CAP;
 
 $dateModeValue = $userConf->hasParam(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY)
 	? $userConf->attributeString(FreshVibesViewExtension::DATE_MODE_CONFIG_KEY)
@@ -146,10 +149,29 @@ $allowCategorySortValue = $userConf->hasParam(FreshVibesViewExtension::ALLOW_CAT
 				type="number"
 				name="freshvibes_refresh_interval"
 				id="freshvibes_refresh_interval"
-				value="<?= $refreshIntervalValue ?>"
-				min="1" />
+				value="<?= (int)$refreshIntervalValue ?>"
+				min="<?= FreshVibesViewExtension::MIN_REFRESH_INTERVAL ?>"
+				max="<?= FreshVibesViewExtension::MAX_REFRESH_INTERVAL ?>" />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_refresh_interval_help') ?>
+			</p>
+		</div>
+	</div>
+
+	<div class="form-group">
+		<label class="group-name" for="freshvibes_max_entries_cap">
+			<?= _t('ext.FreshVibesView.settings_max_entries_cap_label') ?>
+		</label>
+		<div class="group-controls">
+			<input
+				type="number"
+				name="freshvibes_max_entries_cap"
+				id="freshvibes_max_entries_cap"
+				value="<?= $maxEntriesCapValue ?>"
+				min="<?= FreshVibesViewExtension::MIN_MAX_ENTRIES_CAP ?>"
+				max="<?= FreshVibesViewExtension::MAX_MAX_ENTRIES_CAP ?>" />
+			<p class="help">
+				<?= _t('ext.FreshVibesView.settings_max_entries_cap_help') ?>
 			</p>
 		</div>
 	</div>
@@ -163,7 +185,8 @@ $allowCategorySortValue = $userConf->hasParam(FreshVibesViewExtension::ALLOW_CAT
 				type="text"
 				name="freshvibes_date_format"
 				id="freshvibes_date_format"
-				value="<?= $dateFormatValue ?>" />
+				maxlength="<?= FreshVibesViewExtension::MAX_DATE_FORMAT_LENGTH ?>"
+				value="<?= htmlspecialchars((string)$dateFormatValue, ENT_QUOTES) ?>" />
 			<p class="help">
 				<?= _t('ext.FreshVibesView.settings_date_format_help') ?>
 			</p>

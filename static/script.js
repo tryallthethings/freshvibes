@@ -20,6 +20,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	const state = { layout: [], feeds: {}, activeTabId: null, allPlacedFeedIds: new Set() };
 	let currentCsrfToken = csrfToken;
 	let heightPickerHandler = null;
+	let verticalLayoutSortable = null;
 
 	// --- DOM & CONFIG ---
 	const isCategoryMode = settings.mode === 'categories';
@@ -220,8 +221,14 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 		// Initialize sortable for vertical tab headers (custom mode only)
 		const canSortVertical = !isCategoryMode || (isCategoryMode && (settings.allowCategorySort === true || settings.allowCategorySort === '1'));
+		// This container is reused across renders, so the previous instance and its pointer/drag
+		// listeners have to be destroyed before a replacement is created.
+		if (verticalLayoutSortable) {
+			verticalLayoutSortable.destroy();
+			verticalLayoutSortable = null;
+		}
 		if (typeof Sortable !== 'undefined' && canSortVertical) {
-			const verticalLayoutSortable = new Sortable(verticalContainer, { // eslint-disable-line no-unused-vars
+			verticalLayoutSortable = new Sortable(verticalContainer, {
 				animation: 150,
 				draggable: '.freshvibes-vertical-section',
 				handle: '.freshvibes-tab',
@@ -248,26 +255,18 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 					api(url, payload)
 						.then(data => {
-							if (data.status !== 'success') {
+							if (!isOk(data)) {
 								// Revert on failure by re-rendering
+								handleAPIError('Reorder vertical tabs', data);
 								renderVerticalLayout();
 							}
-						})
-						.catch(error => {
-							handleAPIError('Reorder vertical tabs', error);
-							renderVerticalLayout();
 						});
 				}
 			});
 		}
 
-		// Initialize sortable for all columns in vertical mode
-		setTimeout(() => {
-			document
-				.querySelectorAll('.freshvibes-vertical-container .freshvibes-column')
-				.forEach(col => initializeSortable([col]));
-		}, 100);
-		// Setup event handlers for vertical mode
+		// Columns are already initialised by renderTabContent() for each rendered tab; repeating it
+		// here created a second Sortable per column that could no longer be destroyed.
 		setupVerticalLayoutHandlers();
 	}
 
@@ -301,6 +300,26 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		}
 	}
 
+	// Only ever navigate to http(s). The server already filters these values, but validating at the
+	// sink keeps the guarantee local to the assignment and covers any stale cached payload.
+	function setSafeHref(element, value) {
+		if (!element) return;
+		if (!value) {
+			element.removeAttribute('href');
+			return;
+		}
+		try {
+			const parsed = new URL(value, window.location.origin);
+			if (parsed.protocol === 'http:' || parsed.protocol === 'https:') {
+				element.href = parsed.href;
+				return;
+			}
+		} catch {
+			// Not a parseable URL; fall through and leave the element without a target.
+		}
+		element.removeAttribute('href');
+	}
+
 	function resetColorInput(colorInput, defaultColor = '#f0f0f0') {
 		// Validate hex color format
 		const isValidHex = /^#([0-9A-Fa-f]{3}|[0-9A-Fa-f]{6})$/.test(defaultColor);
@@ -313,7 +332,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		return safeColor;
 	}
 
-	function getColorFromComputedStyle(element, className) {
+	function getColorFromComputedStyle(className) {
 		const temp = document.createElement('div');
 		temp.className = className;
 		document.body.appendChild(temp);
@@ -414,7 +433,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 									}
 								});
 							}
-						}).catch(error => handleAPIError('Mark section read', error));
+						});
 					};
 
 					if (shouldConfirm) {
@@ -475,8 +494,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						} else {
 							tabNameSpan.textContent = oldName;
 						}
-					})
-					.catch(() => { tabNameSpan.textContent = oldName; });
+					});
 			} else {
 				tabNameSpan.textContent = oldName;
 			}
@@ -594,7 +612,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				tempTab.className = 'freshvibes-tab';
 				document.body.appendChild(tempTab);
 				document.body.removeChild(tempTab);
-				const defaultColor = getColorFromComputedStyle(document.body, 'freshvibes-tab');
+				const defaultColor = getColorFromComputedStyle('freshvibes-tab');
 				resetColorInput(bgColorInput, defaultColor);
 			}
 		}
@@ -660,8 +678,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				return;
 			}
 
-			let isRefreshing = false;
-			// Instead of calling refreshfeeds, reload the page via AJAX
+			// Auto-refresh re-requests this page and reads its embedded JSON payload.
 			fetch(window.location.href, {
 				headers: { 'X-Requested-With': 'XMLHttpRequest' },
 				credentials: 'same-origin'
@@ -679,10 +696,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					if (!html) return;
 
 					// Skip update if user is interacting
-					const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active');
-					if (isInteracting || isRefreshing) return;
+					if (document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active')) return;
 
-					isRefreshing = true;
 					// Extract feeds data from the response
 					const parser = new DOMParser();
 					const doc = parser.parseFromString(html, 'text/html');
@@ -698,10 +713,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}
 
 					if (feedsScript) {
-						const newFeedsData = JSON.parse(feedsScript.textContent);
-						state.feeds = newFeedsData;
+						state.feeds = JSON.parse(feedsScript.textContent);
 						renderTabs();
-						isRefreshing = false;
 						const activeTab = state.layout.find(t => t.id === state.activeTabId);
 						if (activeTab) {
 							render();
@@ -852,7 +865,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		const titleElement = container.querySelector('.feed-title');
 		if (titleElement && feed.website) {
 			const titleLink = document.createElement('a');
-			titleLink.href = feed.website;
+			setSafeHref(titleLink, feed.website);
 			titleLink.target = '_blank';
 			titleLink.rel = 'noopener noreferrer';
 			titleLink.className = 'feed-title-link';
@@ -1065,9 +1078,11 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 		if (modalDate) modalDate.textContent = entry.dateShort;
 		if (modalExcerpt) {
+			// detailedSnippet has already been filtered against the server-side allow-list in
+			// Models/Sanitizer.php; it is the only field rendered as markup.
 			modalExcerpt.innerHTML = entry.detailedSnippet || '';
 		}
-		if (modalLink) modalLink.href = entry.link || '#';
+		if (modalLink) setSafeHref(modalLink, entry.link);
 
 		if (modalTagsContainer) {
 			const hasTags = entry.tags && entry.tags.length > 0;
@@ -1114,7 +1129,23 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				updateTabBadge(feedData.id);
 			}
 
-			api(urls.markRead, { id: entry.id, ajax: 1, is_read: 1 }).catch(error => handleAPIError('Mark entry read', error));
+			api(urls.markRead, { id: entry.id, ajax: 1, is_read: 1 }).then(data => {
+				if (isOk(data)) return;
+				// Undo the optimistic update so the UI cannot claim a read that was never saved.
+				handleAPIError('Mark entry read', data);
+				entry.isRead = false;
+				li.classList.remove('read');
+				if (btn) {
+					btn.classList.remove('is-read');
+					btn.title = tr.mark_read || 'Mark as read';
+				}
+				if (feedData) {
+					feedData.nbUnread = (feedData.nbUnread || 0) + 1;
+					const header = document.querySelector(`.freshvibes-container[data-feed-id="${feedData.id}"] .freshvibes-container-header`);
+					if (header) updateUnreadBadge(header, feedData.nbUnread);
+					updateTabBadge(feedData.id);
+				}
+			});
 		}
 	}
 
@@ -1153,7 +1184,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							}
 						}
 						entryModal.classList.remove('active');
-					}).catch(error => handleAPIError('Mark entry unread', error));
+					});
 				}
 			}
 		});
@@ -1180,7 +1211,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		if (feed.currentDisplayMode === 'compact') {
 			snippetToUse = entry.compactSnippet;
 		} else if (feed.currentDisplayMode === 'detailed') {
-			snippetToUse = entry.detailedSnippet;
+			// detailedText is plain text; detailedSnippet holds markup reserved for the modal.
+			snippetToUse = entry.detailedText ?? '';
 		}
 
 		const displayDate = settings.dateMode === 'relative' ? entry.dateRelative : entry.dateShort;
@@ -1204,12 +1236,12 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 		const entryLink = document.createElement('a');
 		entryLink.className = 'entry-link';
-		entryLink.href = entry.link;
+		setSafeHref(entryLink, entry.link);
 		entryLink.target = '_blank';
 		entryLink.rel = 'noopener noreferrer';
 		entryLink.dataset.entryId = entry.id;
 		entryLink.dataset.feedId = feed.id;
-		entryLink.title = entry.detailedSnippet.replace(/<[^>]*>/g, '');
+		entryLink.title = entry.detailedText ?? '';
 
 		if (feed.currentDisplayMode === 'tiny') {
 			const mainDiv = document.createElement('div');
@@ -1239,13 +1271,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			if (snippetToUse) {
 				const excerptDiv = document.createElement('div');
 				excerptDiv.className = 'entry-excerpt';
-
-				// The 'detailed' snippet now contains HTML intended for the modal.
-				// We must convert it to plain text here for the list view.
-				const tempDiv = document.createElement('div');
-				tempDiv.innerHTML = snippetToUse;
-				excerptDiv.textContent = tempDiv.textContent || tempDiv.innerText || '';
-
+				excerptDiv.textContent = snippetToUse;
 				wrapper.appendChild(excerptDiv);
 			}
 			li.appendChild(wrapper);
@@ -1301,6 +1327,17 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			});
 	}
 
+	// api() always resolves and never rejects. Success resolves to { ok: true, ...payload };
+	// every HTTP, auth, network and parse failure resolves to { ok: false, status: 'error' } and is
+	// logged here. Callers must branch on isOk(data) — a resolved promise is not a saved write.
+	function apiFailure(extra = {}) {
+		return { ok: false, status: 'error', ...extra };
+	}
+
+	function isOk(data) {
+		return !!data && data.ok !== false && data.status !== 'error';
+	}
+
 	function api(url, body, retryCount = 0) {
 		return fetch(url, {
 			method: 'POST',
@@ -1314,36 +1351,44 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				return refreshCsrfToken().then(success => {
 					if (success) {
 						return api(url, body, 1);
-					} else {
-						// If still failing, handle appropriately
-						if (res.status === 401) {
-							// Let FreshRSS handle the redirect (works with any auth system)
-							window.location.reload();
-							return { status: 'error', requiresAuth: true };
-						}
-						showAuthNotification();
-						return { status: 'error', requiresAuth: true };
 					}
+					if (res.status === 401) {
+						// Let FreshRSS handle the redirect (works with any auth system)
+						window.location.reload();
+						return apiFailure({ requiresAuth: true });
+					}
+					showAuthNotification();
+					return apiFailure({ requiresAuth: true });
 				});
 			}
 
 			if (res.status === 401 || res.status === 403) {
 				showAuthNotification();
-				return { status: 'error', requiresAuth: true };
+				return apiFailure({ requiresAuth: true });
 			}
 
 			const contentType = res.headers.get('content-type');
 			if (!contentType || !contentType.includes('application/json')) {
 				showAuthNotification();
-				return { status: 'error', requiresAuth: true };
+				return apiFailure({ requiresAuth: true });
 			}
 
-			return res.json();
+			return res.json().then(data => {
+				// A 4xx/5xx body is still JSON, so res.ok must be checked explicitly.
+				if (!res.ok) {
+					console.error(`FreshVibesView: ${url} responded ${res.status}`, data);
+					return apiFailure({ httpStatus: res.status, message: data && data.message });
+				}
+				return { ok: true, ...data };
+			}).catch(error => {
+				console.error('FreshVibesView: invalid JSON response from', url, error);
+				return apiFailure({ httpStatus: res.status });
+			});
 		}).catch(error => {
 			// Network error or CORS issue
-			console.error('Fetch error:', error);
+			console.error('FreshVibesView: request failed', url, error);
 			showAuthNotification();
-			return { status: 'error', requiresAuth: true };
+			return apiFailure({ networkError: true });
 		});
 	}
 
@@ -1363,7 +1408,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 		// Generic message that works with any auth system
 		msgSpan.className = 'msg bad freshvibes-auth-notice';
-		msgSpan.innerHTML = `${tr.session_expired || 'Your session has expired. Please refresh the page.'}`;
+		msgSpan.textContent = tr.session_expired || 'Your session has expired. Please refresh the page.';
 
 		// Auto-hide after 5 seconds, then refresh
 		setTimeout(() => {
@@ -1396,7 +1441,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		}
 
 		if (persist) {
-			api(urls.setActiveTab, { tab_id: tabId }).catch(error => handleAPIError('Set active tab', error));
+			api(urls.setActiveTab, { tab_id: tabId });
 		}
 	}
 
@@ -1404,7 +1449,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		if (typeof Sortable === 'undefined') return;
 
 		columns.forEach(column => {
-			if (column.sortable) return;
+			// Instances live in the WeakMap; the old guard tested a property that was never set,
+			// so every column got two Sortables and the first became unreachable.
+			if (sortableInstances.has(column)) return;
 
 			const sortable = new Sortable(column, {
 				group: 'freshvibes-feeds',
@@ -1439,15 +1486,23 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 						const tab = state.layout.find(t => t.id === targetTabId);
 						if (tab) {
+							const previousColumns = tab.columns;
 							tab.columns = layoutData;
 							api(urls.saveLayout, { layout: JSON.stringify(layoutData), tab_id: targetTabId })
-								.catch(error => handleAPIError('Save layout', error));
+								.then(data => {
+									if (isOk(data)) return;
+									// Put the previous arrangement back rather than leaving the client
+									// displaying an order the server rejected.
+									handleAPIError('Save layout', data);
+									tab.columns = previousColumns;
+									renderTabContent(tab);
+								});
 						}
 					} else {
 						// --- CROSS TAB DRAG ---
 						api(urls.moveFeed, { feed_id: movedFeedId, source_tab_id: sourceTabId, target_tab_id: targetTabId })
 							.then(data => {
-								if (data.status === 'success' && data.new_layout) {
+								if (isOk(data) && data.new_layout) {
 									state.layout = assignUniqueSlugs(data.new_layout);
 									state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t =>
 										Object.values(t.columns || {}).flat()
@@ -1460,11 +1515,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 									alert(tr.error_moving_feed || 'Error moving feed. The page will now reload to ensure consistency.');
 									location.reload();
 								}
-							})
-							.catch(error => {
-								handleAPIError('Save cross-tab drag', error);
-								alert(tr.error_moving_feed || 'Error moving feed. The page will now reload to ensure consistency.');
-								location.reload();
 							});
 					}
 				}
@@ -1499,14 +1549,11 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 					api(url, payload)
 						.then(data => {
-							if (data.status !== 'success') {
+							if (!isOk(data)) {
 								// Revert on failure by re-rendering
+								handleAPIError('Reorder tabs', data);
 								render();
 							}
-						})
-						.catch(error => {
-							handleAPIError('Reorder tabs', error);
-							render();
 						});
 				}
 			});
@@ -1657,7 +1704,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							feed.currentMaxHeight = String(finalHeight);
 						}
 					}
-				}).catch(error => handleAPIError('Save resized height', error));
+				});
 			}
 
 			document.addEventListener('mousemove', doDrag);
@@ -1745,7 +1792,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							const tabData = state.layout.find(t => t.id === tabId);
 							renderTabContent(tabData);
 						}
-					}).catch(error => handleAPIError('Set columns', error));
+					});
 					return;
 				}
 
@@ -1761,7 +1808,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					e.stopPropagation();
 					const tabEl = deleteBtn.closest('.freshvibes-tab');
 					const tabId = tabEl.dataset.tabId;
-					const confirmDelete = freshvibesView.dataset.xextensionFreshvibesviewConfirmTabDelete !== '0';
+					// Delivered in the settings JSON. The old dataset key never existed, so
+					// `undefined !== '0'` made the prompt unconditional.
+					const confirmDelete = settings.confirmTabDelete !== '0';
 
 					const performDelete = () => {
 						api(urls.tabAction, { operation: 'delete', tab_id: tabId })
@@ -1778,7 +1827,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 									if (state.activeTabId) activateTab(state.activeTabId);
 								}
 							})
-							.catch(error => handleAPIError('Delete tab', error));
+							;
 					};
 
 					if (confirmDelete) {
@@ -1818,7 +1867,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 								}
 							}
 						})
-							.catch(error => handleAPIError('Reset tab color', error));
+							;
 					}
 					return;
 				}
@@ -1837,7 +1886,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						render();
 						activateTab(data.new_tab.id, false);
 					}
-				}).catch(error => handleAPIError('Add tab', error));
+				});
 				return;
 			}
 
@@ -1862,7 +1911,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						const tabData = state.layout.find(t => t.id === tabId);
 						renderTabContent(tabData);
 					}
-				}).catch(error => handleAPIError('Set columns', error));
+				});
 				return;
 			}
 
@@ -1957,9 +2006,6 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							// Re-render the entire view to reflect the change
 							render();
 						}
-					}).catch(error => {
-						handleAPIError('Move feed', error);
-						location.reload();
 					});
 				return;
 			}
@@ -1980,7 +2026,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							feedData.entries.forEach(entry => { entry.isRead = true; });
 							updateTabBadge(feedId);
 						}
-					}).catch(error => handleAPIError('Mark feed read', error));
+					});
 				};
 
 				if (shouldConfirm) {
@@ -2043,7 +2089,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 									}
 								});
 							}
-						}).catch(error => handleAPIError('Mark tab read', error));
+						});
 					};
 
 					if (shouldConfirm) {
@@ -2087,7 +2133,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							}
 						}
 					})
-						.catch(error => handleAPIError('Reset tab color', error));
+						;
 				} else if (colorInput.classList.contains('feed-header-color-input')) {
 					const container = resetBtn.closest('.freshvibes-container');
 					const feedId = container.dataset.feedId;
@@ -2115,7 +2161,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							state.feeds[feedId].currentHeaderColor = '';
 							resetColorInput(colorInput);
 						}
-					}).catch(error => handleAPIError('Reset feed color', error));
+					});
 				}
 			}
 		});
@@ -2145,7 +2191,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					if (!urls.bookmark) return;
 					const newFav = !entry.isFavorite;
 					api(urls.bookmark, { id: entryId, is_favorite: newFav ? 1 : 0, ajax: 1 })
-						.then(() => {
+						.then(data => {
+							if (!isOk(data)) return;
 							entry.isFavorite = newFav;
 							actionBtn.classList.toggle('is-favorite', newFav);
 							actionBtn.title = tr.mark_favorite || 'Toggle favourite';
@@ -2155,7 +2202,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							if (indicator) {
 								indicator.classList.toggle('is-favorite', newFav);
 							}
-						}).catch(error => handleAPIError('Toggle favorite', error));
+						});
 					return;
 				}
 
@@ -2165,7 +2212,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				const newReadState = !isCurrentlyRead;
 
 				api(urls.markRead, { id: entryId, is_read: newReadState ? 1 : 0, ajax: 1 })
-					.then(() => {
+					.then(data => {
+						if (!isOk(data)) return;
 						entry.isRead = newReadState;
 						entryItem.classList.toggle('read', newReadState);
 						actionBtn.classList.toggle('is-read', newReadState);
@@ -2187,7 +2235,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							}
 							updateTabBadge(feedId);
 						}
-					}).catch(error => handleAPIError('Toggle read state', error));
+					});
 			}
 		});
 
@@ -2241,7 +2289,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						}
 						updateTabBadge(feedData.id);
 					}
-				}).catch(error => handleAPIError('Mark as read on click', error));
+				});
 				return;
 			}
 
@@ -2290,7 +2338,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 								tabData.icon_color = colorVal;
 							}
 						}
-					}).catch(error => handleAPIError('Update tab settings', error));
+					});
 				} else if (e.target.classList.contains('tab-bg-color-input')) {
 					const tabEl = e.target.closest('.freshvibes-tab');
 					if (!tabEl) return;
@@ -2309,7 +2357,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 								tabEl.style.setProperty('--tab-bg-color', bgColor);
 								tabEl.style.setProperty('--tab-font-color', fontColor);
 							}
-						}).catch(error => handleAPIError('Update tab settings', error));
+						});
 				}
 			});
 
@@ -2464,7 +2512,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 								reloadDebounce(() => location.reload(), 500);
 							}
 						}
-					}).catch(error => handleAPIError('Save feed settings', error));
+					});
 				}
 			});
 
@@ -2517,7 +2565,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						}
 						updateTabBadge(feedData.id);
 					}
-				}).catch(error => handleAPIError('Mark as read on middle-click', error));
+				});
 			});
 
 			// Bulk settings modal (delegate "open" so it survives re-renders)
@@ -2568,14 +2616,14 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 					if (confirm(tr.confirm_bulk_apply_feeds)) {
 						api(urls.bulkApplyFeeds, settings)
-							.then(() => {
+							.then(data => {
+								if (!isOk(data)) {
+									alert(tr.error_applying_settings || 'Error applying settings. Please try again.');
+									return;
+								}
 								if (feedColorInput) feedColorInput.dataset.reset = '';
 								alert(tr.bulk_apply_success_feeds);
 								location.reload();
-							})
-							.catch(err => {
-								console.error('Error applying bulk feed settings:', err);
-								alert(tr.error_applying_settings || 'Error applying settings. Please try again.');
 							});
 					}
 				});
@@ -2590,14 +2638,14 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 					if (confirm(tr.confirm_bulk_apply_tabs)) {
 						api(urls.bulkApplyTabs, settings)
-							.then(() => {
+							.then(data => {
+								if (!isOk(data)) {
+									alert(tr.error_applying_settings || 'Error applying settings. Please try again.');
+									return;
+								}
 								if (tabColorInput) tabColorInput.dataset.reset = '';
 								alert(tr.bulk_apply_success_tabs);
 								location.reload();
-							})
-							.catch(err => {
-								console.error('Error applying bulk tab settings:', err);
-								alert(tr.error_applying_settings || 'Error applying settings. Please try again.');
 							});
 					}
 				});
@@ -2606,13 +2654,13 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				document.getElementById('reset-all-feed-settings')?.addEventListener('click', () => {
 					if (confirm(tr.confirm_reset_all_feeds)) {
 						api(urls.resetFeeds, {})
-							.then(() => {
+							.then(data => {
+								if (!isOk(data)) {
+									alert(tr.error_resetting_settings || 'Error resetting settings. Please try again.');
+									return;
+								}
 								alert(tr.bulk_reset_success_feeds);
 								location.reload();
-							})
-							.catch(err => {
-								console.error('Error resetting feed settings:', err);
-								alert(tr.error_resetting_settings || 'Error resetting settings. Please try again.');
 							});
 					}
 				});
@@ -2621,13 +2669,13 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				document.getElementById('reset-all-tab-settings')?.addEventListener('click', () => {
 					if (confirm(tr.confirm_reset_all_tabs)) {
 						api(urls.resetTabs, {})
-							.then(() => {
+							.then(data => {
+								if (!isOk(data)) {
+									alert(tr.error_resetting_settings || 'Error resetting settings. Please try again.');
+									return;
+								}
 								alert(tr.bulk_reset_success_tabs);
 								location.reload();
-							})
-							.catch(err => {
-								console.error('Error resetting tab settings:', err);
-								alert(tr.error_resetting_settings || 'Error resetting settings. Please try again.');
 							});
 					}
 				});

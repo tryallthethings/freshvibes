@@ -13,11 +13,17 @@ final class View extends \Minz_View {
 	public string $currentOrder = 'DESC';
 
 	/**
-	 * @var array{id:int,name:string,favicon:string,website:string,
+	 * Per-feed payload embedded in the page, keyed by feed ID.
+	 *
+	 * `detailedSnippet` holds allow-listed HTML for the modal; every other text field is plain
+	 * text and must be rendered with `textContent`.
+	 *
+	 * @var array<int,array{id:int,name:string,favicon:string,website:string,
 	 *	entries:array<array{id:string,link:string,title:string,dateShort:string,dateRelative:string,
-	 *		dateFull:string,snippet:string,compactSnippet:string,detailedSnippet:string,isRead:bool,author:string,tags:string|array<string>,feedId:int}>,
-	 *	currentLimit:mixed,currentFontSize:null|string,nbUnread:int,currentHeaderColor:null|string,
-	 *	currentMaxHeight:null|string,currentDisplayMode:null|string}[] $feedsData
+	 *		dateFull:string,snippet:string,compactSnippet:string,detailedSnippet:string,detailedText:string,
+	 *		isRead:bool,isFavorite:bool,author:string,tags:array<string>,feedId:int}>|array{error:string},
+	 *	currentLimit:int|string,currentFontSize:string,nbUnread:int,currentHeaderColor:string,
+	 *	currentMaxHeight:string,currentDisplayMode:string}> $feedsData
 	 */
 	public array $feedsData = [];
 
@@ -32,7 +38,6 @@ final class View extends \Minz_View {
 	public bool $refreshEnabled;
 	public int $nbUnreadTags;
 	public int $refreshInterval;
-	public string $dateFormat;
 	public string $dateMode;
 	public string $entryClickMode;
 	public string $feedUrl;
@@ -51,7 +56,6 @@ final class View extends \Minz_View {
 	public string $tabActionUrl;
 	public string $viewMode;
 	public string $bookmarkUrl;
-	public string $refreshFeedsUrl;
 	public string $feedSettingsUrl;
 	public string $categorySettingsUrl;
 	public bool $animationsEnabled;

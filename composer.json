@@ -19,6 +19,7 @@
         "ext-dom": "*",
         "ext-json": "*",
         "ext-libxml": "*",
+        "ext-mbstring": "*",
         "ext-pcre": "*"
     },
     "require-dev": {

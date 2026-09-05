@@ -61,6 +61,7 @@ With the recent shutdown of Netvibes, I was looking for an alternative. FreshRSS
 ## 📋 Requirements
 
 - FreshRSS 1.27.0 or higher
+- PHP 8.1 or higher, with the `dom`, `json`, `libxml`, `mbstring` and `pcre` extensions
 - Modern web browser with JavaScript enabled
 
 ## 🚀 Installation

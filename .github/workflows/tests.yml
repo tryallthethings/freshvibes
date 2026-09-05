@@ -6,20 +6,48 @@ on:
   pull_request:
     branches: [ main ]
 
+# Least privilege by default; the effective repository default is a settings-level value, so the
+# minimum needed is declared in code instead.
+permissions:
+  contents: read
+
+env:
+  # Release baseline. Pinned so analysis is reproducible instead of tracking a moving branch.
+  FRESHRSS_REF: '1.29.1'
+
 jobs:
 
   tests:
     # https://github.com/actions/virtual-environments
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # Declared minimum and a currently security-supported branch.
+        php-version: [ '8.1', '8.4' ]
     defaults:
       run:
         working-directory: ./Extensions
 
     steps:
+    # Actions are pinned to full commit SHAs; a major tag is mutable and is not a supply-chain
+    # guarantee. https://docs.github.com/en/actions/reference/security/secure-use
     - name: Git checkout source code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         path: Extensions
+
+    - name: Set up PHP
+      uses: shivammathur/setup-php@f3e473d116dcccaddc5834248c87452386958240 # 2.37.2
+      with:
+        php-version: ${{ matrix.php-version }}
+        extensions: dom, json, libxml, mbstring
+        coverage: none
+
+    - name: Report tool versions
+      run: |
+        php --version
+        composer --version
 
     # Composer tests
 
@@ -31,25 +59,56 @@ jobs:
 
     - name: Use Composer cache
       id: composer-cache
-      uses: actions/cache@v6
+      uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6
       with:
         path: Extensions/vendor
-        key: ${{ runner.os }}-php-${{ hashFiles('**/composer.lock') }}
+        key: ${{ runner.os }}-php${{ matrix.php-version }}-${{ hashFiles('**/composer.lock') }}
         restore-keys: |
-          ${{ runner.os }}-php-
+          ${{ runner.os }}-php${{ matrix.php-version }}-
 
+    # Always run, so the installed set is verified against the lock file even on a cache hit.
     - name: Run Composer install
       run: composer install --prefer-dist --no-progress
-      if: steps.composer-cache.outputs.cache-hit != 'true'
+
+    - name: Report analysis tool versions
+      run: |
+        vendor/bin/phpcs --version
+        vendor/bin/phpstan --version
 
     - name: PHP_CodeSniffer
       run: composer run-script phpcs
 
     - name: Git checkout FreshRSS source code
-      uses: actions/checkout@v7
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        repository: FreshRSS/FreshRSS
+        ref: ${{ env.FRESHRSS_REF }}
+        path: FreshRSS
+
+    - name: PHPStan
+      run: composer run-script phpstan
+
+  # Non-blocking early warning for changes on the FreshRSS development branch.
+  freshrss-dev:
+    runs-on: ubuntu-latest
+    continue-on-error: true
+    defaults:
+      run:
+        working-directory: ./Extensions
+    steps:
+    - name: Git checkout source code
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      with:
+        path: Extensions
+
+    - name: Run Composer install
+      run: composer install --prefer-dist --no-progress
+
+    - name: Git checkout FreshRSS development branch
+      uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
       with:
         repository: FreshRSS/FreshRSS
         path: FreshRSS
 
-    - name: PHPStan
+    - name: PHPStan against FreshRSS edge
       run: composer run-script phpstan

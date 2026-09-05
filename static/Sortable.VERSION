@@ -1,0 +1,11 @@
+# Vendored dependency. Dependabot does not track standalone committed assets, so the expected
+# upstream release and digest are recorded here for manual and CI verification.
+#
+# Verify with:
+#   sha256sum static/Sortable.min.js
+#   curl -sL https://raw.githubusercontent.com/SortableJS/Sortable/<version>/Sortable.min.js | sha256sum
+name=sortablejs
+version=1.15.7
+source=https://github.com/SortableJS/Sortable/releases/tag/1.15.7
+file=Sortable.min.js
+sha256=bf4241bc73fef7f11c59a283a69fe8051cdd31c6d8ff5a2b9ba219e7831fcf76

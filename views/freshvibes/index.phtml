@@ -33,7 +33,6 @@ $urlsArray = [
 	"bulkApplyTabs" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'bulkApplyTabSettings'], 'json', false),
 	"resetFeeds" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllFeedSettings'], 'json', false),
 	"resetTabs" => Minz_Url::display(['c' => FreshVibesViewExtension::CONTROLLER_NAME_BASE, 'a' => 'resetAllTabSettings'], 'json', false),
-	"refreshFeeds" => $this->refreshFeedsUrl,
 	"feedSettings" => $this->feedSettingsUrl,
 	"categorySettings" => $this->categorySettingsUrl,
 	"saveCategoryOrder" => $this->saveCategoryOrderUrl,
@@ -41,13 +40,10 @@ $urlsArray = [
 
 // Prepare settings array
 $settingsArray = [
-	"refreshInterval" => (string)($this->refreshInterval ?? 15),
-	"dateFormat" => (string)($this->dateFormat ?? 'YYYY-MM-DD hh:mm'),
+	"refreshInterval" => (string)($this->refreshInterval ?? FreshVibesViewExtension::DEFAULT_REFRESH_INTERVAL),
 	"mode" => $this->viewMode ?? 'custom',
 	"confirmTabDelete" => $this->confirmTabDelete ? '1' : '0',
 	"entryClickMode" => $this->entryClickMode ?? 'modal',
-	"sort" => $this->currentSort,
-	"order" => $this->currentOrder,
 	"dateMode" => $this->dateMode ?? 'absolute',
 	"confirmMarkRead" => $this->confirmMarkRead ? '1' : '0',
 	"refreshEnabled" => $this->refreshEnabled ? '1' : '0',
@@ -64,9 +60,8 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 	data-freshvibes-urls='<?= $urlsJson ?>'
 	data-freshvibes-settings='<?= $settingsJson ?>'
 	data-animations="<?= $this->animationsEnabled ? 'enabled' : 'disabled' ?>"
-	data-empty-feeds="<?= $this->emptyFeedsDisplay ?>"
-	data-layout="<?= $this->dashboardLayout ?>"
-	data-freshvibes-is-logged-in="<?= FreshRSS_Auth::hasAccess() ? '1' : '0' ?>"
+	data-empty-feeds="<?= htmlspecialchars($this->emptyFeedsDisplay, ENT_QUOTES) ?>"
+	data-layout="<?= htmlspecialchars($this->dashboardLayout, ENT_QUOTES) ?>"
 	data-freshvibes-csrf-token="<?= htmlspecialchars(FreshRSS_Auth::csrfToken(), ENT_QUOTES); ?>">
 
 	<header class="freshvibes-header">
@@ -233,13 +228,8 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 		'confirm_mark_tab_read' => _t('ext.FreshVibesView.confirm_mark_tab_read', 'Mark all entries in this tab as read?'),
 		'mark_all_read' => _t('ext.FreshVibesView.mark_all_read', 'Mark all as read'),
 		'mark_favorite' => _t('ext.FreshVibesView.mark_favorite', _t('conf.shortcut.mark_favorite')),
-		'header_color' => _t('ext.FreshVibesView.header_color', 'Header color'),
-		'tab_bg_color' => _t('ext.FreshVibesView.tab_bg_color', 'Tab background'),
-		'icon_read' => _i('unread'),
-		'icon_unread' => _i('read'),
 		'unlimited' => _t('ext.FreshVibesView.unlimited', 'Unlimited'),
 		'fit_to_content' => _t('ext.FreshVibesView.fit_to_content', 'Fit to content'),
-		'display_mode_label' => _t('ext.FreshVibesView.display_mode_label', 'Display:'),
 		'display_mode_tiny' => _t('ext.FreshVibesView.display_mode_tiny', 'Tiny'),
 		'display_mode_compact' => _t('ext.FreshVibesView.display_mode_compact', 'Compact'),
 		'display_mode_detailed' => _t('ext.FreshVibesView.display_mode_detailed', 'Detailed'),
@@ -247,8 +237,6 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 		'confirm_bulk_apply_tabs' => _t('ext.FreshVibesView.confirm_bulk_apply_tabs', 'Are you sure you want to apply these settings to all tabs?'),
 		'confirm_reset_all_feeds' => _t('ext.FreshVibesView.confirm_reset_all_feeds', 'Are you sure you want to reset all feeds to default settings?'),
 		'confirm_reset_all_tabs' => _t('ext.FreshVibesView.confirm_reset_all_tabs', 'Are you sure you want to reset all tabs to default settings?'),
-		'feeds' => _t('ext.FreshVibesView.feeds', 'feeds'),
-		'tabs' => _t('ext.FreshVibesView.tabs', 'tabs'),
 		'bulk_apply_success_feeds' => _t('ext.FreshVibesView.bulk_apply_success_feeds', 'Settings applied to all feeds successfully'),
 		'bulk_apply_success_tabs' => _t('ext.FreshVibesView.bulk_apply_success_tabs', 'Settings applied to all tabs successfully'),
 		'bulk_reset_success_feeds' => _t('ext.FreshVibesView.bulk_reset_success_feeds', 'All feeds reset to defaults successfully'),
@@ -264,8 +252,11 @@ $settingsJson = htmlspecialchars(json_encode($settingsArray, JSON_HEX_APOS | JSO
 		'error_applying_settings' => _t('ext.FreshVibesView.error_applying_settings', 'Error applying settings. Please try again.'),
 		'error_resetting_settings' => _t('ext.FreshVibesView.error_resetting_settings', 'Error resetting settings. Please try again.'),
 		'icon_starred' => _i('starred'),
-		'login_required' => _t('ext.FreshVibesView.login_required', 'You need to be logged in to make changes'),
-		'login' => _t('ext.FreshVibesView.login', 'Login'),
+		'error_moving_feed' => _t('ext.FreshVibesView.error_moving_feed', 'Error moving feed. Please try again.'),
+		'feed_already_in_tab' => _t('ext.FreshVibesView.feed_already_in_tab', 'This feed is already in the target tab.'),
+		'mark_read' => _t('ext.FreshVibesView.mark_read', 'Mark as read'),
+		'mark_unread' => _t('ext.FreshVibesView.mark_unread', 'Mark as unread'),
+		'session_expired' => _t('ext.FreshVibesView.session_expired', 'Your session has expired. Please refresh the page.'),
 	], JSON_HEX_TAG | JSON_HEX_AMP | JSON_HEX_APOS | JSON_HEX_QUOT) ?>
 </script>
 
