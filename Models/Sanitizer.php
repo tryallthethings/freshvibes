@@ -229,6 +229,12 @@ final class Sanitizer {
 
 	/** Parse an HTML fragment into a document with a single known root element. */
 	private static function loadFragment(string $html): ?DOMDocument {
+		// Remove raw script/style blocks before parsing. Per the HTML spec their content ends only
+		// at the matching close tag, but libxml treats an inner `</p>` as closing the enclosing
+		// element, which splits the block and leaks its tail into the document as visible text.
+		// Stripping first means the parser never sees the mis-nesting.
+		$html = preg_replace('#<(script|style)\b[^>]*>.*?(?:</\1\s*>|$)#is', '', $html) ?? $html;
+
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$previous = libxml_use_internal_errors(true);
 		// The XML declaration pins the encoding; without it libxml assumes ISO-8859-1.

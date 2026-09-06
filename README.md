@@ -120,6 +120,8 @@ Access the extension settings through **Configuration** → **Extensions** → *
 Contributions are welcome! Please feel free to submit a Pull Request.
 If you'd like to help translate FreshVibes, join our project on [Crowdin](https://crowdin.com/project/freshvibes).
 
+Development setup, the test suite and the vendored-asset checks are described in [CONTRIBUTING.md](CONTRIBUTING.md).
+
 ## 🐛 Issues
 
 If you encounter any bugs or have feature requests, please [open an issue](https://github.com/tryallthethings/freshvibes/issues).

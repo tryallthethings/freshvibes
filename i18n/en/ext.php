@@ -133,6 +133,8 @@ return array(
 		'settings_animations_enabled_help' => 'Enable smooth transitions and hover effects throughout the interface',
 		'error_moving_feed' => 'Error moving feed. Please try again.',
 		'error_access_denied' => 'You are not allowed to perform this action.',
+		'error_too_many_tabs' => 'You have reached the maximum number of tabs.',
+		'error_layout_too_large' => 'The dashboard layout is too large to be saved.',
 		'feed_already_in_tab' => 'This feed is already in the target tab.',
 		'session_expired' => 'Your session has expired. Please refresh the page.',
 		'settings_max_entries_cap_label' => 'Maximum articles loaded per feed',

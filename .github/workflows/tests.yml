@@ -23,8 +23,9 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Declared minimum and a currently security-supported branch.
-        php-version: [ '8.1', '8.4' ]
+        # Declared minimum, plus every branch still receiving security support.
+        # https://www.php.net/supported-versions.php
+        php-version: [ '8.1', '8.4', '8.5' ]
     defaults:
       run:
         working-directory: ./Extensions
@@ -87,6 +88,12 @@ jobs:
 
     - name: PHPStan
       run: composer run-script phpstan
+
+    - name: PHPUnit
+      run: composer run-script phpunit
+
+    - name: Verify vendored asset digests
+      run: composer run-script verify-vendored
 
   # Non-blocking early warning for changes on the FreshRSS development branch.
   freshrss-dev:

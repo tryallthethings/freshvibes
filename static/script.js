@@ -24,7 +24,10 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 
 	// --- DOM & CONFIG ---
 	const isCategoryMode = settings.mode === 'categories';
-	const sortableInstances = new WeakMap();
+	const sortableInstances = new Map();
+	// Pending initializeSortable() timers, so a re-render can cancel initialisers whose target
+	// columns it is about to detach.
+	const pendingSortableInits = new Set();
 	const trEl = document.getElementById('freshvibes-i18n');
 	const tr = trEl ? JSON.parse(trEl.textContent) : {};
 	if (trEl) trEl.remove();
@@ -121,6 +124,10 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	function renderVerticalLayout() {
 		// — store subscription buttons before we clear the layout
 		const subscriptionButtons = document.querySelector('.moved-subscription-buttons');
+		// Destroy before detaching: cleanup cannot reach nodes that innerHTML has already removed.
+		cancelPendingSortableInits();
+		destroySortablesWithin(tabsContainer);
+		destroySortablesWithin(panelsContainer);
 		// Clear existing content
 		tabsContainer.innerHTML = '';
 		panelsContainer.innerHTML = '';
@@ -137,6 +144,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			panelsContainer.parentNode.insertBefore(verticalContainer, panelsContainer);
 		}
 
+		destroySortablesWithin(verticalContainer);
 		verticalContainer.innerHTML = '';
 
 		// Render each tab as a section
@@ -268,6 +276,43 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		// Columns are already initialised by renderTabContent() for each rendered tab; repeating it
 		// here created a second Sortable per column that could no longer be destroyed.
 		setupVerticalLayoutHandlers();
+	}
+
+	// Destroy the Sortable bound to one element, if any.
+	function destroySortable(element) {
+		const instance = sortableInstances.get(element);
+		if (instance) {
+			instance.destroy();
+			sortableInstances.delete(element);
+		}
+	}
+
+	// Tear down every Sortable at or below `root`. Must run *before* the root's children are
+	// detached: once a node is detached, `contains()` can no longer find it.
+	function destroySortablesWithin(root) {
+		if (!root) return;
+		for (const element of Array.from(sortableInstances.keys())) {
+			if (element === root || root.contains(element)) {
+				destroySortable(element);
+			}
+		}
+	}
+
+	// Safety net for any instance whose node left the document by another route.
+	function destroyDetachedSortables() {
+		for (const element of Array.from(sortableInstances.keys())) {
+			if (!element.isConnected) {
+				destroySortable(element);
+			}
+		}
+	}
+
+	// Cancel initialisers scheduled for columns that a re-render is about to replace.
+	function cancelPendingSortableInits() {
+		for (const timer of pendingSortableInits) {
+			clearTimeout(timer);
+		}
+		pendingSortableInits.clear();
 	}
 
 	function updateUnreadBadge(container, count, cssClass = 'feed-unread-badge', titleText = null) {
@@ -517,6 +562,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	}
 
 	function renderPanels() {
+		cancelPendingSortableInits();
+		destroySortablesWithin(panelsContainer);
 		panelsContainer.innerHTML = '';
 		state.layout.forEach(tab => panelsContainer.appendChild(createTabPanel(tab)));
 	}
@@ -664,8 +711,10 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		const intervalMinutes = parseInt(settings.refreshInterval, 10) || 15;
 		const refreshMs = intervalMinutes * 60 * 1000;
 
-		// Validate settings
-		if (!refreshEnabled || !urls.refreshFeeds || refreshMs <= 0) {
+		// Auto-refresh re-requests this page rather than a dedicated endpoint, so it has no URL
+		// prerequisite. Requiring urls.refreshFeeds here made the loop unreachable once that
+		// (unused, now removed) endpoint stopped being published.
+		if (!refreshEnabled || refreshMs <= 0) {
 			return;
 		}
 
@@ -770,15 +819,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		}
 
 		// Destroy any existing Sortable instances before clearing the DOM
-		if (columnsContainer) {
-			columnsContainer.querySelectorAll('.freshvibes-column').forEach(column => {
-				const sortable = sortableInstances.get(column);
-				if (sortable) {
-					sortable.destroy();
-					sortableInstances.delete(column);
-				}
-			});
-		}
+		destroySortablesWithin(columnsContainer);
 
 		columnsContainer.innerHTML = '';
 		columnsContainer.className = `freshvibes-columns columns-${tab.num_columns}`;
@@ -825,10 +866,14 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			});
 		}
 
-		// Initialize sortable after a delay to ensure DOM is ready
-		setTimeout(() => {
-			initializeSortable(columns);
+		// Initialize sortable after a delay to ensure DOM is ready. The handle is tracked so a
+		// later render can cancel it, and detached columns are skipped in case it still fires.
+		const timer = setTimeout(() => {
+			pendingSortableInits.delete(timer);
+			destroyDetachedSortables();
+			initializeSortable(columns.filter(column => column.isConnected));
 		}, 100);
+		pendingSortableInits.add(timer);
 	}
 
 	function createFeedContainer(feed, sourceTabId) {
@@ -1441,7 +1486,11 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		}
 
 		if (persist) {
-			api(urls.setActiveTab, { tab_id: tabId });
+			api(urls.setActiveTab, { tab_id: tabId }).then(data => {
+				// The active tab is a convenience; a failed write only means the next page load
+				// starts elsewhere, so report it rather than disturbing the current view.
+				if (!isOk(data)) handleAPIError('Set active tab', data);
+			});
 		}
 	}
 
@@ -1782,16 +1831,20 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					const numCols = columnsButton.dataset.columns;
 					const tabId = columnsButton.closest('.freshvibes-tab').dataset.tabId;
 
-					// Update active state immediately
+					// Update active state immediately, remembering what to restore on failure.
+					const previousCols = state.layout.find(t => t.id === tabId)?.num_columns;
 					updateColumnButtonState(columnsButton.parentElement, parseInt(numCols));
 
 					api(urls.tabAction, { operation: 'set_columns', tab_id: tabId, value: numCols }).then(data => {
-						if (data.status === 'success') {
-							state.layout = data.new_layout;
-							state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
-							const tabData = state.layout.find(t => t.id === tabId);
-							renderTabContent(tabData);
+						if (!isOk(data) || !data.new_layout) {
+							handleAPIError('Set columns', data);
+							if (previousCols) updateColumnButtonState(columnsButton.parentElement, previousCols);
+							return;
 						}
+						state.layout = assignUniqueSlugs(data.new_layout);
+						state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+						const tabData = state.layout.find(t => t.id === tabId);
+						if (tabData) renderTabContent(tabData);
 					});
 					return;
 				}
@@ -1815,7 +1868,11 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					const performDelete = () => {
 						api(urls.tabAction, { operation: 'delete', tab_id: tabId })
 							.then(data => {
-								if (data.status === 'success') {
+								if (!isOk(data)) {
+									handleAPIError('Delete tab', data);
+									return;
+								}
+								if (data.new_layout) {
 									state.layout = assignUniqueSlugs(data.new_layout);
 									state.allPlacedFeedIds = new Set(
 										data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String)
@@ -1901,16 +1958,20 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				const numCols = columnsButton.dataset.columns;
 				const tabId = columnsButton.closest('.freshvibes-tab').dataset.tabId;
 
-				// Update active state immediately
+				// Update active state immediately, remembering what to restore on failure.
+				const previousCols = state.layout.find(t => t.id === tabId)?.num_columns;
 				updateColumnButtonState(columnsButton.parentElement, parseInt(numCols));
 
 				api(urls.tabAction, { operation: 'set_columns', tab_id: tabId, value: numCols }).then(data => {
-					if (data.status === 'success') {
-						state.layout = assignUniqueSlugs(data.new_layout);
-						state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
-						const tabData = state.layout.find(t => t.id === tabId);
-						renderTabContent(tabData);
+					if (!isOk(data) || !data.new_layout) {
+						handleAPIError('Set columns', data);
+						if (previousCols) updateColumnButtonState(columnsButton.parentElement, previousCols);
+						return;
 					}
+					state.layout = assignUniqueSlugs(data.new_layout);
+					state.allPlacedFeedIds = new Set(data.new_layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+					const tabData = state.layout.find(t => t.id === tabId);
+					if (tabData) renderTabContent(tabData);
 				});
 				return;
 			}

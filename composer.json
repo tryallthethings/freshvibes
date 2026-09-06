@@ -25,7 +25,8 @@
     "require-dev": {
         "phpstan/phpstan": "^2.1",
         "phpstan/phpstan-strict-rules": "^2",
-        "squizlabs/php_codesniffer": "^4.0"
+        "squizlabs/php_codesniffer": "^4.0",
+        "phpunit/phpunit": "^10.5"
     },
     "scripts": {
         "php-lint": "find . -type d -name 'vendor' -prune -o -name '*.php' -print0 | xargs -0 -n1 -P4 php -l 1>/dev/null",
@@ -37,11 +38,15 @@
             "@php-lint",
             "@phtml-lint",
             "@phpcs",
-            "@phpstan"
+            "@phpstan",
+            "@phpunit",
+            "@verify-vendored"
         ],
         "fix": [
             "@phpcbf"
-        ]
+        ],
+        "phpunit": "phpunit",
+        "verify-vendored": "./.github/verify-vendored.sh"
     },
     "config": {
         "allow-plugins": {

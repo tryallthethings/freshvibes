@@ -210,6 +210,86 @@ final class LayoutSchema {
 		unset($tab);
 	}
 
+	/**
+	 * Total feeds placed across the whole layout.
+	 *
+	 * `validateColumns()` bounds a single tab, but moves and redistribution write layouts without
+	 * going through it, so the whole-layout total is checked separately before every save.
+	 *
+	 * @param list<array<string,mixed>> $layout
+	 */
+	public static function totalPlacedFeeds(array $layout): int {
+		$total = 0;
+		foreach ($layout as $tab) {
+			foreach ((array)($tab['columns'] ?? []) as $column) {
+				$total += count((array)$column);
+			}
+		}
+		return $total;
+	}
+
+	/**
+	 * Whether a complete layout is within the declared structural limits.
+	 *
+	 * Checks the per-tab ceiling as well as the tab count. `validateColumns()` enforces the per-tab
+	 * limit for the one path that goes through it, but moves, redistribution and tab deletion build
+	 * layouts directly, so the limit is re-checked here on the shared write path.
+	 *
+	 * @param list<array<string,mixed>> $layout
+	 */
+	public static function withinLimits(array $layout): bool {
+		if (count($layout) > self::MAX_TABS) {
+			return false;
+		}
+
+		foreach ($layout as $tab) {
+			$feedsInTab = 0;
+			foreach ((array)($tab['columns'] ?? []) as $column) {
+				$feedsInTab += count((array)$column);
+			}
+			if ($feedsInTab > self::MAX_FEEDS_PER_TAB) {
+				return false;
+			}
+		}
+
+		return true;
+	}
+
+	/**
+	 * Validate a submitted category order against the categories that actually exist.
+	 *
+	 * Requires an exact permutation: a subset would leave the omitted categories on their old
+	 * positions and collide with the newly assigned ones, and an empty value used to arrive as
+	 * `['']`, update nothing and still report success.
+	 *
+	 * @param list<string> $requestedIds Raw `cat-<id>` strings from the request.
+	 * @param list<int> $existingIds Category IDs the user actually has.
+	 * @return list<int>|null Ordered category IDs, or null when the request is not a permutation.
+	 */
+	public static function orderedCategoryIds(array $requestedIds, array $existingIds): ?array {
+		$parsed = [];
+		foreach ($requestedIds as $raw) {
+			if (preg_match('/^cat-([1-9][0-9]*)$/', trim($raw), $m) !== 1) {
+				return null;
+			}
+			$parsed[] = (int)$m[1];
+		}
+
+		if ($parsed === [] || count($parsed) !== count($existingIds)) {
+			return null;
+		}
+
+		$sortedRequested = $parsed;
+		$sortedExisting = $existingIds;
+		sort($sortedRequested);
+		sort($sortedExisting);
+		if ($sortedRequested !== $sortedExisting) {
+			return null;
+		}
+
+		return $parsed;
+	}
+
 	/** Trim a user-supplied display string and reject it when empty or over-long. */
 	public static function normalizeName(string $value, int $maxLength = self::MAX_TAB_NAME_LENGTH): ?string {
 		$value = trim($value);
