@@ -4,13 +4,8 @@ declare(strict_types=1);
 
 namespace tryallthethings\FreshVibes\Models;
 
-use DOMComment;
 use DOMDocument;
 use DOMElement;
-use DOMNode;
-use DOMProcessingInstruction;
-use DOMText;
-use DOMXPath;
 
 /**
  * Output-safety helpers for untrusted feed content.
@@ -25,8 +20,29 @@ use DOMXPath;
  */
 final class Sanitizer {
 
-	/** Wrapper element used to give libxml a single, predictable root. */
-	private const ROOT_ID = 'freshvibes-sanitizer-root';
+	/**
+	 * PHP 8.4's HTML5 document class, named as a string.
+	 *
+	 * It is referenced dynamically because this file also has to parse on PHP 8.1, where the class
+	 * does not exist, and because `DOMElement` and `Dom\Element` are unrelated classes with the
+	 * same shape: the filter below is written against the members they share, not against either
+	 * hierarchy.
+	 */
+	private const HTML5_DOCUMENT_CLASS = 'Dom\\HTMLDocument';
+
+	/** The only element namespace whose tags may survive; anything else is foreign content. */
+	private const HTML_NAMESPACE = 'http://www.w3.org/1999/xhtml';
+
+	/**
+	 * Hard bound on the markup handed to the parser or to the plain-text reducer.
+	 *
+	 * A single entry's stored content is not bounded by anything the extension controls: it comes
+	 * from whatever a publisher put in the feed. The word and sentence limits bound the *output*,
+	 * not the cost of parsing the input, and neither does the per-feed article cap. Cutting on a
+	 * character boundary keeps the remainder valid UTF-8, and the allow-list filter discards the
+	 * partial tag the cut may leave behind.
+	 */
+	private const MAX_INPUT_BYTES = 262144;
 
 	/** URL schemes accepted for links that a user may navigate to. */
 	private const ALLOWED_URL_SCHEMES = ['http', 'https', 'mailto'];
@@ -150,6 +166,7 @@ final class Sanitizer {
 	 * text instead of becoming markup. The result is only ever safe to assign with `textContent`.
 	 */
 	public static function toText(string $html): string {
+		$html = self::boundInput($html);
 		// `strip_tags()` keeps the *content* of script/style blocks, so remove those outright.
 		$html = preg_replace('#<(script|style)\b[^>]*>.*?</\1\s*>#is', ' ', $html) ?? $html;
 		// Give block boundaries a separator so adjacent words do not run together.
@@ -195,12 +212,13 @@ final class Sanitizer {
 	 * and only allow-listed URL schemes.
 	 */
 	public static function sanitizeHtml(string $html, ?int $wordLimit = null): string {
+		$html = self::boundInput($html);
 		if (trim($html) === '') {
 			return '';
 		}
 
-		$doc = self::loadFragment($html);
-		if ($doc === null) {
+		$root = self::loadFragment($html);
+		if ($root === null) {
 			// Parsing failed; fall back to escaped plain text rather than emitting raw markup.
 			$text = self::toText($html);
 			if ($wordLimit !== null) {
@@ -209,26 +227,77 @@ final class Sanitizer {
 			return htmlspecialchars($text, ENT_QUOTES | ENT_HTML5, 'UTF-8');
 		}
 
-		$xpath = new DOMXPath($doc);
-		$root = $xpath->query('//*[@id="' . self::ROOT_ID . '"]')->item(0);
-		if (!$root instanceof DOMElement) {
-			return '';
-		}
-
 		self::filterChildren($root);
 		if ($wordLimit !== null) {
 			self::truncateNodeToWords($root, $wordLimit);
 		}
 
+		$doc = $root->ownerDocument;
+		if ($doc === null) {
+			return '';
+		}
+
 		$result = '';
 		foreach (iterator_to_array($root->childNodes) as $child) {
-			$result .= $doc->saveHTML($child);
+			$result .= (string)$doc->saveHTML($child);
 		}
 		return trim($result);
 	}
 
-	/** Parse an HTML fragment into a document with a single known root element. */
-	private static function loadFragment(string $html): ?DOMDocument {
+	/** Cut over-long markup on a character boundary so the parser always sees bounded input. */
+	private static function boundInput(string $html): string {
+		if (strlen($html) <= self::MAX_INPUT_BYTES) {
+			return $html;
+		}
+		return mb_strcut($html, 0, self::MAX_INPUT_BYTES, 'UTF-8');
+	}
+
+	/**
+	 * Parse an HTML fragment and return the single known root element wrapping it.
+	 *
+	 * PHP 8.4 added `Dom\HTMLDocument`, an HTML5 parser that follows the same specification the
+	 * browser does. That matters here because the result of this parse is eventually assigned to
+	 * `innerHTML`: where the two parsers disagree — foreign content, raw-text elements, mis-nested
+	 * tables — the browser's reading is the one that decides what actually runs, and PHP documents
+	 * that very divergence as a reason not to rely on `DOMDocument::loadHTML()` for sanitisation.
+	 * It is used when available; older runtimes keep the `DOMDocument` path.
+	 *
+	 * Either way the filter is an allow-list over the parsed tree and the output is re-serialised
+	 * with escaping, so a parser disagreement can change which text survives but cannot introduce
+	 * an element or attribute that the allow-list does not name.
+	 *
+	 * @see https://www.php.net/manual/en/domdocument.loadhtml.php
+	 * @return object|null A `DOMElement` or a `Dom\Element`, whichever parser ran.
+	 */
+	private static function loadFragment(string $html): ?object {
+		return self::loadFragmentHtml5($html) ?? self::loadFragmentLibxml($html);
+	}
+
+	/** Spec-compliant HTML5 parse, used on PHP 8.4 and later. Null when unavailable or unparsable. */
+	private static function loadFragmentHtml5(string $html): ?object {
+		$factory = self::HTML5_DOCUMENT_CLASS . '::createFromString';
+		if (!class_exists(self::HTML5_DOCUMENT_CLASS) || !is_callable($factory)) {
+			return null;
+		}
+
+		try {
+			// Nothing is appended after the fragment. A raw-text element such as `<plaintext>` or
+			// `<xmp>` runs to the end of the input, so any closing tag written after it would be
+			// swallowed and re-emitted as visible text in the excerpt.
+			$doc = $factory('<!DOCTYPE html><body>' . $html, LIBXML_NOERROR, 'UTF-8');
+		} catch (\Throwable $e) {
+			return null;
+		}
+
+		if (!is_object($doc)) {
+			return null;
+		}
+		$body = $doc->body;
+		return is_object($body) ? $body : null;
+	}
+
+	/** libxml HTML4 parse, used when the HTML5 parser is unavailable. */
+	private static function loadFragmentLibxml(string $html): ?object {
 		// Remove raw script/style blocks before parsing. Per the HTML spec their content ends only
 		// at the matching close tag, but libxml treats an inner `</p>` as closing the enclosing
 		// element, which splits the block and leaks its tail into the document as visible text.
@@ -238,35 +307,56 @@ final class Sanitizer {
 		$doc = new DOMDocument('1.0', 'UTF-8');
 		$previous = libxml_use_internal_errors(true);
 		// The XML declaration pins the encoding; without it libxml assumes ISO-8859-1.
+		// `LIBXML_HTML_NOIMPLIED` keeps the explicit `<body>` as the document element, which then
+		// serves as the fragment root — again with no trailing tag for a raw-text element to eat.
 		$loaded = $doc->loadHTML(
-			'<?xml encoding="utf-8" ?><div id="' . self::ROOT_ID . '">' . $html . '</div>',
+			'<?xml encoding="utf-8" ?><body>' . $html,
 			LIBXML_HTML_NOIMPLIED | LIBXML_HTML_NODEFDTD | LIBXML_NONET | LIBXML_NOERROR | LIBXML_NOWARNING
 		);
 		libxml_clear_errors();
 		libxml_use_internal_errors($previous);
 
-		return $loaded ? $doc : null;
+		if (!$loaded) {
+			return null;
+		}
+
+		$root = $doc->documentElement;
+		return $root instanceof DOMElement && strtolower($root->nodeName) === 'body' ? $root : null;
 	}
 
-	/** Recursively apply the allow-list to every child of `$parent`. */
-	private static function filterChildren(DOMNode $parent): void {
+	/**
+	 * Recursively apply the allow-list to every child of `$parent`.
+	 *
+	 * Written against the node interface both DOM implementations share, and against the numeric
+	 * node types rather than class names, because `DOMElement` and `Dom\Element` are unrelated
+	 * classes with the same shape.
+	 *
+	 * @param object $parent A `DOMNode` or a `Dom\Node`.
+	 */
+	private static function filterChildren(object $parent): void {
 		// Iterate over a snapshot: the live NodeList shifts as nodes are removed or unwrapped.
 		foreach (iterator_to_array($parent->childNodes) as $child) {
-			if ($child instanceof DOMText) {
+			if ($child->nodeType === XML_TEXT_NODE) {
 				continue;
 			}
 
-			if ($child instanceof DOMComment || $child instanceof DOMProcessingInstruction) {
+			// Comments, processing instructions, CDATA and doctypes carry no displayable text and
+			// are exactly the constructs whose reparsing differs between implementations.
+			if ($child->nodeType !== XML_ELEMENT_NODE) {
 				$parent->removeChild($child);
 				continue;
 			}
 
-			if (!$child instanceof DOMElement) {
+			// Foreign content — SVG and MathML — has its own parsing rules, and an element there
+			// may share a local name with an allow-listed HTML element. The HTML5 parser records
+			// the namespace, so anything outside the HTML namespace is dropped with its subtree.
+			$namespace = $child->namespaceURI;
+			if ($namespace !== null && $namespace !== self::HTML_NAMESPACE) {
 				$parent->removeChild($child);
 				continue;
 			}
 
-			$tag = strtolower($child->nodeName);
+			$tag = strtolower($child->localName ?? $child->nodeName);
 
 			if (isset(self::DROPPED_SUBTREES[$tag])) {
 				$parent->removeChild($child);
@@ -285,13 +375,19 @@ final class Sanitizer {
 		}
 	}
 
-	/** Strip every attribute the element is not explicitly allowed to keep. */
-	private static function filterAttributes(DOMElement $element, string $tag): void {
+	/**
+	 * Strip every attribute the element is not explicitly allowed to keep.
+	 *
+	 * @param object $element A `DOMElement` or a `Dom\Element`.
+	 */
+	private static function filterAttributes(object $element, string $tag): void {
 		$allowed = self::ALLOWED_ELEMENTS[$tag];
 
 		foreach (iterator_to_array($element->attributes ?? []) as $attribute) {
 			$name = strtolower($attribute->nodeName);
 
+			// A namespaced attribute such as `xlink:href` is never on an allow-list, but removing
+			// it needs the name the parser recorded, not the lower-cased comparison key.
 			if (!in_array($name, $allowed, true)) {
 				$element->removeAttribute($attribute->nodeName);
 				continue;
@@ -314,8 +410,13 @@ final class Sanitizer {
 		}
 	}
 
-	/** Replace an element with its children. */
-	private static function unwrap(DOMElement $element, DOMNode $parent): void {
+	/**
+	 * Replace an element with its children.
+	 *
+	 * @param object $element A `DOMElement` or a `Dom\Element`.
+	 * @param object $parent Its parent node.
+	 */
+	private static function unwrap(object $element, object $parent): void {
 		foreach (iterator_to_array($element->childNodes) as $grandChild) {
 			$parent->insertBefore($grandChild, $element);
 		}
@@ -325,16 +426,17 @@ final class Sanitizer {
 	/**
 	 * Trim the tree so it holds at most `$limit` words, appending an ellipsis when text was cut.
 	 *
+	 * @param object $node A `DOMNode` or a `Dom\Node`.
 	 * @return int The number of words kept.
 	 */
-	private static function truncateNodeToWords(DOMNode $node, int $limit, int $used = 0): int {
+	private static function truncateNodeToWords(object $node, int $limit, int $used = 0): int {
 		foreach (iterator_to_array($node->childNodes) as $child) {
 			if ($used >= $limit) {
 				$node->removeChild($child);
 				continue;
 			}
 
-			if ($child instanceof DOMText) {
+			if ($child->nodeType === XML_TEXT_NODE) {
 				$text = $child->nodeValue ?? '';
 				$words = preg_split('/(\s+)/u', $text, -1, PREG_SPLIT_DELIM_CAPTURE | PREG_SPLIT_NO_EMPTY) ?: [];
 				$kept = '';

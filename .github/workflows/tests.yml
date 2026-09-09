@@ -23,9 +23,11 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        # Declared minimum, plus every branch still receiving security support.
+        # The declared minimum, plus every branch still receiving security support.
         # https://www.php.net/supported-versions.php
-        php-version: [ '8.1', '8.4', '8.5' ]
+        # 8.1 and 8.3 also cover the DOMDocument sanitiser path; 8.4 and 8.5 cover the
+        # Dom\HTMLDocument path that Models/Sanitizer.php uses when it is available.
+        php-version: [ '8.1', '8.2', '8.3', '8.4', '8.5' ]
     defaults:
       run:
         working-directory: ./Extensions

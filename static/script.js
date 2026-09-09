@@ -253,6 +253,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						if (tab) newLayout.push(tab);
 					});
 
+					// Keep the order the server still holds. Re-rendering alone cannot undo the
+					// change, because the renderer reads the very state that was just replaced.
+					const previousLayout = state.layout;
 					state.layout = newLayout;
 
 					// Save the new layout order
@@ -264,8 +267,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					api(url, payload)
 						.then(data => {
 							if (!isOk(data)) {
-								// Revert on failure by re-rendering
+								// Put the stored order back before re-rendering.
 								handleAPIError('Reorder vertical tabs', data);
+								state.layout = previousLayout;
 								renderVerticalLayout();
 							}
 						});
@@ -1589,6 +1593,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 						if (tab) newLayout.push(tab);
 					});
 
+					// As in the vertical handler: keep the order the server still holds, because
+					// render() draws from state and cannot undo a change already written into it.
+					const previousLayout = state.layout;
 					state.layout = newLayout;
 
 					const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
@@ -1599,8 +1606,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					api(url, payload)
 						.then(data => {
 							if (!isOk(data)) {
-								// Revert on failure by re-rendering
+								// Put the stored order back before re-rendering.
 								handleAPIError('Reorder tabs', data);
+								state.layout = previousLayout;
 								render();
 							}
 						});

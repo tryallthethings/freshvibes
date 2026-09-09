@@ -273,6 +273,19 @@ final class LayoutSchemaTest extends TestCase {
 			'whitespace only' => ['   ', null],
 			'too long' => [str_repeat('x', LayoutSchema::MAX_TAB_NAME_LENGTH + 1), null],
 			'too long unicode' => [str_repeat('é', LayoutSchema::MAX_TAB_NAME_LENGTH + 1), null],
+			// Names are now stored as typed rather than HTML-escaped, so the length limit counts
+			// characters instead of entities and the value must be checked here rather than relying
+			// on escaping to have removed anything awkward.
+			'markup is text, not markup' => ['<b>x</b>', '<b>x</b>'],
+			'ampersand kept verbatim' => ['Tech & Science', 'Tech & Science'],
+			'four markup characters are four characters' => [str_repeat('<', LayoutSchema::MAX_TAB_NAME_LENGTH), str_repeat('<', LayoutSchema::MAX_TAB_NAME_LENGTH)],
+			'newline rejected' => ["a\nb", null],
+			'carriage return rejected' => ["a\rb", null],
+			'tab character rejected' => ["a\tb", null],
+			'nul rejected' => ["a\0b", null],
+			'delete character rejected' => ["a\x7Fb", null],
+			'invalid utf8 rejected' => ["a\xC3\x28b", null],
+			'emoji kept' => ['📊 Dashboard', '📊 Dashboard'],
 		];
 	}
 

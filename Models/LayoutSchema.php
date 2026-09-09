@@ -31,12 +31,17 @@ final class LayoutSchema {
 	 * @param mixed $decoded Result of `json_decode(..., true)` on the request payload.
 	 * @param list<int> $knownFeedIds Feed IDs the user is actually subscribed to.
 	 * @param int $numColumns Number of columns the target tab declares.
+	 * @param int|null $maxFeeds Ceiling for this tab. Defaults to `MAX_FEEDS_PER_TAB`; callers
+	 *                           raise it to the tab's current size so a tab that is already over
+	 *                           the ceiling stays editable instead of rejecting every drag.
 	 * @return array<string,list<int>>|null Normalised columns, or null when the payload is invalid.
 	 */
-	public static function validateColumns(mixed $decoded, array $knownFeedIds, int $numColumns): ?array {
+	public static function validateColumns(mixed $decoded, array $knownFeedIds, int $numColumns, ?int $maxFeeds = null): ?array {
 		if (!is_array($decoded)) {
 			return null;
 		}
+
+		$maxFeeds = max(self::MAX_FEEDS_PER_TAB, $maxFeeds ?? 0);
 
 		$numColumns = max(self::MIN_COLUMNS, min(self::MAX_COLUMNS, $numColumns));
 		$known = array_flip($knownFeedIds);
@@ -68,7 +73,7 @@ final class LayoutSchema {
 				if ($feedId <= 0 || !isset($known[$feedId]) || isset($seen[$feedId])) {
 					continue;
 				}
-				if (++$total > self::MAX_FEEDS_PER_TAB) {
+				if (++$total > $maxFeeds) {
 					return null;
 				}
 				$seen[$feedId] = true;
@@ -235,24 +240,65 @@ final class LayoutSchema {
 	 * limit for the one path that goes through it, but moves, redistribution and tab deletion build
 	 * layouts directly, so the limit is re-checked here on the shared write path.
 	 *
+	 * When `$previous` is given, a dimension that the stored layout already exceeds is judged
+	 * against that stored value instead of against the constant: an oversized layout may be kept
+	 * or reduced, never pushed further. Without that allowance an account over a ceiling — a bulk
+	 * import, more categories than `MAX_TABS`, an upgrade from a release that had no ceilings —
+	 * could not use the dashboard to get back under it.
+	 *
 	 * @param list<array<string,mixed>> $layout
+	 * @param list<array<string,mixed>>|null $previous The layout currently stored, if any.
 	 */
-	public static function withinLimits(array $layout): bool {
-		if (count($layout) > self::MAX_TABS) {
+	public static function withinLimits(array $layout, ?array $previous = null): bool {
+		$maxTabs = self::MAX_TABS;
+		$maxFeedsPerTab = self::MAX_FEEDS_PER_TAB;
+
+		if ($previous !== null) {
+			$maxTabs = max($maxTabs, count($previous));
+			$maxFeedsPerTab = max($maxFeedsPerTab, self::largestTabSize($previous));
+		}
+
+		if (count($layout) > $maxTabs) {
 			return false;
 		}
 
+		return self::largestTabSize($layout) <= $maxFeedsPerTab;
+	}
+
+	/**
+	 * Number of feeds placed in the fullest tab of a layout.
+	 *
+	 * @param list<array<string,mixed>> $layout
+	 */
+	public static function largestTabSize(array $layout): int {
+		$largest = 0;
 		foreach ($layout as $tab) {
 			$feedsInTab = 0;
 			foreach ((array)($tab['columns'] ?? []) as $column) {
 				$feedsInTab += count((array)$column);
 			}
-			if ($feedsInTab > self::MAX_FEEDS_PER_TAB) {
-				return false;
-			}
+			$largest = max($largest, $feedsInTab);
 		}
+		return $largest;
+	}
 
-		return true;
+	/**
+	 * Number of feeds placed in the tab with this ID, or 0 when it holds none.
+	 *
+	 * @param list<array<string,mixed>> $layout
+	 */
+	public static function tabSize(array $layout, string $tabId): int {
+		foreach ($layout as $tab) {
+			if (($tab['id'] ?? null) !== $tabId) {
+				continue;
+			}
+			$feedsInTab = 0;
+			foreach ((array)($tab['columns'] ?? []) as $column) {
+				$feedsInTab += count((array)$column);
+			}
+			return $feedsInTab;
+		}
+		return 0;
 	}
 
 	/**
@@ -290,10 +336,22 @@ final class LayoutSchema {
 		return $parsed;
 	}
 
-	/** Trim a user-supplied display string and reject it when empty or over-long. */
+	/**
+	 * Trim a user-supplied display string and reject it when empty, over-long or malformed.
+	 *
+	 * The value is measured and stored as the text the user typed. Control characters are rejected
+	 * rather than stripped, so a name can never carry a line break or a NUL into the stored
+	 * configuration, and invalid UTF-8 is rejected because `mb_strlen()` cannot measure it.
+	 */
 	public static function normalizeName(string $value, int $maxLength = self::MAX_TAB_NAME_LENGTH): ?string {
+		if (!mb_check_encoding($value, 'UTF-8')) {
+			return null;
+		}
 		$value = trim($value);
 		if ($value === '' || mb_strlen($value) > $maxLength) {
+			return null;
+		}
+		if (preg_match('/[\x00-\x1F\x7F]/u', $value) === 1) {
 			return null;
 		}
 		return $value;
