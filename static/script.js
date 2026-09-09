@@ -25,7 +25,12 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	// reordering is several row updates with no transaction, so two drags in flight can commit in
 	// the opposite order to the one the user performed, and a late failure from the first can
 	// otherwise overwrite the state the second one successfully stored.
+	//
+	// The lock lives here rather than on the Sortable instances: a rerender destroys and recreates
+	// them, and a replacement built from Sortable's defaults is enabled, which silently dropped the
+	// lock and let a second drag start while the first request was still outstanding.
 	let reorderSequence = 0;
+	let reorderPending = false;
 
 	// --- DOM & CONFIG ---
 	const isCategoryMode = settings.mode === 'categories';
@@ -243,6 +248,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		if (typeof Sortable !== 'undefined' && canSortVertical) {
 			verticalLayoutSortable = new Sortable(verticalContainer, {
 				animation: 150,
+				// A replacement instance built during an outstanding reorder must start locked;
+				// Sortable's own default is enabled.
+				disabled: reorderPending,
 				draggable: '.freshvibes-vertical-section',
 				handle: '.freshvibes-tab',
 				delay: 300,
@@ -255,28 +263,52 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			});
 		}
 
+		// The instance above was just replaced, so re-assert the lock in case a reorder is still
+		// outstanding. Belt and braces alongside the `disabled` option, which does not apply when
+		// this render happened not to recreate the instance.
+		applyReorderLock();
+
 		// Columns are already initialised by renderTabContent() for each rendered tab; repeating it
 		// here created a second Sortable per column that could no longer be destroyed.
 		setupVerticalLayoutHandlers();
 	}
 
-	// Enable or disable both tab-level Sortables while a reorder request is outstanding.
-	function setReorderEnabled(enabled) {
+	// Push the current lock onto whichever tab-level Sortables exist right now.
+	//
+	// Called after every render, so an instance created while a request is outstanding starts
+	// disabled instead of inheriting Sortable's enabled default.
+	function applyReorderLock() {
 		if (verticalLayoutSortable) {
-			verticalLayoutSortable.option('disabled', !enabled);
+			verticalLayoutSortable.option('disabled', reorderPending);
 		}
 		if (tabsContainer && tabsContainer.sortable) {
-			tabsContainer.sortable.option('disabled', !enabled);
+			tabsContainer.sortable.option('disabled', reorderPending);
 		}
 	}
 
-	// Replace local state with the order the server actually holds.
+	function setReorderPending(pending) {
+		reorderPending = pending;
+		applyReorderLock();
+	}
+
+	// Adopt a layout the server just handed us.
 	//
-	// A rejected reorder does not mean nothing was written: category ordering updates one row at a
-	// time and stops at the first failure, so the stored order can be a mix of old and new. The
-	// captured snapshot is only the fallback for when the layout cannot be re-read at all.
-	function reloadAuthoritativeLayout(operation, fallbackLayout, rerender) {
-		return fetch(urls.getLayout)
+	// Feeds and layout have to move together: the renderer places any feed that no tab claims into
+	// the first visible tab, so a client layout older than the feed list shows a feed the stored
+	// tab does not hold, and the next drag there submits more feeds than that tab is allowed.
+	function adoptLayout(layout, activeTabId) {
+		state.layout = assignUniqueSlugs(layout);
+		state.allPlacedFeedIds = new Set(
+			layout.flatMap(t => Object.values(t.columns || {}).flat()).map(String)
+		);
+		if (!state.layout.some(t => t.id === state.activeTabId)) {
+			state.activeTabId = activeTabId || state.layout[0]?.id || null;
+		}
+	}
+
+	// Read the layout the server actually holds.
+	function fetchLayout() {
+		return fetch(urls.getLayout, { credentials: 'same-origin' })
 			.then(res => {
 				if (!res.ok) {
 					throw new Error(`HTTP error! status: ${res.status}`);
@@ -287,11 +319,20 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				if (!Array.isArray(data.layout)) {
 					throw new Error('Malformed layout response.');
 				}
+				return data;
+			});
+	}
+
+	// Replace local state with the order the server actually holds.
+	//
+	// A rejected reorder does not mean nothing was written: category ordering updates one row at a
+	// time and stops at the first failure, so the stored order can be a mix of old and new. The
+	// captured snapshot is only the fallback for when the layout cannot be re-read at all.
+	function reloadAuthoritativeLayout(operation, fallbackLayout, rerender) {
+		return fetchLayout()
+			.then(data => {
 				if (operation !== reorderSequence) return;
-				state.layout = assignUniqueSlugs(data.layout);
-				state.allPlacedFeedIds = new Set(
-					data.layout.flatMap(t => Object.values(t.columns || {}).flat()).map(String)
-				);
+				adoptLayout(data.layout, data.active_tab_id);
 				rerender();
 			})
 			.catch(error => {
@@ -306,6 +347,14 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	//
 	// `context` names the operation for logging; `rerender` redraws whichever layout is on screen.
 	function persistTabOrder(newOrder, context, rerender) {
+		if (reorderPending) {
+			// Sortable is disabled for exactly this reason, but a rerender can install a fresh
+			// instance mid-request, so the helper refuses too. Redrawing puts the visible order
+			// back to the one the outstanding request is about to confirm.
+			rerender();
+			return Promise.resolve();
+		}
+
 		const newLayout = [];
 		newOrder.forEach(tabId => {
 			const tab = state.layout.find(t => t.id === tabId);
@@ -318,7 +367,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		state.layout = newLayout;
 
 		const operation = ++reorderSequence;
-		setReorderEnabled(false);
+		setReorderPending(true);
 
 		const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
 		const payload = isCategoryMode
@@ -335,7 +384,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			})
 			.then(() => {
 				if (operation === reorderSequence) {
-					setReorderEnabled(true);
+					setReorderPending(false);
 				}
 			});
 	}
@@ -767,6 +816,56 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		return panel;
 	}
 
+	// Adopt one auto-refresh response: the fresh articles, the fresh CSRF token and the layout the
+	// server currently holds.
+	//
+	// Named rather than inlined in the refresh loop so the path can be exercised without timers.
+	function applyRefreshedDocument(html) {
+		if (!html) return Promise.resolve();
+
+		// Skip update if user is interacting
+		if (document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active')) {
+			return Promise.resolve();
+		}
+
+		// Extract feeds data from the response
+		const parser = new DOMParser();
+		const doc = parser.parseFromString(html, 'text/html');
+		const feedsScript = doc.getElementById('feeds-data-script');
+
+		// Also update CSRF token during refresh
+		const freshvibesView = doc.querySelector('.freshvibes-view');
+		if (freshvibesView) {
+			const newToken = freshvibesView.getAttribute('data-freshvibes-csrf-token');
+			if (newToken && newToken !== currentCsrfToken) {
+				currentCsrfToken = newToken;
+			}
+		}
+
+		if (!feedsScript) return Promise.resolve();
+
+		state.feeds = JSON.parse(feedsScript.textContent);
+
+		// The feed list and the layout have to be adopted together. Refreshing only the feeds left
+		// a subscription added elsewhere unplaced in the client's layout; the renderer shows an
+		// unclaimed feed in the first visible tab anyway, so a drag there submitted more feeds than
+		// that tab holds and the save was rejected.
+		return fetchLayout()
+			.then(data => {
+				if (reorderPending) return;
+				adoptLayout(data.layout, data.active_tab_id);
+				render();
+			})
+			.catch(error => {
+				// Keep the refreshed articles even if the layout could not be re-read.
+				handleAPIError('Refresh layout', error);
+				renderTabs();
+				if (state.layout.some(t => t.id === state.activeTabId)) {
+					render();
+				}
+			});
+	}
+
 	function setupAutoRefresh() {
 		// Read settings
 		const refreshEnabled = settings.refreshEnabled === 'true' || settings.refreshEnabled === '1' || settings.refreshEnabled === 1;
@@ -784,7 +883,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			const isInteracting = document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active') ||
 				(document.activeElement && ['INPUT', 'TEXTAREA', 'BUTTON', 'A'].includes(document.activeElement.tagName));
 
-			if (isInteracting) {
+			// A refresh replaces the whole layout, so it must not land on top of a reorder the
+			// server has not confirmed yet.
+			if (isInteracting || reorderPending) {
 				setTimeout(refreshLoop, refreshMs);
 				return;
 			}
@@ -803,35 +904,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 					}
 					return res.text();
 				})
-				.then(html => {
-					if (!html) return;
-
-					// Skip update if user is interacting
-					if (document.querySelector('.tab-settings-menu.active, .feed-settings-editor.active, .fv-modal.active')) return;
-
-					// Extract feeds data from the response
-					const parser = new DOMParser();
-					const doc = parser.parseFromString(html, 'text/html');
-					const feedsScript = doc.getElementById('feeds-data-script');
-
-					// Also update CSRF token during refresh
-					const freshvibesView = doc.querySelector('.freshvibes-view');
-					if (freshvibesView) {
-						const newToken = freshvibesView.getAttribute('data-freshvibes-csrf-token');
-						if (newToken && newToken !== currentCsrfToken) {
-							currentCsrfToken = newToken;
-						}
-					}
-
-					if (feedsScript) {
-						state.feeds = JSON.parse(feedsScript.textContent);
-						renderTabs();
-						const activeTab = state.layout.find(t => t.id === state.activeTabId);
-						if (activeTab) {
-							render();
-						}
-					}
-				})
+				.then(html => applyRefreshedDocument(html))
 				.catch(error => {
 					console.log('Refresh error:', error.message);
 				})
@@ -1601,12 +1674,24 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 							tab.columns = layoutData;
 							api(urls.saveLayout, { layout: JSON.stringify(layoutData), tab_id: targetTabId })
 								.then(data => {
-									if (isOk(data)) return;
-									// Put the previous arrangement back rather than leaving the client
-									// displaying an order the server rejected.
+									if (isOk(data)) return undefined;
 									handleAPIError('Save layout', data);
-									tab.columns = previousColumns;
-									renderTabContent(tab);
+									// A rejection usually means the client's copy of the layout is
+									// behind the server's, so re-read it instead of redrawing the
+									// stale tab: repeating the old columns would place the same
+									// unclaimed feed here again and the next drag would fail too.
+									return fetchLayout()
+										.then(fresh => {
+											adoptLayout(fresh.layout, fresh.active_tab_id);
+											render();
+										})
+										.catch(error => {
+											handleAPIError('Reload layout', error);
+											// Put the previous arrangement back rather than leaving
+											// the client displaying an order the server rejected.
+											tab.columns = previousColumns;
+											renderTabContent(tab);
+										});
 								});
 						}
 					} else {
@@ -1638,6 +1723,7 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		if (typeof Sortable !== 'undefined' && tabsContainer && !tabsContainer.sortable && (!isCategoryMode || (isCategoryMode && allowCategorySort))) {
 			tabsContainer.sortable = new Sortable(tabsContainer, {
 				animation: 150,
+				disabled: reorderPending,
 				draggable: '.freshvibes-tab',
 				filter: '.tab-add-button, .tab-bulk-button, .moved-subscription-buttons',
 				delay: 300,
@@ -1648,6 +1734,8 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				}
 			});
 		}
+
+		applyReorderLock();
 	}
 
 	function getContrastColor(hexColor) {
@@ -2811,16 +2899,13 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 			}
 
 			// Set the primary state objects from the data
-			state.layout = data.layout || [];
-			state.activeTabId = data.active_tab_id;
 			state.feeds = JSON.parse(feedsDataScript.textContent);
-
-			state.allPlacedFeedIds = new Set(state.layout.flatMap(t => Object.values(t.columns).flat()).map(String));
+			// One place decides how a server layout becomes client state, so the first load, a
+			// refresh and a recovery read cannot drift apart.
+			adoptLayout(data.layout || [], data.active_tab_id);
 
 			// Clean up the temporary script tag
 			document.getElementById('feeds-data-script').remove();
-
-			state.layout = assignUniqueSlugs(state.layout);
 
 			// check URL for “?tab=some-slug”
 			const params = new URLSearchParams(window.location.search);

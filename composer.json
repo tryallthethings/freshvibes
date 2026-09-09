@@ -47,7 +47,7 @@
             "@phpcbf"
         ],
         "phpunit": "phpunit",
-        "jstest": "node --test tests/js/*.test.mjs",
+        "jstest": "node --test --test-timeout=10000 tests/js/*.test.mjs",
         "verify-vendored": "./.github/verify-vendored.sh"
     },
     "config": {
