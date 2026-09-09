@@ -180,6 +180,138 @@ final class LayoutSchema {
 	}
 
 	/**
+	 * Place feeds that no tab holds yet, filling the tabs that still have spare capacity.
+	 *
+	 * Custom-mode layouts used to leave a new subscription unplaced: the client rendered it into
+	 * the first tab anyway, so the next drag inside that tab submitted one more feed than the
+	 * stored tab was allowed to hold and the save was rejected. Reconciling the stored layout with
+	 * the subscription list keeps what is displayed and what is stored in agreement.
+	 *
+	 * @param list<array<string,mixed>> $layout Modified in place.
+	 * @param list<int> $feedIds Feeds to place, in the order they should appear.
+	 * @param string $position `top` to prepend to the first column, anything else to spread across
+	 *                         the tab's columns after the feeds it already holds.
+	 * @param int $maxPerTab Capacity of one tab. `PHP_INT_MAX` disables the bound.
+	 * @return list<int> The feeds that did not fit anywhere.
+	 */
+	public static function placeFeeds(array &$layout, array $feedIds, string $position, int $maxPerTab = self::MAX_FEEDS_PER_TAB): array {
+		$remaining = array_values($feedIds);
+
+		foreach ($layout as &$tab) {
+			if ($remaining === []) {
+				break;
+			}
+
+			$used = self::countFeeds($tab);
+			$capacity = $maxPerTab - $used;
+			if ($capacity <= 0) {
+				continue;
+			}
+
+			$batch = array_slice($remaining, 0, $capacity);
+			$remaining = array_slice($remaining, count($batch));
+
+			$numColumns = self::columnCount($tab);
+			$columns = self::normalisedColumns($tab, $numColumns);
+
+			if ($position === 'top') {
+				$columns['col1'] = array_merge($batch, $columns['col1']);
+			} else {
+				foreach ($batch as $offset => $feedId) {
+					$columns['col' . ((($used + $offset) % $numColumns) + 1)][] = $feedId;
+				}
+			}
+
+			$tab['columns'] = $columns;
+		}
+		unset($tab);
+
+		return $remaining;
+	}
+
+	/**
+	 * Place every feed the layout does not already hold, adding tabs when the existing ones fill up.
+	 *
+	 * New tabs are only added up to `MAX_TABS`. Beyond that the remainder goes into the tabs that
+	 * exist, past the per-tab limit: that is the recoverable outcome, because the stored layout
+	 * still matches what the dashboard displays and the user can move the feeds elsewhere. Leaving
+	 * them unplaced instead makes every drag in the tab that displays them fail, which is the
+	 * defect this reconciliation exists to remove. `withinLimits()` judges growth against the
+	 * stored layout, so the result stays editable.
+	 *
+	 * @param list<array<string,mixed>> $layout
+	 * @param list<int> $feedIds Feeds to place, in the order they should appear.
+	 * @param string $position `top` or `bottom`.
+	 * @param callable(int, list<array<string,mixed>>): array<string,mixed> $makeTab Builds an empty
+	 *        tab for the given index. It receives the layout built so far, so the new tab's ID can
+	 *        be checked against the ones already in it.
+	 * @return list<array<string,mixed>> The layout with every feed placed.
+	 */
+	public static function reconcileFeeds(array $layout, array $feedIds, string $position, callable $makeTab): array {
+		$remaining = self::placeFeeds($layout, $feedIds, $position);
+
+		while ($remaining !== [] && count($layout) < self::MAX_TABS) {
+			$layout[] = $makeTab(count($layout), $layout);
+			$remaining = self::placeFeeds($layout, $remaining, $position);
+		}
+
+		if ($remaining !== []) {
+			self::placeFeeds($layout, $remaining, $position, PHP_INT_MAX);
+		}
+
+		return $layout;
+	}
+
+	/**
+	 * Feeds currently placed in one tab.
+	 *
+	 * A column that is not a list holds no feeds. Counting one as occupying a slot shifted the
+	 * round-robin that appends new feeds and made the totals disagree with what `deduplicate()`
+	 * writes, since it replaces such a column with an empty list before every save.
+	 *
+	 * @param array<string,mixed> $tab
+	 */
+	public static function countFeeds(array $tab): int {
+		$total = 0;
+		foreach ((array)($tab['columns'] ?? []) as $column) {
+			if (is_array($column)) {
+				$total += count($column);
+			}
+		}
+		return $total;
+	}
+
+	/** How many columns a tab declares, clamped to the supported range. @param array<string,mixed> $tab */
+	private static function columnCount(array $tab): int {
+		$declared = (int)($tab['num_columns'] ?? 0);
+		if ($declared < self::MIN_COLUMNS) {
+			$declared = count((array)($tab['columns'] ?? []));
+		}
+		return max(self::MIN_COLUMNS, min(self::MAX_COLUMNS, $declared));
+	}
+
+	/**
+	 * A tab's columns with every declared column present and holding a list.
+	 *
+	 * A saved layout may hold fewer columns than it declares, or a non-array where a list belongs.
+	 *
+	 * @param array<string,mixed> $tab
+	 * @return array<string,list<mixed>>
+	 */
+	private static function normalisedColumns(array $tab, int $numColumns): array {
+		$columns = [];
+		foreach ((array)($tab['columns'] ?? []) as $key => $column) {
+			$columns[(string)$key] = is_array($column) ? array_values($column) : [];
+		}
+		for ($i = 1; $i <= $numColumns; $i++) {
+			if (!isset($columns['col' . $i])) {
+				$columns['col' . $i] = [];
+			}
+		}
+		return $columns;
+	}
+
+	/**
 	 * Remove feeds that appear in more than one place, keeping the first occurrence.
 	 *
 	 * Uses a keyed set rather than repeated `in_array()` scans, which were quadratic in the number
@@ -226,9 +358,7 @@ final class LayoutSchema {
 	public static function totalPlacedFeeds(array $layout): int {
 		$total = 0;
 		foreach ($layout as $tab) {
-			foreach ((array)($tab['columns'] ?? []) as $column) {
-				$total += count((array)$column);
-			}
+			$total += self::countFeeds($tab);
 		}
 		return $total;
 	}
@@ -273,11 +403,7 @@ final class LayoutSchema {
 	public static function largestTabSize(array $layout): int {
 		$largest = 0;
 		foreach ($layout as $tab) {
-			$feedsInTab = 0;
-			foreach ((array)($tab['columns'] ?? []) as $column) {
-				$feedsInTab += count((array)$column);
-			}
-			$largest = max($largest, $feedsInTab);
+			$largest = max($largest, self::countFeeds($tab));
 		}
 		return $largest;
 	}
@@ -289,14 +415,9 @@ final class LayoutSchema {
 	 */
 	public static function tabSize(array $layout, string $tabId): int {
 		foreach ($layout as $tab) {
-			if (($tab['id'] ?? null) !== $tabId) {
-				continue;
+			if (($tab['id'] ?? null) === $tabId) {
+				return self::countFeeds($tab);
 			}
-			$feedsInTab = 0;
-			foreach ((array)($tab['columns'] ?? []) as $column) {
-				$feedsInTab += count((array)$column);
-			}
-			return $feedsInTab;
 		}
 		return 0;
 	}

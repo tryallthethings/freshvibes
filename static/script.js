@@ -21,6 +21,11 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 	let currentCsrfToken = csrfToken;
 	let heightPickerHandler = null;
 	let verticalLayoutSortable = null;
+	// Reorder requests are serialised. The server applies them in arrival order and category
+	// reordering is several row updates with no transaction, so two drags in flight can commit in
+	// the opposite order to the one the user performed, and a late failure from the first can
+	// otherwise overwrite the state the second one successfully stored.
+	let reorderSequence = 0;
 
 	// --- DOM & CONFIG ---
 	const isCategoryMode = settings.mode === 'categories';
@@ -242,37 +247,10 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				handle: '.freshvibes-tab',
 				delay: 300,
 				delayOnTouchOnly: true,
-				onEnd: evt => {
+				onEnd: () => {
 					// Get the new order of tabs
 					const newOrder = Array.from(verticalContainer.querySelectorAll('.freshvibes-vertical-section')).map(section => section.dataset.tabId);
-
-					// Reorder the layout array
-					const newLayout = [];
-					newOrder.forEach(tabId => {
-						const tab = state.layout.find(t => t.id === tabId);
-						if (tab) newLayout.push(tab);
-					});
-
-					// Keep the order the server still holds. Re-rendering alone cannot undo the
-					// change, because the renderer reads the very state that was just replaced.
-					const previousLayout = state.layout;
-					state.layout = newLayout;
-
-					// Save the new layout order
-					const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
-					const payload = isCategoryMode
-						? { category_ids: newOrder.join(',') }
-						: { operation: 'reorder', tab_ids: newOrder.join(',') };
-
-					api(url, payload)
-						.then(data => {
-							if (!isOk(data)) {
-								// Put the stored order back before re-rendering.
-								handleAPIError('Reorder vertical tabs', data);
-								state.layout = previousLayout;
-								renderVerticalLayout();
-							}
-						});
+					persistTabOrder(newOrder, 'Reorder vertical tabs', renderVerticalLayout);
 				}
 			});
 		}
@@ -280,6 +258,86 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 		// Columns are already initialised by renderTabContent() for each rendered tab; repeating it
 		// here created a second Sortable per column that could no longer be destroyed.
 		setupVerticalLayoutHandlers();
+	}
+
+	// Enable or disable both tab-level Sortables while a reorder request is outstanding.
+	function setReorderEnabled(enabled) {
+		if (verticalLayoutSortable) {
+			verticalLayoutSortable.option('disabled', !enabled);
+		}
+		if (tabsContainer && tabsContainer.sortable) {
+			tabsContainer.sortable.option('disabled', !enabled);
+		}
+	}
+
+	// Replace local state with the order the server actually holds.
+	//
+	// A rejected reorder does not mean nothing was written: category ordering updates one row at a
+	// time and stops at the first failure, so the stored order can be a mix of old and new. The
+	// captured snapshot is only the fallback for when the layout cannot be re-read at all.
+	function reloadAuthoritativeLayout(operation, fallbackLayout, rerender) {
+		return fetch(urls.getLayout)
+			.then(res => {
+				if (!res.ok) {
+					throw new Error(`HTTP error! status: ${res.status}`);
+				}
+				return res.json();
+			})
+			.then(data => {
+				if (!Array.isArray(data.layout)) {
+					throw new Error('Malformed layout response.');
+				}
+				if (operation !== reorderSequence) return;
+				state.layout = assignUniqueSlugs(data.layout);
+				state.allPlacedFeedIds = new Set(
+					data.layout.flatMap(t => Object.values(t.columns || {}).flat()).map(String)
+				);
+				rerender();
+			})
+			.catch(error => {
+				handleAPIError('Reload layout', error);
+				if (operation !== reorderSequence) return;
+				state.layout = fallbackLayout;
+				rerender();
+			});
+	}
+
+	// Apply a new tab order locally and persist it.
+	//
+	// `context` names the operation for logging; `rerender` redraws whichever layout is on screen.
+	function persistTabOrder(newOrder, context, rerender) {
+		const newLayout = [];
+		newOrder.forEach(tabId => {
+			const tab = state.layout.find(t => t.id === tabId);
+			if (tab) newLayout.push(tab);
+		});
+
+		// Keep the order the server still holds. Re-rendering alone cannot undo the change,
+		// because the renderer reads the very state that was just replaced.
+		const previousLayout = state.layout;
+		state.layout = newLayout;
+
+		const operation = ++reorderSequence;
+		setReorderEnabled(false);
+
+		const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
+		const payload = isCategoryMode
+			? { category_ids: newOrder.join(',') }
+			: { operation: 'reorder', tab_ids: newOrder.join(',') };
+
+		return api(url, payload)
+			.then(data => {
+				if (isOk(data)) return undefined;
+				handleAPIError(context, data);
+				// A newer drag has already been sent; its own outcome owns the state.
+				if (operation !== reorderSequence) return undefined;
+				return reloadAuthoritativeLayout(operation, previousLayout, rerender);
+			})
+			.then(() => {
+				if (operation === reorderSequence) {
+					setReorderEnabled(true);
+				}
+			});
 	}
 
 	// Destroy the Sortable bound to one element, if any.
@@ -1584,34 +1642,9 @@ function initializeDashboard(freshvibesView, urls, settings, csrfToken) {
 				filter: '.tab-add-button, .tab-bulk-button, .moved-subscription-buttons',
 				delay: 300,
 				delayOnTouchOnly: true,
-				onEnd: evt => {
+				onEnd: () => {
 					const newOrder = Array.from(tabsContainer.querySelectorAll('.freshvibes-tab')).map(tab => tab.dataset.tabId);
-
-					const newLayout = [];
-					newOrder.forEach(tabId => {
-						const tab = state.layout.find(t => t.id === tabId);
-						if (tab) newLayout.push(tab);
-					});
-
-					// As in the vertical handler: keep the order the server still holds, because
-					// render() draws from state and cannot undo a change already written into it.
-					const previousLayout = state.layout;
-					state.layout = newLayout;
-
-					const url = isCategoryMode ? urls.saveCategoryOrder : urls.tabAction;
-					const payload = isCategoryMode
-						? { category_ids: newOrder.join(',') }
-						: { operation: 'reorder', tab_ids: newOrder.join(',') };
-
-					api(url, payload)
-						.then(data => {
-							if (!isOk(data)) {
-								// Put the stored order back before re-rendering.
-								handleAPIError('Reorder tabs', data);
-								state.layout = previousLayout;
-								render();
-							}
-						});
+					persistTabOrder(newOrder, 'Reorder tabs', render);
 				}
 			});
 		}

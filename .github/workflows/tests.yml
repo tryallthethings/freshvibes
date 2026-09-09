@@ -94,6 +94,11 @@ jobs:
     - name: PHPUnit
       run: composer run-script phpunit
 
+    # The dashboard's reorder plumbing is client-side, so its regression tests run on Node's
+    # built-in test runner. No package.json and no npm dependencies are involved.
+    - name: JavaScript tests
+      run: composer run-script jstest
+
     - name: Verify vendored asset digests
       run: composer run-script verify-vendored
 

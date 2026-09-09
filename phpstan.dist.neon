@@ -12,13 +12,19 @@ parameters:
 	excludePaths:
 		analyse:
 			- ../FreshRSS
+			# Drives the entrypoint against those same stubs, so its symbols only exist at test
+			# runtime. Analysing it would resolve them to the real framework classes and report
+			# differences that are the point of the double, not defects. It is still scanned.
+			- tests/ExtensionEntrypointTest.php
+			- tests/LayoutReconciliationTest.php
 		analyseAndScan:
 			- .git/*?
 			- node_modules/*?
 			- vendor/
-			# The unit-test stub redeclares Minz_Extension. Scanning it makes PHPStan resolve the
-			# entrypoint's base class to the stub instead of the real framework class in
-			# ../FreshRSS, which then reports every inherited method as undefined.
+			# The unit-test stubs redeclare framework classes. Scanning them makes PHPStan resolve
+			# the entrypoint's base class and the Minz statics to the stubs instead of the real
+			# framework classes in ../FreshRSS, which then reports every inherited method as
+			# undefined. Production code must be analysed against the real framework.
 			- tests/stubs/
 	checkBenevolentUnionTypes: true
 	checkMissingOverrideMethodAttribute: true

@@ -18,11 +18,15 @@ abstract class Minz_Extension {
 	public function init(): void {
 	}
 
-	/** @return bool */
+	/** @return string|true true when uninstalled, or a message explaining why it was not. */
 	public function uninstall() {
 		return true;
 	}
 
 	public function handleConfigureAction(): void {
+	}
+
+	/** Called by `handleConfigureAction()`; the real one loads the extension's translations. */
+	protected function registerTranslates(): void {
 	}
 }

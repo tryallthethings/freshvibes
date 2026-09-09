@@ -407,6 +407,16 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		if ($layout === null) {
 			$layout = $this->buildInitialLayout($newFeedPosition);
 			$this->persistGeneratedLayout($layout);
+		} else {
+			// Reconcile feeds subscribed to since the layout was last written. Leaving them out
+			// used to make the stored layout disagree with the dashboard: the client renders an
+			// unplaced feed into the first tab regardless, so the next drag in that tab submitted
+			// more feeds than the stored tab was allowed to hold and every save was rejected.
+			$unplaced = array_values(array_diff($this->subscribedFeedIds(), LayoutSchema::placedFeedIds($layout)));
+			if ($unplaced !== []) {
+				$layout = $this->placeNewSubscriptions($layout, $unplaced, $newFeedPosition);
+				$this->persistGeneratedLayout($layout);
+			}
 		}
 
 		// Ensure all layout columns are arrays before returning
@@ -444,34 +454,66 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 	 * @return list<array<string,mixed>>
 	 */
 	private function buildInitialLayout(string $newFeedPosition): array {
-		$numCols = FreshVibesViewExtension::DEFAULT_TAB_COLUMNS;
 		$feedIds = $this->subscribedFeedIds();
-
 		$chunks = $feedIds === [] ? [[]] : array_chunk($feedIds, LayoutSchema::MAX_FEEDS_PER_TAB);
-		$baseName = _t('ext.FreshVibesView.default_tab_name');
-		$createdAt = microtime(true);
+
 		$layout = [];
-
 		foreach ($chunks as $index => $chunkIds) {
-			$columns = $this->buildEmptyColumns($numCols);
-			if ($newFeedPosition === 'top') {
-				// Add all feeds of this chunk to the first column
-				$columns['col1'] = $chunkIds;
-			} else {
-				// Distribute feeds across columns (existing behavior)
-				foreach ($chunkIds as $i => $feedId) {
-					$columns['col' . (($i % $numCols) + 1)][] = $feedId;
-				}
-			}
+			$tab = $this->buildGeneratedTab($index, $layout);
+			// Placement honours the user's new-feed preference, exactly as it does later when a
+			// subscription is added to an existing layout.
+			$onlyTab = [$tab];
+			LayoutSchema::placeFeeds($onlyTab, $chunkIds, $newFeedPosition);
+			$layout[] = $onlyTab[0];
+		}
 
-			$layout[] = [
-				'id' => 'tab-' . $createdAt . '-' . $index,
-				'name' => $index === 0 ? $baseName : $baseName . ' ' . ($index + 1),
-				'icon' => '',
-				'icon_color' => '',
-				'num_columns' => $numCols,
-				'columns' => $columns,
-			];
+		return $layout;
+	}
+
+	/**
+	 * An empty tab for a generated layout, numbered from zero.
+	 *
+	 * @param list<array<string,mixed>> $existing Tabs already in the layout, so the ID is unique.
+	 * @return array<string,mixed>
+	 */
+	private function buildGeneratedTab(int $index, array $existing = []): array {
+		$baseName = _t('ext.FreshVibesView.default_tab_name');
+		$id = 'tab-' . microtime(true) . '-' . $index;
+		$suffix = 0;
+		while (LayoutSchema::tabExists($existing, $id)) {
+			$id = 'tab-' . microtime(true) . '-' . $index . '-' . (++$suffix);
+		}
+
+		return [
+			'id' => $id,
+			'name' => $index === 0 ? $baseName : $baseName . ' ' . ($index + 1),
+			'icon' => '',
+			'icon_color' => '',
+			'num_columns' => FreshVibesViewExtension::DEFAULT_TAB_COLUMNS,
+			'columns' => $this->buildEmptyColumns(FreshVibesViewExtension::DEFAULT_TAB_COLUMNS),
+		];
+	}
+
+	/**
+	 * Place newly subscribed feeds, adding overflow tabs when the existing ones are full.
+	 *
+	 * @param list<array<string,mixed>> $layout
+	 * @param list<int> $feedIds
+	 * @return list<array<string,mixed>>
+	 */
+	private function placeNewSubscriptions(array $layout, array $feedIds, string $newFeedPosition): array {
+		$layout = LayoutSchema::reconcileFeeds(
+			$layout,
+			$feedIds,
+			$newFeedPosition,
+			fn(int $index, array $soFar): array => $this->buildGeneratedTab($index, $soFar)
+		);
+
+		if (LayoutSchema::largestTabSize($layout) > LayoutSchema::MAX_FEEDS_PER_TAB) {
+			Minz_Log::warning(
+				'FreshVibesView: tab ceiling reached, so new subscriptions were placed beyond the '
+				. 'per-tab limit rather than left unreachable.'
+			);
 		}
 
 		return $layout;
@@ -1548,13 +1590,27 @@ class FreshExtension_freshvibes_Controller extends Minz_ActionController {
 		exit;
 	}
 
-	/** Feed IDs the current user is subscribed to. @return list<int> */
+	/**
+	 * Feed IDs the current user is subscribed to.
+	 *
+	 * Memoised for the request: several actions ask for this two or three times, and layout
+	 * reconciliation now needs it on every read as well. The controller instance does not outlive
+	 * the request, so the subscription list cannot change underneath it.
+	 *
+	 * @var list<int>|null
+	 */
+	private ?array $subscribedFeedIds = null;
+
+	/** @return list<int> */
 	private function subscribedFeedIds(): array {
-		$ids = [];
-		foreach (FreshRSS_Factory::createFeedDao()->listFeeds() as $feed) {
-			$ids[] = $feed->id();
+		if ($this->subscribedFeedIds === null) {
+			$ids = [];
+			foreach (FreshRSS_Factory::createFeedDao()->listFeeds() as $feed) {
+				$ids[] = $feed->id();
+			}
+			$this->subscribedFeedIds = $ids;
 		}
-		return $ids;
+		return $this->subscribedFeedIds;
 	}
 
 	private function deduplicateLayout(array &$layout): void {

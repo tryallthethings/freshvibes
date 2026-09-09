@@ -40,12 +40,14 @@
             "@phpcs",
             "@phpstan",
             "@phpunit",
+            "@jstest",
             "@verify-vendored"
         ],
         "fix": [
             "@phpcbf"
         ],
         "phpunit": "phpunit",
+        "jstest": "node --test tests/js/*.test.mjs",
         "verify-vendored": "./.github/verify-vendored.sh"
     },
     "config": {

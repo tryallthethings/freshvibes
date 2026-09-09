@@ -120,6 +120,15 @@ class FreshVibesViewExtension extends Minz_Extension {
 		}
 	}
 
+	/**
+	 * Restore the reading mode before the host disables the extension.
+	 *
+	 * `Minz_Configuration::save()` reports failure by return value. The host reads anything other
+	 * than `true` as a refusal and keeps the extension enabled, which is the correct outcome here:
+	 * the user would otherwise be left on a reading mode with no controller behind it.
+	 *
+	 * @return string|true true when uninstalled, or a message explaining why it was not.
+	 */
 	#[\Override]
 	public function uninstall() {
 		$userConf = FreshRSS_Context::userConf();
@@ -127,7 +136,9 @@ class FreshVibesViewExtension extends Minz_Extension {
 		// Only change the view_mode if it's currently set to this extension's view
 		if ($userConf->hasParam('view_mode') && $userConf->view_mode === self::CONTROLLER_NAME_BASE) {
 			$userConf->_attribute('view_mode', 'normal');
-			$userConf->save();
+			if (!$userConf->save()) {
+				return 'FreshVibesView: could not restore the reading mode, so the view mode would have no controller.';
+			}
 		}
 
 		// The uninstall method must return true on success.
@@ -177,6 +188,11 @@ class FreshVibesViewExtension extends Minz_Extension {
 
 	/**
 	 * Handles the logic when the configuration form is submitted.
+	 *
+	 * @throws Minz_Exception when the submitted settings could not be stored. That is the failure
+	 * channel the host's `configureAction()` understands: it logs the detail and redirects with an
+	 * error notice. Ignoring the boolean `save()` result instead left the form reporting success
+	 * while the values existed only in request memory.
 	 */
 	#[\Override]
 	public function handleConfigureAction(): void {
@@ -229,7 +245,10 @@ class FreshVibesViewExtension extends Minz_Extension {
 				$userConf->_attribute($configKey, in_array($value, $allowed, true) ? $value : $default);
 			}
 
-			$userConf->save();
+			if (!$userConf->save()) {
+				Minz_Log::error('FreshVibesView: the submitted configuration could not be stored.');
+				throw new Minz_Exception('FreshVibesView: the submitted configuration could not be stored.');
+			}
 		}
 	}
 }

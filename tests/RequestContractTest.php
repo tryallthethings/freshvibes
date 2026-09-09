@@ -168,14 +168,35 @@ final class RequestContractTest extends TestCase {
 
 	// ---------------------------------------------------------------- FV-005
 
-	/** Every `save()` on a state-changing path is answered, not discarded. */
-	public function testPersistenceResultsAreChecked(): void {
-		$source = self::controllerSource();
+	/**
+	 * Every `save()` on a state-changing path is answered, not discarded.
+	 *
+	 * The extension entrypoint is included: it was missed the first time because this fence only
+	 * read the controller, while `handleConfigureAction()` and `uninstall()` were still throwing
+	 * the boolean away. `ExtensionEntrypointTest` covers their behaviour; this keeps a new
+	 * unchecked call site from appearing in either file.
+	 *
+	 * @return array<string,array{string}>
+	 */
+	public static function persistenceSourceProvider(): array {
+		return [
+			'controller' => [__DIR__ . '/../Controllers/freshvibesController.php'],
+			'entrypoint' => [__DIR__ . '/../extension.php'],
+		];
+	}
+
+	#[DataProvider('persistenceSourceProvider')]
+	public function testPersistenceResultsAreChecked(string $path): void {
+		$source = file_get_contents($path);
+		self::assertIsString($source);
 		self::assertSame(
 			0,
 			preg_match_all('/^\t+\$userConf->save\(\);$/m', $source),
-			'An unchecked save() lets a failed write be reported to the client as success.'
+			'An unchecked save() lets a failed write be reported as success.'
 		);
-		self::assertStringContainsString('private function failWithPersistenceError(', $source);
+	}
+
+	public function testTheControllerHasADedicatedPersistenceFailurePath(): void {
+		self::assertStringContainsString('private function failWithPersistenceError(', self::controllerSource());
 	}
 }

@@ -28,5 +28,8 @@ spl_autoload_register(static function (string $class): void {
 // FreshRSS dependencies at definition time. Loading it directly keeps the suite self-contained.
 if (!class_exists('FreshVibesViewExtension', false)) {
 	require_once __DIR__ . '/stubs/Minz_Extension.php';
+	// The entrypoint's methods reach for framework globals, so those stand-ins are loaded too.
+	// Defining a constant is not enough: `ExtensionEntrypointTest` executes the real methods.
+	require_once __DIR__ . '/stubs/framework.php';
 	require_once __DIR__ . '/../extension.php';
 }
